@@ -151,7 +151,7 @@
             .sec-bar { grid-column: 1 / -1; height: 4px; margin-top: 8px; }
             .items { list-style: none; margin: 0; padding: 0 16px 12px; }
             .fields-head { display: flex; justify-content: flex-end; gap: 12px; padding: 4px 0 2px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
-            .fields-head span { width: calc(var(--sz) * 5 + var(--gap) * 4); text-align: center; }
+            .fields-head > .fh-cell { width: calc(var(--sz) * 5 + var(--gap) * 4); text-align: center; }
             .fields-wrap { padding-bottom: 0; }
             .item {
                 display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px 12px;
@@ -232,6 +232,50 @@
             .g-up li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); }
             .g-up .dot { --sz: 18px; font-size: 10px; border-width: 1.5px; }
 
+            /* Glossary: term buttons, popover / bottom sheet, list */
+            .term-btn {
+                background: none; border: 0; margin: 0; padding: 2px 0; font: inherit; color: inherit; text-align: left;
+                cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; min-height: 28px;
+                text-transform: inherit; letter-spacing: inherit;
+            }
+            .item-name .term-btn { display: inline; padding: 4px 0; min-height: 0; line-height: inherit; }
+            .item-name .term-btn .info-i { display: inline-grid; vertical-align: -2px; margin-left: 6px; }
+            .term-btn:hover { text-decoration: underline dotted; text-underline-offset: 3px; }
+            .term-btn.icon-only { min-width: 28px; justify-content: center; vertical-align: middle; margin: -4px 0 -4px 2px; }
+            .info-i {
+                width: 16px; height: 16px; flex: none; border-radius: 50%; border: 1.5px solid currentColor; color: var(--muted);
+                display: inline-grid; place-items: center; font: italic 700 11px/1 Georgia, "Times New Roman", serif; text-transform: none;
+            }
+            .term-btn:hover .info-i, .term-btn:focus-visible .info-i { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+            .fh-cell { display: inline-flex; justify-content: center; }
+            dialog.term { position: fixed; inset: auto; margin: 0; width: min(360px, calc(100vw - 16px)); }
+            dialog.term::backdrop { background: rgba(15, 12, 25, .18); }
+            dialog.term .dlg { gap: 6px; padding: 16px 18px 18px; }
+            dialog.term h2 { font-size: 19px; }
+            .term-context { margin: 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+            dialog.term .term-desc { color: var(--text); font-size: 16px; line-height: 1.5; }
+            dialog.term.sheet {
+                inset: auto 0 0 0; width: 100%; max-width: 100%; border-radius: 20px 20px 0 0; border-bottom: 0;
+                padding-bottom: env(safe-area-inset-bottom); animation: sheet-up .2s ease-out;
+            }
+            dialog.term.sheet::backdrop { background: rgba(15, 12, 25, .5); }
+            dialog.term.sheet .dlg { padding: 18px 20px 26px; }
+            dialog.term.sheet .dlg::before { content: ''; width: 40px; height: 4px; border-radius: 99px; background: var(--border); align-self: center; margin: -8px 0 4px; }
+            @keyframes sheet-up { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+            dialog.glossary { width: min(640px, calc(100vw - 24px)); max-height: min(80vh, 760px); overflow: auto; }
+            dialog.glossary .dlg { padding-top: 0; }
+            .gloss-top { position: sticky; top: 0; z-index: 1; background: var(--card); padding-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+            .gloss-search { width: 100%; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); font-size: 16px; }
+            #GlossCount { margin: 0 0 4px; }
+            .gloss-list { margin: 0; display: grid; gap: 4px; }
+            .gloss-entry { padding: 10px 0; border-top: 1px solid var(--border); }
+            .gloss-entry dt { font-weight: 700; font-size: 16px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+            .gloss-tags { font-weight: 500; font-size: 12px; color: var(--muted); }
+            .gloss-entry dd { margin: 4px 0 0; font-size: 15px; line-height: 1.5; }
+            .g-def { color: var(--text) !important; font-size: 15px !important; line-height: 1.5; margin-top: -4px !important; }
+            .g-def:empty { display: none; }
+            .g-def .g-fdef { display: block; color: var(--muted); font-size: 13px; margin-top: 4px; }
+
             @media (max-width: 760px) {
                 .panel { grid-template-columns: 1fr; }
                 .share { justify-content: flex-start; }
@@ -256,6 +300,8 @@
                 .kbd-hint { display: none; }
                 .share .btn { white-space: nowrap; padding: 8px 10px; font-size: 14px; }
                 /* keep the column labels in view while scrolling a long section */
+                dialog.glossary { inset: auto 0 0 0; margin: 0; width: 100%; max-width: 100%; max-height: 88vh; border-radius: 20px 20px 0 0; border-bottom: 0; }
+                .top-actions { gap: 6px; }
                 .fields-wrap { position: sticky; top: var(--topbar-h, 0px); z-index: 2; background: var(--card); border-bottom: 1px solid var(--border); }
             }
             @media (prefers-reduced-motion: reduce) {
@@ -274,6 +320,10 @@
                     <button id="GuidedBtn" class="btn" type="button" aria-label="Guided mode" title="Answer one item at a time">
                         <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                         <span class="btn-label">Guided mode</span>
+                    </button>
+                    <button id="GlossaryBtn" class="btn" type="button" aria-label="Glossary" aria-haspopup="dialog" title="What the terms mean">
+                        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/></svg>
+                        <span class="btn-label">Glossary</span>
                     </button>
                     <button id="EditBtn" class="icon-btn" type="button" aria-label="Edit list" title="Edit list">
                         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.830 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -340,7 +390,7 @@
         <dialog id="EditDialog" aria-labelledby="EditTitle">
             <div class="dlg">
                 <div class="dlg-head"><h2 id="EditTitle">Edit list</h2></div>
-                <p>Lines starting with <code>#</code> are sections, <code>(A, B)</code> lists the columns for that section, and <code>*</code> lines are items. Answers to unchanged items are kept. Custom lists are included in share links.</p>
+                <p>Lines starting with <code>#</code> are sections, <code>(A, B)</code> lists the columns for that section, and <code>*</code> lines are items. Add a definition after <code>::</code>, e.g. <code>* Kissing :: Kissing on the lips</code> (max 300 characters). Standard terms already have built-in definitions. Answers to unchanged items are kept. Custom lists, including any definitions you add, are included in share links.</p>
                 <label for="ListText" class="sr-only">List text</label>
                 <textarea id="ListText" spellcheck="false"></textarea>
                 <div id="ListError" role="alert"></div>
@@ -350,6 +400,38 @@
                     <button type="button" class="btn" id="ListCancel">Cancel</button>
                     <button type="button" class="btn btn-primary" id="ListApply">Apply</button>
                 </div>
+            </div>
+        </dialog>
+
+        <dialog id="TermDialog" class="term" aria-labelledby="TermTitle" aria-describedby="TermDesc">
+            <div class="dlg">
+                <div class="dlg-head">
+                    <div style="flex:1;min-width:0">
+                        <p class="term-context" id="TermContext"></p>
+                        <h2 id="TermTitle"></h2>
+                    </div>
+                    <button type="button" class="icon-btn" id="TermClose" aria-label="Close">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                    </button>
+                </div>
+                <p class="term-desc" id="TermDesc"></p>
+            </div>
+        </dialog>
+
+        <dialog id="GlossaryDialog" class="glossary" aria-labelledby="GlossTitle">
+            <div class="dlg">
+                <div class="gloss-top">
+                    <div class="dlg-head">
+                        <h2 id="GlossTitle">Glossary</h2>
+                        <button type="button" class="icon-btn" id="GlossClose" aria-label="Close glossary">
+                            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                        </button>
+                    </div>
+                    <label for="GlossSearch" class="sr-only">Search terms</label>
+                    <input type="search" id="GlossSearch" class="gloss-search" placeholder="Search terms and descriptions" autocomplete="off" spellcheck="false">
+                    <p id="GlossCount" aria-live="polite"></p>
+                </div>
+                <dl class="gloss-list" id="GlossList"></dl>
             </div>
         </dialog>
 
@@ -363,6 +445,7 @@
                 </div>
                 <div class="bar" id="GBar" aria-hidden="true"><i></i></div>
                 <h2 class="g-item" id="GItem"></h2>
+                <p class="g-def" id="GDef"></p>
                 <div class="g-options" id="GOptions" role="group" aria-label="Choose an answer"></div>
                 <ul class="g-up" id="GUp" aria-label="Coming up"></ul>
                 <div class="dlg-actions">
@@ -420,6 +503,85 @@
                 '* Cock/Pussy slapping', '* Spanking', '* Nipple clamps', '* Flogging'
             ].join('\n');
 
+            /* ---------------------------------------------------------------
+             * Built-in glossary. Shown for matching terms in any list (an
+             * explicit "* Term :: description" in an edited list wins).
+             * Never put into share links: every copy of the page already has it.
+             * ------------------------------------------------------------- */
+            var GLOSSARY = {
+                sections: {
+                    'Play Style': 'How close you like to be to the other couple when things get intimate: sharing a bed, sharing a room, or having your own space.',
+                    'Play Location': 'Where you feel comfortable meeting up and playing, from clubs and resorts to private homes.',
+                    'Safety': 'The safer-sex habits that matter to you. Agreeing on these before you meet anyone helps everyone relax and enjoy themselves.',
+                    'Sexual Preference': 'Who each of you is open to playing with. The Him and Her columns let each partner answer for themselves.',
+                    'Groupings': 'The mix of people you\u2019re open to playing with. The letters stand for who\u2019s involved (F = woman, M = man). People read these combos differently, so always talk through what you mean.',
+                    'Activities (Him)': 'Sexual activities for him: things he\u2019d like to do with others (Giving) and have done to him (Receiving).',
+                    'Activities (Her)': 'Sexual activities for her: things she\u2019d like to do with others (Giving) and have done to her (Receiving).',
+                    'Observation': 'Watching and being watched: how much you enjoy having an audience, or being one.',
+                    'Kinks (Him)': 'Kink and BDSM play for him, from light and playful to more intense. Start slowly, agree on limits and a safeword, and check in often.',
+                    'Kinks (Her)': 'Kink and BDSM play for her, from light and playful to more intense. Start slowly, agree on limits and a safeword, and check in often.'
+                },
+                columns: {
+                    'General': 'One answer for the two of you as a couple.',
+                    'Him': 'His own answer, so each partner can speak for themselves.',
+                    'Her': 'Her own answer, so each partner can speak for themselves.',
+                    'Giving': 'Doing this to or for someone else.',
+                    'Receiving': 'Having this done to you.'
+                },
+                items: {
+                    'Same room, same bed': 'Everyone plays together in one bed. The closest and most social way to play.',
+                    'Same room, separate beds': 'You share a room and can see and hear each other, but each pairing keeps to its own bed.',
+                    'Separate rooms': 'Each pairing goes off to a private room. Agree beforehand on check-ins and when you\u2019ll meet back up.',
+                    'Club': 'A lifestyle club or venue where couples meet, socialize and play. Most have house rules about consent and privacy.',
+                    'Resort': 'An adults-only lifestyle resort or trip: a vacation with a social, open-minded atmosphere.',
+                    'Hotel takeover': 'A lifestyle event where a group books out all or most of a hotel, often with themed parties and play spaces.',
+                    'Hotel room': 'Meeting in a private hotel room. Neutral ground that many couples find comfortable and discreet.',
+                    'Hosting at home': 'Inviting others over to your own place. Cozy and private, but think about how much personal information you\u2019re happy to share.',
+                    'Party': 'Private or organized lifestyle parties, from relaxed meet-and-greets to play parties.',
+                    'Condom': 'Using condoms for penetrative sex. Many couples treat this as non-negotiable, so be clear about your rule before things heat up.',
+                    'Regular testing': 'Getting tested for STIs on a regular schedule and being open to sharing recent results. It\u2019s normal to ask when someone was last tested.',
+                    'Opposite sex': 'Open to playing with people of the other sex.',
+                    'Same sex': 'Open to playing with people of the same sex, such as a woman with another woman.',
+                    'Parallel Play': 'Each couple plays with their own partner, side by side, with no swapping. A popular, low-pressure way to start.',
+                    'FFM': 'A threesome with two women and one man. Usually means the women are also intimate with each other. People use these letters differently, so talk it through.',
+                    'FMF': 'A threesome with two women and one man, usually with him in the middle: both women focus on him rather than on each other. Usage varies, so check what everyone means.',
+                    'MFM': 'A threesome with two men and one woman, usually with her in the middle: the men focus on her, not on each other. Usage varies, so talk it through.',
+                    'MMF': 'A threesome with two men and one woman. Usually implies the men are also open to contact with each other. Confirm this with everyone first.',
+                    'MFFM': 'Two men and two women with the women in the middle. Usually means the women may also play with each other, while the men don\u2019t. Usage varies, so check.',
+                    'MFMF': 'Two men and two women alternating, like a classic foursome or full swap where everyone pairs up man-woman. Usage varies, so talk it through.',
+                    'Orgy': 'Group sex with several people playing together, often at parties. Agree on your limits as a couple before you go.',
+                    'Gangbang': 'One person (often a woman) is the focus of several partners, usually taking turns. Plan it carefully: clear limits, condoms, a safeword, and someone trusted looking out for them.',
+                    'Kissing': 'Kissing on the lips, from soft to passionate. For many couples it feels more intimate than sex, so it\u2019s worth agreeing on.',
+                    'Handjob / fingering': 'Using hands and fingers to pleasure someone\u2019s genitals.',
+                    'Oral': 'Oral sex: using the mouth on someone\u2019s genitals. Some couples use condoms or dental dams for oral with new partners.',
+                    'Swallowing': 'Swallowing semen during oral sex. This carries some STI risk, so recent test results and trust matter here.',
+                    'Penetrative sex': 'Intercourse involving penetration. Condoms are the norm with new partners.',
+                    'Penetrative sex (PIV)': 'Penis-in-vagina intercourse. Condoms are the norm with new partners.',
+                    'Penetrative sex (strap on)': 'Penetration with a dildo worn in a harness. Plenty of lube and a slow start make it more enjoyable.',
+                    'Anal touch': 'Touching or teasing around the anus with fingers, a tongue or a toy, without full penetration.',
+                    'Anal sex, pegging': 'Anal penetration. Pegging means a woman penetrating a man with a strap-on. Use lots of lube, go slowly, and never switch from anal to vaginal without a fresh condom.',
+                    'Rimming': 'Using the tongue on someone\u2019s anus (analingus). Good hygiene matters, and a dental dam lowers the risk of infection.',
+                    'Double penetration': 'Being penetrated in two places at once, by two partners or a partner and a toy. It\u2019s intense: warm up, use plenty of lube, and keep checking in.',
+                    'Dildos': 'Penetrative sex toys. Choose body-safe materials, and clean or cover toys with a fresh condom between partners.',
+                    'Plugs': 'Butt plugs worn in the anus for a feeling of fullness. Always use one with a flared base, and plenty of lube.',
+                    'Vibrators': 'Buzzing toys used on or inside the body, alone or with partners. Clean or cover them between people.',
+                    'Exhibitionism': 'Enjoying being watched while you\u2019re intimate, or showing off for others.',
+                    'Voyeurism': 'Enjoying watching others be intimate, always with their consent.',
+                    'Blindfold': 'Covering someone\u2019s eyes to heighten their other senses. A gentle first step into sensory play.',
+                    'Collar': 'Wearing a collar, often as a symbol of submission or belonging. Keep it loose enough for two fingers, and never pull on the neck.',
+                    'Gag': 'Something in or over the mouth that muffles speech. Because the wearer can\u2019t say a safeword, agree on a hand signal, and never leave a gagged person alone.',
+                    'Leash': 'A lead clipped to a collar for playful control or display. Guide gently and never put pressure on the throat.',
+                    'Bondage': 'Restraining someone with cuffs, rope or ties. Keep safety shears nearby, check circulation often, and never leave a restrained person alone.',
+                    'Hair pulling': 'Gripping hair during sex for a rush of sensation and a feeling of being taken. Grab close to the roots and pull steadily rather than yanking.',
+                    'Light pain': 'Mild sensations like scratching, biting or pinching that add intensity. Agree on limits and a safeword first.',
+                    'Cock/Pussy slapping': 'Light, controlled slaps to the genitals. Start very gently, build up only with feedback, and avoid hard hits to the testicles.',
+                    'Spanking': 'Slapping the buttocks with a hand or toy. Aim for the fleshy part, warm up slowly, and check in as it gets more intense.',
+                    'Nipple clamps': 'Clips that squeeze the nipples. Start loose and keep sessions short. Removing them gives an intense rush, so take them off gently.',
+                    'Flogging': 'Striking with a flogger, a handle with many soft tails. Stick to fleshy areas like the upper back and buttocks, avoid the spine and kidneys, and start light.'
+                }
+            };
+            var DEF_MAX = 300; // max characters per definition in an edited list
+
             var $ = function (sel, root) { return (root || document).querySelector(sel); };
             var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
             var el = function (tag, attrs, children) {
@@ -434,8 +596,14 @@
             };
 
             /* ---------------------------------------------------------------
-             * List parsing (same text format as v1.0)
+             * List parsing (same text format as v1.0, plus optional
+             * definitions: "#Section :: text" and "* Item :: text")
              * ------------------------------------------------------------- */
+            function splitDef(s) {
+                var at = s.indexOf('::');
+                if (at < 0) return { name: s.trim(), def: '' };
+                return { name: s.substring(0, at).trim(), def: s.substring(at + 2).trim().replace(/\s+/g, ' ') };
+            }
             function parseList(text) {
                 var lines = String(text).replace(/\r/g, '').split('\n');
                 var list = [], cat = null, seen = {}, total = 0;
@@ -451,19 +619,22 @@
                     if (!line) continue;
                     if (line[0] === '#') {
                         var err = close(); if (err) return { error: err };
-                        var name = line.substring(1).trim();
+                        var sd = splitDef(line.substring(1)), name = sd.name;
                         if (!name) return { error: 'Line ' + (i + 1) + ': section name is empty.' };
+                        if (sd.def.length > DEF_MAX) return { error: 'Line ' + (i + 1) + ': the definition is too long (max ' + DEF_MAX + ' characters).' };
                         if (seen[name]) return { error: 'Section "' + name + '" appears twice.' };
                         seen[name] = true;
-                        cat = { name: name, fields: null, items: [] };
+                        cat = { name: name, fields: null, items: [], def: sd.def, defs: {} };
                     } else if (!cat) {
                         return { error: 'Line ' + (i + 1) + ': start with a # section line.' };
                     } else if (line[0] === '(') {
                         cat.fields = line.replace(/^\(|\)$/g, '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
                         if (cat.fields.length > 4) return { error: '"' + cat.name + '": at most 4 columns per section.' };
                     } else if (line[0] === '*') {
-                        var item = line.substring(1).trim();
+                        var idf = splitDef(line.substring(1)), item = idf.name;
                         if (!item) continue;
+                        if (idf.def.length > DEF_MAX) return { error: 'Line ' + (i + 1) + ': the definition is too long (max ' + DEF_MAX + ' characters).' };
+                        if (idf.def) cat.defs[item] = idf.def;
                         if (cat.items.indexOf(item) >= 0) return { error: '"' + item + '" is listed twice in "' + cat.name + '".' };
                         cat.items.push(item);
                         if (++total > 2000) return { error: 'The list is too long (max 2000 items).' };
@@ -475,11 +646,17 @@
                 if (!list.length) return { error: 'The list is empty.' };
                 return { list: list };
             }
+            // Only definitions written into the list text are serialized; built-in ones never are.
             function serializeList(list) {
                 return list.map(function (c) {
-                    return '#' + c.name + '\n(' + c.fields.join(', ') + ')\n' + c.items.map(function (i) { return '* ' + i; }).join('\n');
+                    return '#' + c.name + (c.def ? ' :: ' + c.def : '') + '\n(' + c.fields.join(', ') + ')\n' +
+                        c.items.map(function (i) { return '* ' + i + (c.defs[i] ? ' :: ' + c.defs[i] : ''); }).join('\n');
                 }).join('\n\n');
             }
+            // Definition lookup: the list's own definition first, then the built-in glossary.
+            function sectionDef(cat) { return cat.def || GLOSSARY.sections[cat.name] || ''; }
+            function itemDef(cat, item) { return (cat.defs && cat.defs[item]) || GLOSSARY.items[item] || ''; }
+            function columnDef(field) { return GLOSSARY.columns[field] || ''; }
             function keyOf(cat, item, field) { return cat + '\u241F' + item + '\u241F' + field; }
             // Order = section, item, column. Same order v1.0 used for its hash.
             function slotsOf(list) {
@@ -673,6 +850,16 @@
                 });
             }
 
+            // A button that opens a definition. iconOnly: just the (i), labelled for screen readers.
+            function termButton(ref, label, iconOnly) {
+                var b = el('button', { type: 'button', class: 'term-btn' + (iconOnly ? ' icon-only' : ''), 'aria-haspopup': 'dialog', 'aria-label': label, 'data-kind': ref.kind, 'data-cat': ref.cat });
+                if (ref.item != null) b.setAttribute('data-item', ref.item);
+                if (ref.field != null) b.setAttribute('data-field', ref.field);
+                b.appendChild(el('span', { class: 'info-i', 'aria-hidden': 'true', text: 'i' }));
+                if (!iconOnly) b.title = 'What does this mean?';
+                return b;
+            }
+
             function renderList() {
                 var root = $('#InputList');
                 root.textContent = '';
@@ -683,20 +870,36 @@
                     if (!state.collapsed.has(cat.name)) details.open = true;
                     var count = el('span', { class: 'sec-count' });
                     var bar = el('div', { class: 'bar sec-bar', 'aria-hidden': 'true' }, [el('i')]);
-                    details.appendChild(el('summary', null, [el('span', { class: 'sec-title', text: cat.name }), count, chevron(), bar]));
+                    var title = el('span', { class: 'sec-title', text: cat.name });
+                    if (sectionDef(cat)) title.appendChild(termButton({ kind: 'section', cat: cat.name }, 'About ' + cat.name, true));
+                    details.appendChild(el('summary', null, [title, count, chevron(), bar]));
                     details.addEventListener('toggle', function () {
                         if (details.open) state.collapsed.delete(cat.name); else state.collapsed.add(cat.name);
                     });
                     var multi = cat.fields.length > 1;
                     if (multi) {
-                        var head = el('div', { class: 'fields-head', 'aria-hidden': 'true' });
-                        cat.fields.forEach(function (f) { head.appendChild(el('span', { text: f })); });
+                        var head = el('div', { class: 'fields-head' });
+                        cat.fields.forEach(function (f) {
+                            var cell = el('span', { class: 'fh-cell' });
+                            if (columnDef(f)) {
+                                var fb = termButton({ kind: 'column', cat: cat.name, field: f }, f + ', what this column means');
+                                fb.insertBefore(document.createTextNode(f), fb.firstChild);
+                                cell.appendChild(fb);
+                            } else cell.textContent = f;
+                            head.appendChild(cell);
+                        });
                         details.appendChild(el('div', { class: 'items fields-wrap' }, [head]));
                     }
                     var ul = el('ul', { class: 'items' });
                     cat.items.forEach(function (item) {
                         var li = el('li', { class: 'item' + (multi ? ' multi' : '') });
-                        li.appendChild(el('span', { class: 'item-name', text: item }));
+                        var nameEl = el('span', { class: 'item-name' });
+                        if (itemDef(cat, item)) {
+                            var tb = termButton({ kind: 'item', cat: cat.name, item: item }, item + ', show definition');
+                            tb.insertBefore(document.createTextNode(item), tb.firstChild);
+                            nameEl.appendChild(tb);
+                        } else nameEl.textContent = item;
+                        li.appendChild(nameEl);
                         cat.fields.forEach(function (field) {
                             var key = keyOf(cat.name, item, field);
                             var group = el('div', { class: 'choices', role: 'group', 'aria-label': item + (multi ? ', ' + field : ''), 'data-key': key });
@@ -900,6 +1103,9 @@
                 var title = $('#GItem'); title.textContent = '';
                 if (s.multi) title.appendChild(el('span', { class: 'g-field', text: s.field + ': ' }));
                 title.appendChild(document.createTextNode(s.item));
+                var gcat = state.list[s.ci], gdef = $('#GDef');
+                gdef.textContent = itemDef(gcat, s.item);
+                if (s.multi && gdef.textContent && columnDef(s.field)) gdef.appendChild(el('span', { class: 'g-fdef', text: s.field + ': ' + columnDef(s.field) }));
                 $('#GBar').firstChild.style.width = (n ? countAnswered() / n * 100 : 0) + '%';
                 var cur = state.answers.get(s.key) || 0;
                 var opts = $('#GOptions'); opts.textContent = '';
@@ -1073,6 +1279,100 @@
                     flash('Image saved to your device.');
                 }, 'image/png');
             });
+
+            /* ---------------------------------------------------------------
+             * Glossary: definition popover (desktop) / bottom sheet (mobile)
+             * ------------------------------------------------------------- */
+            var termDlg = $('#TermDialog'), termOpener = null;
+            var mqSheet = window.matchMedia('(max-width: 600px)');
+            function findCat(name) { for (var i = 0; i < state.list.length; i++) if (state.list[i].name === name) return state.list[i]; return null; }
+            function termInfo(kind, catName, item, field) {
+                var cat = findCat(catName);
+                if (!cat) return null;
+                if (kind === 'section') return { title: cat.name, context: 'Section', desc: sectionDef(cat) };
+                if (kind === 'column') return { title: field, context: 'Column \u00B7 ' + cat.name, desc: columnDef(field) };
+                return { title: item, context: cat.name, desc: itemDef(cat, item) };
+            }
+            function positionTerm() {
+                if (!termDlg.open || termDlg.classList.contains('sheet') || !termOpener) return;
+                var r = termOpener.getBoundingClientRect(), d = termDlg.getBoundingClientRect(), m = 8;
+                var top = r.bottom + m;
+                if (top + d.height > window.innerHeight - m) top = Math.max(m, r.top - m - d.height);
+                var left = Math.min(Math.max(m, r.left), window.innerWidth - d.width - m);
+                termDlg.style.top = top + 'px'; termDlg.style.left = left + 'px';
+            }
+            function openTerm(info, opener) {
+                if (!info || !info.desc) return;
+                if (termDlg.open) termDlg.close();
+                $('#TermContext').textContent = info.context;
+                $('#TermTitle').textContent = info.title;
+                $('#TermDesc').textContent = info.desc;
+                termOpener = opener || null;
+                termDlg.classList.toggle('sheet', mqSheet.matches || !opener);
+                termDlg.style.top = ''; termDlg.style.left = '';
+                termDlg.showModal();
+                positionTerm();
+                $('#TermClose').focus();
+            }
+            termDlg.addEventListener('close', function () {
+                var o = termOpener; termOpener = null;
+                if (o && o.isConnected) o.focus();
+            });
+            termDlg.addEventListener('click', function (e) { if (e.target === termDlg) termDlg.close(); });
+            $('#TermClose').addEventListener('click', function () { termDlg.close(); });
+            window.addEventListener('resize', function () { if (termDlg.open) termDlg.classList.contains('sheet') === mqSheet.matches ? positionTerm() : termDlg.close(); });
+            window.addEventListener('scroll', positionTerm, { passive: true });
+            // Term buttons live next to (never inside) the answer dots, so answering is unaffected.
+            $('#InputList').addEventListener('click', function (e) {
+                var b = e.target.closest('.term-btn');
+                if (!b) return;
+                e.preventDefault(); // don't toggle the section when the (i) sits in its header
+                e.stopPropagation();
+                openTerm(termInfo(b.getAttribute('data-kind'), b.getAttribute('data-cat'), b.getAttribute('data-item'), b.getAttribute('data-field')), b);
+            });
+
+            /* Glossary list (searchable) */
+            var glossDlg = $('#GlossaryDialog');
+            function glossaryEntries() {
+                var byKey = new Map();
+                function add(title, desc, tag) {
+                    if (!desc) return;
+                    var k = title.toLowerCase() + '\u241F' + desc;
+                    var e = byKey.get(k);
+                    if (!e) { e = { title: title, desc: desc, tags: [] }; byKey.set(k, e); }
+                    if (e.tags.indexOf(tag) < 0) e.tags.push(tag);
+                }
+                state.list.forEach(function (cat) {
+                    add(cat.name, sectionDef(cat), 'Section');
+                    cat.fields.forEach(function (f) { add(f, columnDef(f), 'Column'); });
+                    cat.items.forEach(function (item) { add(item, itemDef(cat, item), cat.name); });
+                });
+                return Array.from(byKey.values()).sort(function (a, b) { return a.title.localeCompare(b.title, undefined, { sensitivity: 'base', numeric: true }); });
+            }
+            function renderGlossary() {
+                var q = $('#GlossSearch').value.trim().toLowerCase();
+                var list = $('#GlossList'); list.textContent = '';
+                var all = glossaryEntries(), shown = 0;
+                all.forEach(function (e) {
+                    if (q && (e.title + ' ' + e.desc + ' ' + e.tags.join(' ')).toLowerCase().indexOf(q) < 0) return;
+                    shown++;
+                    list.appendChild(el('div', { class: 'gloss-entry' }, [
+                        el('dt', null, [el('span', { text: e.title }), el('span', { class: 'gloss-tags', text: e.tags.join(' \u00B7 ') })]),
+                        el('dd', { text: e.desc })
+                    ]));
+                });
+                $('#GlossCount').textContent = q ? (shown + ' of ' + all.length + ' terms match') : (all.length + ' terms');
+            }
+            $('#GlossaryBtn').addEventListener('click', function () {
+                $('#GlossSearch').value = '';
+                renderGlossary();
+                glossDlg.showModal();
+                glossDlg.scrollTop = 0;
+                if (mqSheet.matches) $('#GlossClose').focus(); else $('#GlossSearch').focus();
+            });
+            $('#GlossSearch').addEventListener('input', renderGlossary);
+            $('#GlossClose').addEventListener('click', function () { glossDlg.close(); });
+            glossDlg.addEventListener('click', function (e) { if (e.target === glossDlg) glossDlg.close(); });
 
             /* ---------------------------------------------------------------
              * Boot
