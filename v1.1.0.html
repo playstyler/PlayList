@@ -129,6 +129,8 @@
                 background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
             }
             .notice strong { font-weight: 700; }
+            .notice.has-action, .notice.consent { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+            .notice.has-action > span, .notice.consent > p { flex: 1 1 16rem; margin: 0; }
 
             /* Sections (multi-column, reflows on its own) */
             .sections { columns: 380px 4; column-gap: 16px; }
@@ -176,7 +178,17 @@
             .lv3 { --c: var(--l3); --ink: var(--l3-ink); }
             .lv4 { --c: var(--l4); --ink: var(--l4-ink); }
             .lv5 { --c: var(--l5); --ink: var(--l5-ink); }
-            .dot.lv0 { background: transparent; border: 2px dashed var(--muted); }
+            /* Required / Preferred / Open / N/A scale (safety and agreements) */
+            .sv1 { --c: var(--s1); --ink: var(--s1-ink); }
+            .sv2 { --c: var(--s2); --ink: var(--s2-ink); }
+            .sv3 { --c: var(--s3); --ink: var(--s3-ink); }
+            .sv4 { --c: var(--s4); --ink: var(--s4-ink); }
+            .dot.lv0, .dot.sv0 { background: transparent; border: 2px dashed var(--muted); }
+            .legend .legend-break { flex-basis: 100%; height: 0; }
+            .legend .legend-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+            .sec-scale { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0; padding: 0 0 6px; list-style: none; font-size: 13px; color: var(--muted); }
+            .sec-scale li { display: inline-flex; align-items: center; gap: 5px; }
+            .sec-scale .dot { --sz: 18px; font-size: 10px; border-width: 1.5px; }
             .choice {
                 cursor: pointer; background: color-mix(in srgb, var(--c) 10%, var(--card));
                 color: color-mix(in srgb, var(--c) 75%, var(--text));
@@ -298,6 +310,8 @@
                 .fields-head { gap: 8px; }
                 .item { gap: 6px 8px; }
                 .kbd-hint { display: none; }
+                /* each safety section carries its own scale key, so the panel stays short */
+                .legend .legend-break, .legend .ls { display: none; }
                 .share .btn { white-space: nowrap; padding: 8px 10px; font-size: 14px; }
                 /* keep the column labels in view while scrolling a long section */
                 dialog.glossary { inset: auto 0 0 0; margin: 0; width: 100%; max-width: 100%; max-height: 88vh; border-radius: 20px 20px 0 0; border-bottom: 0; }
@@ -369,6 +383,10 @@
                 <p class="hint">Tap a dot to answer, tap it again to clear.<span class="kbd-hint"> Keyboard: Tab between items, &larr;/&rarr; to move, 1&ndash;5 to pick, 0 to clear.</span></p>
             </section>
 
+            <div id="ConsentNote" class="notice consent" role="note" hidden>
+                <p><strong>This is a starting point for a conversation, not a contract.</strong> Anyone can change their mind at any time.</p>
+                <button type="button" class="btn btn-small" id="ConsentDismiss">Got it</button>
+            </div>
             <div id="PrivateBanner" class="notice" hidden>
                 <strong>Private mode is on.</strong> Answers live only in this tab's memory and vanish when you close or reload it. Use &ldquo;Copy share link&rdquo; to keep or send them.
             </div>
@@ -384,13 +402,15 @@
                     <li>The image is drawn and saved on your device. Nothing is uploaded.</li>
                     <li>Anyone you give a share link to can see the answers in it.</li>
                 </ul>
+                <h2>About consent</h2>
+                <p>This is a starting point for a conversation, not a contract. Anyone can change their mind at any time.</p>
             </footer>
         </main>
 
         <dialog id="EditDialog" aria-labelledby="EditTitle">
             <div class="dlg">
                 <div class="dlg-head"><h2 id="EditTitle">Edit list</h2></div>
-                <p>Lines starting with <code>#</code> are sections, <code>(A, B)</code> lists the columns for that section, and <code>*</code> lines are items. Add a definition after <code>::</code>, e.g. <code>* Kissing :: Kissing on the lips</code> (max 300 characters). Standard terms already have built-in definitions. Answers to unchanged items are kept. Custom lists, including any definitions you add, are included in share links.</p>
+                <p>Lines starting with <code>#</code> are sections, <code>(A, B)</code> lists the columns for that section, and <code>*</code> lines are items. Add a definition after <code>::</code>, e.g. <code>* Kissing :: Kissing on the lips</code> (max 300 characters). Add <code>[safety]</code> after a section name, e.g. <code>#Safety [safety]</code>, to answer it with Required / Preferred / Open / N/A. Standard terms already have built-in definitions. Answers to unchanged items are kept. Custom lists, including any definitions you add, are included in share links.</p>
                 <label for="ListText" class="sr-only">List text</label>
                 <textarea id="ListText" spellcheck="false"></textarea>
                 <div id="ListError" role="alert"></div>
@@ -472,24 +492,68 @@
                 { name: 'Maybe',       color: '#EF7D22', ink: '#1F1D2B', sym: '?' },
                 { name: 'No',          color: '#C93838', ink: '#FFFFFF', sym: '\u2715' }  // cross
             ];
+            // Sections tagged [safety] use this scale instead. Same 0-5 storage, so links encode the same way.
+            var SAFETY_LEVELS = [
+                { name: 'Not entered', color: '#FFFFFF', ink: '#6B6880', sym: '' },
+                { name: 'Required',    color: '#0F766E', ink: '#FFFFFF', sym: '!' },
+                { name: 'Preferred',   color: '#2778C4', ink: '#FFFFFF', sym: '+' },
+                { name: 'Open',        color: '#A9A5C2', ink: '#1F1D2B', sym: '\u2218' }, // ring operator
+                { name: 'N/A',         color: '#D9D6E3', ink: '#4A4760', sym: '\u2013' }  // dash
+            ];
+            var SCALES = {
+                like:   { levels: LEVELS, cls: 'lv' },
+                safety: { levels: SAFETY_LEVELS, cls: 'sv' }
+            };
+            function scaleOf(cat) { return SCALES[(cat && cat.scale) || 'like']; }
             for (var li = 1; li < LEVELS.length; li++) {
                 document.documentElement.style.setProperty('--l' + li, LEVELS[li].color);
                 document.documentElement.style.setProperty('--l' + li + '-ink', LEVELS[li].ink);
             }
+            for (var si = 1; si < SAFETY_LEVELS.length; si++) {
+                document.documentElement.style.setProperty('--s' + si, SAFETY_LEVELS[si].color);
+                document.documentElement.style.setProperty('--s' + si + '-ink', SAFETY_LEVELS[si].ink);
+            }
 
             /* ---------------------------------------------------------------
-             * Default list for share-link format "v2".
-             * DO NOT reorder, add or remove items here: links without an
-             * embedded list are decoded against this exact list (by position).
-             * To change the default list, add a new list + format version (v3)
-             * and keep this one so v2 links keep working. Fixing spelling is safe.
-             * It also matches v1.0's list position-for-position, so old v1.0
-             * links still open.
+             * Frozen list for share-link format "v2" (and untagged v1.0 links).
+             * DO NOT reorder, add or remove items here: v2 links without an
+             * embedded list are decoded against this exact list (by position),
+             * and it matches v1.0's list position-for-position. Fixing spelling
+             * is safe. New links use DEFAULT_LIST_TEXT below (format v3).
              * ------------------------------------------------------------- */
-            var DEFAULT_LIST_TEXT = [
+            var LIST_V2_TEXT = [
                 '#Play Style', '(General)', '* Same room, same bed', '* Same room, separate beds', '* Separate rooms', '',
                 '#Play Location', '(General)', '* Club', '* Resort', '* Hotel takeover', '* Hotel room', '* Hosting at home', '* Party', '',
                 '#Safety', '(General)', '* Condom', '* Regular testing', '',
+                '#Sexual Preference', '(Him, Her)', '* Opposite sex', '* Same sex', '',
+                '#Groupings', '(General)', '* Parallel Play', '* FFM', '* FMF', '* MFM', '* MMF', '* MFFM', '* MFMF', '* Orgy', '* Gangbang', '',
+                '#Activities (Him)', '(Giving, Receiving)', '* Kissing', '* Handjob / fingering', '* Oral', '* Swallowing', '* Penetrative sex',
+                '* Anal touch', '* Anal sex, pegging', '* Rimming', '* Double penetration', '* Dildos', '* Plugs', '',
+                '#Activities (Her)', '(Giving, Receiving)', '* Kissing', '* Handjob / fingering', '* Oral', '* Swallowing', '* Penetrative sex (PIV)',
+                '* Penetrative sex (strap on)', '* Anal touch', '* Anal sex, pegging', '* Rimming', '* Double penetration', '* Dildos', '* Plugs', '* Vibrators', '',
+                '#Observation', '(General)', '* Exhibitionism', '* Voyeurism', '',
+                '#Kinks (Him)', '(Giving, Receiving)', '* Blindfold', '* Collar', '* Gag', '* Leash', '* Bondage', '* Hair pulling', '* Light pain',
+                '* Cock/Pussy slapping', '* Spanking', '* Nipple clamps', '* Flogging', '',
+                '#Kinks (Her)', '(Giving, Receiving)', '* Blindfold', '* Collar', '* Gag', '* Leash', '* Bondage', '* Hair pulling', '* Light pain',
+                '* Cock/Pussy slapping', '* Spanking', '* Nipple clamps', '* Flogging'
+            ].join('\n');
+
+            /* ---------------------------------------------------------------
+             * Default list for share-link format "v3".
+             * Same rule as above: links without an embedded list are decoded
+             * against this exact list by position. To change it, freeze it
+             * like LIST_V2_TEXT and add a v4.
+             * "Play Style" from v2 is merged into Boundaries. Sections tagged
+             * [safety] use the Required / Preferred / Open / N/A scale.
+             * ------------------------------------------------------------- */
+            var DEFAULT_LIST_TEXT = [
+                '#Boundaries', '(General)', '* Social only', '* Soft swap', '* Oral only', '* Full swap', '* Kissing other people',
+                '* Same room, same bed', '* Same room, separate beds', '* Separate rooms', '* Independent play', '',
+                '#Agreements [safety]', '(General)', '* Check in before escalating', '* Stop if either partner signals', '* Agreed safe word or signal',
+                '* Either partner can veto', '',
+                '#Safety [safety]', '(General)', '* Condoms for penetrative sex', '* Fresh condom for each partner', '* Condoms or dams for oral',
+                '* Regular STI testing', '* Recent results shared', '* Sober or limited alcohol', '* No photos or videos', '',
+                '#Play Location', '(General)', '* Club', '* Resort', '* Hotel takeover', '* Hotel room', '* Hosting at home', '* Party', '',
                 '#Sexual Preference', '(Him, Her)', '* Opposite sex', '* Same sex', '',
                 '#Groupings', '(General)', '* Parallel Play', '* FFM', '* FMF', '* MFM', '* MMF', '* MFFM', '* MFMF', '* Orgy', '* Gangbang', '',
                 '#Activities (Him)', '(Giving, Receiving)', '* Kissing', '* Handjob / fingering', '* Oral', '* Swallowing', '* Penetrative sex',
@@ -510,6 +574,8 @@
              * ------------------------------------------------------------- */
             var GLOSSARY = {
                 sections: {
+                    'Boundaries': 'The big-picture lines for the two of you: how far play goes, whether kissing is part of it, and how close you want to be to each other. Talk these through first, since everything else builds on them.',
+                    'Agreements': 'The ground rules you agree on before anyone plays. They use the Required / Preferred / Open scale, because they\u2019re about what you need rather than what you enjoy.',
                     'Play Style': 'How close you like to be to the other couple when things get intimate: sharing a bed, sharing a room, or having your own space.',
                     'Play Location': 'Where you feel comfortable meeting up and playing, from clubs and resorts to private homes.',
                     'Safety': 'The safer-sex habits that matter to you. Agreeing on these before you meet anyone helps everyone relax and enjoy themselves.',
@@ -521,6 +587,16 @@
                     'Kinks (Him)': 'Kink and BDSM play for him, from light and playful to more intense. Start slowly, agree on limits and a safeword, and check in often.',
                     'Kinks (Her)': 'Kink and BDSM play for her, from light and playful to more intense. Start slowly, agree on limits and a safeword, and check in often.'
                 },
+                // Used instead of the entry above when the section is answered on the Required scale
+                scaledSections: {
+                    'Safety': 'The safer-sex and privacy habits that matter to you. Mark each one Required, Preferred, Open or N/A. Agreeing on these before you meet anyone helps everyone relax and enjoy themselves.'
+                },
+                scale: {
+                    'Required': 'A must for you. If it isn\u2019t met, you\u2019d rather not play, and that\u2019s completely fine to say.',
+                    'Preferred': 'You\u2019d really like it, and you\u2019re open to talking it through.',
+                    'Open': 'Fine either way. Happy to go with what feels right for everyone.',
+                    'N/A': 'Doesn\u2019t apply to you, or not something you need to decide on.'
+                },
                 columns: {
                     'General': 'One answer for the two of you as a couple.',
                     'Him': 'His own answer, so each partner can speak for themselves.',
@@ -529,6 +605,23 @@
                     'Receiving': 'Having this done to you.'
                 },
                 items: {
+                    'Social only': 'Meeting, flirting and hanging out with other couples, with no sex with anyone else. A relaxed way to enjoy the lifestyle, and a perfectly good place to stay.',
+                    'Soft swap': 'Playing with others short of intercourse: kissing, touching and often oral. Couples draw this line in different places, so say exactly where yours is.',
+                    'Oral only': 'Oral is as far as it goes with others, with no intercourse. Some couples count this as soft swap; others draw the soft-swap line before oral.',
+                    'Full swap': 'Going all the way with someone else, including intercourse. Most couples pair this with clear safer-sex rules they\u2019ve agreed on beforehand.',
+                    'Kissing other people': 'Whether kissing on the lips is on the table with others. For many couples it feels more intimate than sex, so some keep it just for each other.',
+                    'Independent play': 'Playing with someone else when your partner isn\u2019t there, like a solo date. Agree on what\u2019s okay and how you\u2019ll share about it afterwards.',
+                    'Check in before escalating': 'Pausing to ask before moving on to something new, like from kissing to oral. A quick look or a word keeps everyone on the same page.',
+                    'Stop if either partner signals': 'If either of you gives the signal, play pauses or stops, no questions asked. You can talk it over later, once everyone feels ready.',
+                    'Agreed safe word or signal': 'A word or gesture you\u2019ve chosen together that means \u201cslow down\u201d or \u201cstop.\u201d A gesture helps in loud clubs, or when talking is hard.',
+                    'Either partner can veto': 'Either of you can say no to a person or a situation, before or during play, and the other respects it without pressure.',
+                    'Condoms for penetrative sex': 'Using a condom for any intercourse with someone new. Many couples treat this as a must, so be clear about your rule before things heat up.',
+                    'Fresh condom for each partner': 'Switching to a new condom when changing partners, and when moving from anal to vaginal sex.',
+                    'Condoms or dams for oral': 'Using condoms or dental dams for oral sex with new partners. Less common than for intercourse, so mention it early if it matters to you.',
+                    'Regular STI testing': 'Getting tested for STIs on a regular schedule, often every three to six months when you\u2019re active. It\u2019s normal to ask when someone was last tested.',
+                    'Recent results shared': 'Showing each other recent test results before you play. Many people share a screenshot or the clinic\u2019s app, and it\u2019s a normal, friendly thing to ask.',
+                    'Sober or limited alcohol': 'Keeping drinks light, or skipping them, so everyone stays clear-headed about what they want. A drink to relax is common; new decisions are best made sober.',
+                    'No photos or videos': 'No pictures or recordings of anyone without everyone\u2019s clear okay. Most clubs and parties have this rule, and it protects everyone\u2019s privacy.',
                     'Same room, same bed': 'Everyone plays together in one bed. The closest and most social way to play.',
                     'Same room, separate beds': 'You share a room and can see and hear each other, but each pairing keeps to its own bed.',
                     'Separate rooms': 'Each pairing goes off to a private room. Agree beforehand on check-ins and when you\u2019ll meet back up.',
@@ -581,6 +674,7 @@
                 }
             };
             var DEF_MAX = 300; // max characters per definition in an edited list
+            var CONSENT_TEXT = 'This is a starting point for a conversation, not a contract. Anyone can change their mind at any time.';
 
             var $ = function (sel, root) { return (root || document).querySelector(sel); };
             var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
@@ -604,7 +698,9 @@
                 if (at < 0) return { name: s.trim(), def: '' };
                 return { name: s.substring(0, at).trim(), def: s.substring(at + 2).trim().replace(/\s+/g, ' ') };
             }
-            function parseList(text) {
+            // opts.noTags: read "[safety]" as part of the name (lists embedded in v2 links predate tags)
+            function parseList(text, opts) {
+                var tags = !(opts && opts.noTags);
                 var lines = String(text).replace(/\r/g, '').split('\n');
                 var list = [], cat = null, seen = {}, total = 0;
                 function close() {
@@ -619,12 +715,15 @@
                     if (!line) continue;
                     if (line[0] === '#') {
                         var err = close(); if (err) return { error: err };
-                        var sd = splitDef(line.substring(1)), name = sd.name;
+                        var sd = splitDef(line.substring(1)), name = sd.name, scale = null;
+                        var tm = tags ? /\s*\[(safety)\]$/i.exec(name) : null;
+                        if (tm) { name = name.substring(0, tm.index).trim(); scale = 'safety'; }
+                        else if (tags && (tm = /\s*\[(safety)\]$/i.exec(sd.def))) { sd.def = sd.def.substring(0, tm.index).trim(); scale = 'safety'; } // "#Name :: text [safety]" also works
                         if (!name) return { error: 'Line ' + (i + 1) + ': section name is empty.' };
                         if (sd.def.length > DEF_MAX) return { error: 'Line ' + (i + 1) + ': the definition is too long (max ' + DEF_MAX + ' characters).' };
                         if (seen[name]) return { error: 'Section "' + name + '" appears twice.' };
                         seen[name] = true;
-                        cat = { name: name, fields: null, items: [], def: sd.def, defs: {} };
+                        cat = { name: name, fields: null, items: [], def: sd.def, defs: {}, scale: scale };
                     } else if (!cat) {
                         return { error: 'Line ' + (i + 1) + ': start with a # section line.' };
                     } else if (line[0] === '(') {
@@ -649,12 +748,12 @@
             // Only definitions written into the list text are serialized; built-in ones never are.
             function serializeList(list) {
                 return list.map(function (c) {
-                    return '#' + c.name + (c.def ? ' :: ' + c.def : '') + '\n(' + c.fields.join(', ') + ')\n' +
+                    return '#' + c.name + (c.scale ? ' [' + c.scale + ']' : '') + (c.def ? ' :: ' + c.def : '') + '\n(' + c.fields.join(', ') + ')\n' +
                         c.items.map(function (i) { return '* ' + i + (c.defs[i] ? ' :: ' + c.defs[i] : ''); }).join('\n');
                 }).join('\n\n');
             }
             // Definition lookup: the list's own definition first, then the built-in glossary.
-            function sectionDef(cat) { return cat.def || GLOSSARY.sections[cat.name] || ''; }
+            function sectionDef(cat) { return cat.def || (cat.scale === 'safety' && GLOSSARY.scaledSections[cat.name]) || GLOSSARY.sections[cat.name] || ''; }
             function itemDef(cat, item) { return (cat.defs && cat.defs[item]) || GLOSSARY.items[item] || ''; }
             function columnDef(field) { return GLOSSARY.columns[field] || ''; }
             function keyOf(cat, item, field) { return cat + '\u241F' + item + '\u241F' + field; }
@@ -664,7 +763,7 @@
                 list.forEach(function (c, ci) {
                     c.items.forEach(function (item) {
                         c.fields.forEach(function (field) {
-                            out.push({ cat: c.name, item: item, field: field, ci: ci, key: keyOf(c.name, item, field), multi: c.fields.length > 1 });
+                            out.push({ cat: c.name, item: item, field: field, ci: ci, key: keyOf(c.name, item, field), multi: c.fields.length > 1, levels: scaleOf(c).levels });
                         });
                     });
                 });
@@ -673,6 +772,9 @@
 
             var DEFAULT_LIST = parseList(DEFAULT_LIST_TEXT).list;
             var DEFAULT_SERIALIZED = serializeList(DEFAULT_LIST);
+            var LIST_V2 = parseList(LIST_V2_TEXT, { noTags: true }).list;
+            var V2_SERIALIZED = serializeList(LIST_V2);
+            function hasSafetyScale(list) { return list.some(function (c) { return c.scale === 'safety'; }); }
 
             /* ---------------------------------------------------------------
              * State. Answers live here, in memory. The URL hash is only a mirror.
@@ -687,8 +789,12 @@
 
             /* ---------------------------------------------------------------
              * Share-link encoding
+             *   v3:   "#v3:<answers>" or "#v3:<answers>:<base64url custom list>"
+             *         Default list = DEFAULT_LIST_TEXT; custom lists may carry [safety] tags.
              *   v2:   "#v2:<answers>" or "#v2:<answers>:<base64url custom list>"
-             *         <answers>: two answers (0-5 each) per base-36 character
+             *         Default list = LIST_V2_TEXT. Still read, and still written
+             *         while a v2 list is open, so an old link stays as it was.
+             *         <answers>: two answers (0-5 each) per base-36 character, both formats
              *   v1.0: untagged legacy hash (positional, decoded with the old code)
              * ------------------------------------------------------------- */
             var B36 = '0123456789abcdefghijklmnopqrstuvwxyz';
@@ -749,13 +855,18 @@
                 }
             };
 
-            function isCustomList() { return serializeList(state.list) !== DEFAULT_SERIALIZED; }
+            function listKind() {
+                var s = serializeList(state.list);
+                return s === DEFAULT_SERIALIZED ? 'default' : s === V2_SERIALIZED ? 'v2' : 'custom';
+            }
+            function isCustomList() { return listKind() === 'custom'; }
             function buildHash() {
                 var values = state.slots.map(function (s) { return state.answers.get(s.key) || 0; });
                 var data = encodeV2(values);
-                var custom = isCustomList();
-                if (!data && !custom) return '';
-                return 'v2:' + data + (custom ? ':' + b64urlEncode(serializeList(state.list)) : '');
+                var kind = listKind();
+                if (kind === 'v2') return 'v2:' + data; // previous list, kept as-is until the user switches
+                if (kind === 'default') return data ? 'v3:' + data : '';
+                return 'v3:' + data + ':' + b64urlEncode(serializeList(state.list));
             }
             function baseUrl() { return location.href.split('#')[0]; }
             function shareLink() { var h = buildHash(); return baseUrl() + (h ? '#' + h : ''); }
@@ -771,9 +882,44 @@
 
             function showNotice(text) {
                 var n = $('#LinkNotice');
+                n.classList.remove('has-action');
                 n.textContent = text || '';
                 n.hidden = !text;
             }
+
+            // Shown for links made with the previous (v2) list: answers stay exactly as saved,
+            // and the user can choose to move to the new list.
+            function showUpgradeNotice(prefix) {
+                var n = $('#LinkNotice');
+                n.textContent = '';
+                n.appendChild(el('span', { text: (prefix ? prefix + ' ' : '') + 'This link uses the previous list, so its answers are shown exactly as saved. The new list adds Boundaries, Agreements and a Required / Preferred / Open scale for safety.' }));
+                n.appendChild(el('button', { type: 'button', class: 'btn btn-small', id: 'UpgradeBtn', text: 'Switch to the new list' }));
+                n.classList.add('has-action');
+                n.hidden = false;
+            }
+            // v2 list -> default list. Same-named items carry over; Play Style moved into Boundaries.
+            // Old Safety answers used the like/dislike scale, so they are not carried into the Required scale.
+            var V2_MOVED = { 'Play Style': 'Boundaries' }, V2_DROPPED = { 'Safety': true };
+            function upgradeList() {
+                if (listKind() !== 'v2') return;
+                var keys = new Set(slotsOf(DEFAULT_LIST).map(function (s) { return s.key; }));
+                var next = new Map(), kept = 0, safety = 0, other = 0;
+                state.answers.forEach(function (v, k) {
+                    var p = k.split('\u241F');
+                    if (V2_DROPPED[p[0]]) { safety++; return; }
+                    var nk = keyOf(V2_MOVED[p[0]] || p[0], p[1], p[2]);
+                    if (keys.has(nk)) { next.set(nk, v); kept++; } else other++;
+                });
+                setList(DEFAULT_LIST);
+                state.answers = next;
+                renderList();
+                syncUrl();
+                showNotice('');
+                flash('Switched to the new list. ' + kept + ' answer' + (kept === 1 ? '' : 's') + ' carried over.' +
+                    (safety ? ' Safety now uses Required / Preferred / Open / N/A, so please answer it again.' : '') +
+                    (other ? ' ' + other + ' could not be matched.' : ''));
+            }
+            $('#LinkNotice').addEventListener('click', function (e) { if (e.target.closest('#UpgradeBtn')) upgradeList(); });
 
             function setList(list) {
                 state.list = list;
@@ -786,7 +932,7 @@
                 state.answers = new Map();
                 state.slots.forEach(function (s, i) {
                     var v = values[i];
-                    if (v > 0 && v < LEVELS.length) state.answers.set(s.key, v);
+                    if (v > 0 && v < s.levels.length) state.answers.set(s.key, v);
                 });
             }
 
@@ -797,15 +943,16 @@
                 if (!h) return false;
                 var m = /^v(\d+):/.exec(h);
                 if (m) {
-                    if (m[1] !== '2') {
-                        showNotice('This link was made with a different version of PlayList (format v' + m[1] + ') and can\u2019t be opened here.');
+                    var ver = m[1];
+                    if (ver !== '2' && ver !== '3') {
+                        showNotice('This link was made with a different version of PlayList (format v' + ver + ') and can\u2019t be opened here.');
                         return false;
                     }
                     var parts = h.split(':');
-                    var list = DEFAULT_LIST;
+                    var list = ver === '2' ? LIST_V2 : DEFAULT_LIST;
                     if (parts[2]) {
                         var parsed;
-                        try { parsed = parseList(b64urlDecode(parts[2])); } catch (e) { parsed = { error: 'unreadable' }; }
+                        try { parsed = parseList(b64urlDecode(parts[2]), { noTags: ver === '2' }); } catch (e) { parsed = { error: 'unreadable' }; }
                         if (parsed.error) { showNotice('This link\u2019s custom list couldn\u2019t be read, so its answers weren\u2019t loaded.'); return false; }
                         list = parsed.list;
                     }
@@ -813,14 +960,16 @@
                     try { values = decodeV2(parts[1] || ''); } catch (e) { showNotice('This share link looks damaged, so its answers weren\u2019t loaded.'); return false; }
                     setList(list);
                     applyValues(values);
-                    showNotice(parts[2] ? 'This link uses a custom list, which has been loaded.' : '');
+                    if (parts[2]) showNotice('This link uses a custom list, which has been loaded.');
+                    else if (ver === '2') showUpgradeNotice('');
+                    else showNotice('');
                     return true;
                 }
-                // Untagged: a v1.0 link. It is positional against the default list.
+                // Untagged: a v1.0 link. It is positional against the v2 list (same items).
                 if (h.length >= 10 && /^[a-zA-Z0-9\-_.=+*^!@]+$/.test(h)) {
-                    setList(DEFAULT_LIST);
+                    setList(LIST_V2);
                     applyValues(legacy.decode(LEVELS.length, h));
-                    showNotice('Opened a link from PlayList v1.0. It has been upgraded to the new link format.');
+                    showUpgradeNotice('Opened a link from PlayList v1.0. It has been upgraded to the new link format.');
                     return true;
                 }
                 return false;
@@ -848,6 +997,23 @@
                     var dot = el('span', { class: 'dot lv' + i, 'aria-hidden': 'true', text: lv.sym });
                     ul.appendChild(el('li', null, [dot, el('span', { text: lv.name })]));
                 });
+                if (!hasSafetyScale(state.list)) return;
+                ul.appendChild(el('li', { class: 'legend-break', 'aria-hidden': 'true' }));
+                ul.appendChild(el('li', { class: 'legend-label ls', text: 'Safety & agreements' }));
+                SAFETY_LEVELS.forEach(function (lv, i) {
+                    if (!i) return;
+                    var dot = el('span', { class: 'dot sv' + i, 'aria-hidden': 'true', text: lv.sym });
+                    ul.appendChild(el('li', { class: 'ls', title: GLOSSARY.scale[lv.name] }, [dot, el('span', { text: lv.name })]));
+                });
+            }
+            // Small key at the top of each Required-scale section (the panel legend hides it on phones)
+            function scaleKey() {
+                var ul = el('ul', { class: 'sec-scale', 'aria-label': 'Scale for this section' });
+                SAFETY_LEVELS.forEach(function (lv, i) {
+                    if (!i) return;
+                    ul.appendChild(el('li', { title: GLOSSARY.scale[lv.name] }, [el('span', { class: 'dot sv' + i, 'aria-hidden': 'true', text: lv.sym }), el('span', { text: lv.name })]));
+                });
+                return ul;
             }
 
             // A button that opens a definition. iconOnly: just the (i), labelled for screen readers.
@@ -861,6 +1027,7 @@
             }
 
             function renderList() {
+                renderLegend();
                 var root = $('#InputList');
                 root.textContent = '';
                 groupsByKey = new Map();
@@ -876,7 +1043,8 @@
                     details.addEventListener('toggle', function () {
                         if (details.open) state.collapsed.delete(cat.name); else state.collapsed.add(cat.name);
                     });
-                    var multi = cat.fields.length > 1;
+                    var multi = cat.fields.length > 1, sc = scaleOf(cat);
+                    if (cat.scale === 'safety') details.appendChild(el('div', { class: 'items' }, [scaleKey()]));
                     if (multi) {
                         var head = el('div', { class: 'fields-head' });
                         cat.fields.forEach(function (f) {
@@ -903,11 +1071,11 @@
                         cat.fields.forEach(function (field) {
                             var key = keyOf(cat.name, item, field);
                             var group = el('div', { class: 'choices', role: 'group', 'aria-label': item + (multi ? ', ' + field : ''), 'data-key': key });
-                            for (var lv = 1; lv < LEVELS.length; lv++) {
+                            for (var lv = 1; lv < sc.levels.length; lv++) {
                                 group.appendChild(el('button', {
-                                    type: 'button', class: 'choice lv' + lv, 'data-level': lv, 'aria-pressed': 'false',
-                                    'aria-label': LEVELS[lv].name, title: LEVELS[lv].name, tabindex: lv === 1 ? '0' : '-1'
-                                }, [el('span', { class: 'sym', 'aria-hidden': 'true', text: LEVELS[lv].sym })]));
+                                    type: 'button', class: 'choice ' + sc.cls + lv, 'data-level': lv, 'aria-pressed': 'false',
+                                    'aria-label': sc.levels[lv].name, title: sc.levels[lv].name, tabindex: lv === 1 ? '0' : '-1'
+                                }, [el('span', { class: 'sym', 'aria-hidden': 'true', text: sc.levels[lv].sym })]));
                             }
                             groupsByKey.set(key, group);
                             li.appendChild(group);
@@ -993,7 +1161,7 @@
                     var gi = groups.indexOf(group) + (e.key === 'ArrowDown' ? 1 : -1);
                     if (gi >= 0 && gi < groups.length) focusIn(groups[gi], idx);
                 }
-                else if (/^[1-5]$/.test(e.key)) { setAnswer(key, +e.key); focusIn(group, +e.key - 1); }
+                else if (/^[1-5]$/.test(e.key) && +e.key <= buttons.length) { setAnswer(key, +e.key); focusIn(group, +e.key - 1); }
                 else if (e.key === '0' || e.key === 'Delete' || e.key === 'Backspace') setAnswer(key, 0);
                 else return;
                 e.preventDefault();
@@ -1109,18 +1277,19 @@
                 $('#GBar').firstChild.style.width = (n ? countAnswered() / n * 100 : 0) + '%';
                 var cur = state.answers.get(s.key) || 0;
                 var opts = $('#GOptions'); opts.textContent = '';
-                LEVELS.forEach(function (lv, i) {
+                var gsc = scaleOf(gcat);
+                gsc.levels.forEach(function (lv, i) {
                     opts.appendChild(el('button', { type: 'button', class: 'g-opt', 'aria-pressed': cur === i ? 'true' : 'false', 'data-level': i }, [
-                        el('span', { class: 'dot lv' + i, 'aria-hidden': 'true', text: lv.sym }),
+                        el('span', { class: 'dot ' + gsc.cls + i, 'aria-hidden': 'true', text: lv.sym }),
                         el('span', { class: 'lbl', text: i ? lv.name : 'Skip / not entered' }),
                         el('kbd', { text: String(i) })
                     ]));
                 });
                 var up = $('#GUp'); up.textContent = '';
                 for (var k = 1; k <= 3 && k < n; k++) {
-                    var ns = state.slots[gNorm(gIndex + k)], v = state.answers.get(ns.key) || 0;
+                    var ns = state.slots[gNorm(gIndex + k)], v = state.answers.get(ns.key) || 0, nsc = scaleOf(state.list[ns.ci]);
                     up.appendChild(el('li', null, [
-                        el('span', { class: 'dot lv' + v, 'aria-hidden': 'true', text: LEVELS[v].sym }),
+                        el('span', { class: 'dot ' + nsc.cls + v, 'aria-hidden': 'true', text: nsc.levels[v].sym }),
                         el('span', { text: (ns.multi ? ns.field + ': ' : '') + ns.item + ' \u2014 ' + ns.cat })
                     ]));
                 }
@@ -1148,7 +1317,7 @@
             gDlg.addEventListener('click', function (e) { if (e.target === gDlg) gDlg.close(); });
             gDlg.addEventListener('keydown', function (e) {
                 if (e.altKey || e.ctrlKey || e.metaKey) return;
-                if (/^[0-5]$/.test(e.key)) gPick(+e.key);
+                if (/^[0-5]$/.test(e.key) && +e.key < state.slots[gNorm(gIndex)].levels.length) gPick(+e.key);
                 else if (e.key === 'ArrowDown') gGo(1);
                 else if (e.key === 'ArrowUp') gGo(-1);
                 else return;
@@ -1173,8 +1342,8 @@
                 while (text.length > 1 && ctx.measureText(text + '\u2026').width > maxW) text = text.slice(0, -1);
                 return text + '\u2026';
             }
-            function drawDot(ctx, cx, cy, r, level) {
-                var lv = LEVELS[level];
+            function drawDot(ctx, cx, cy, r, level, levels) {
+                var lv = (levels || LEVELS)[level];
                 ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
                 if (level) { ctx.fillStyle = lv.color; ctx.fill(); }
                 else {
@@ -1189,7 +1358,8 @@
                 }
             }
             function drawImage(name) {
-                var numCols = 4, colW = 330, gap = 16, pad = 28, headerH = 118;
+                var hasSafety = hasSafetyScale(state.list);
+                var numCols = 4, colW = 330, gap = 16, pad = 28, headerH = 118 + (hasSafety ? 30 : 0), footH = 50;
                 var titleH = 32, subH = 18, rowH = 26, cardPad = 14, cardGap = 16, dotR = 9, dotStep = 23;
                 var cats = state.list.map(function (c) {
                     return { cat: c, h: cardPad * 2 + titleH + (c.fields.length > 1 ? subH : 0) + c.items.length * rowH };
@@ -1203,7 +1373,7 @@
                 });
                 var tallest = Math.max.apply(null, cols.map(function (c) { return c.h; }));
                 var W = pad * 2 + numCols * colW + (numCols - 1) * gap;
-                var H = pad + headerH + tallest + 28;
+                var H = pad + headerH + tallest + footH;
                 var scale = 2;
                 var canvas = document.createElement('canvas');
                 canvas.width = W * scale; canvas.height = H * scale;
@@ -1228,6 +1398,19 @@
                     ctx.fillText(lv.name, lx + 28, ly + 5);
                     lx += 28 + ctx.measureText(lv.name).width + 26;
                 });
+                if (hasSafety) {
+                    lx = pad; ly += 30;
+                    ctx.fillStyle = IMG.muted; ctx.font = '700 12px ' + IMG.font;
+                    ctx.fillText('SAFETY & AGREEMENTS', lx, ly + 4);
+                    lx += ctx.measureText('SAFETY & AGREEMENTS').width + 18;
+                    SAFETY_LEVELS.forEach(function (lv, i) {
+                        if (!i) return;
+                        drawDot(ctx, lx + 11, ly, 11, i, SAFETY_LEVELS);
+                        ctx.fillStyle = IMG.text; ctx.font = '600 15px ' + IMG.font;
+                        ctx.fillText(lv.name, lx + 28, ly + 5);
+                        lx += 28 + ctx.measureText(lv.name).width + 26;
+                    });
+                }
 
                 // Section cards
                 cols.forEach(function (col, c) {
@@ -1249,7 +1432,7 @@
                         cat.items.forEach(function (item) {
                             var mid = cy + rowH / 2;
                             cat.fields.forEach(function (field, fi) {
-                                drawDot(ctx, x + cardPad + dotR + fi * dotStep, mid, dotR, state.answers.get(keyOf(cat.name, item, field)) || 0);
+                                drawDot(ctx, x + cardPad + dotR + fi * dotStep, mid, dotR, state.answers.get(keyOf(cat.name, item, field)) || 0, scaleOf(cat).levels);
                             });
                             var tx = x + cardPad + cat.fields.length * dotStep + 6;
                             ctx.fillStyle = IMG.text; ctx.font = '14px ' + IMG.font;
@@ -1259,6 +1442,8 @@
                         y += entry.h + cardGap;
                     });
                 });
+                ctx.fillStyle = IMG.text; ctx.font = '600 13px ' + IMG.font;
+                ctx.fillText(CONSENT_TEXT, pad, H - 34);
                 ctx.fillStyle = IMG.muted; ctx.font = '12px ' + IMG.font;
                 ctx.fillText('Made with PlayList \u00B7 created on this device, never uploaded', pad, H - 14);
                 return canvas;
@@ -1342,6 +1527,7 @@
                     if (!e) { e = { title: title, desc: desc, tags: [] }; byKey.set(k, e); }
                     if (e.tags.indexOf(tag) < 0) e.tags.push(tag);
                 }
+                if (hasSafetyScale(state.list)) Object.keys(GLOSSARY.scale).forEach(function (k) { add(k, GLOSSARY.scale[k], 'Safety scale'); });
                 state.list.forEach(function (cat) {
                     add(cat.name, sectionDef(cat), 'Section');
                     cat.fields.forEach(function (f) { add(f, columnDef(f), 'Column'); });
@@ -1375,6 +1561,18 @@
             glossDlg.addEventListener('click', function (e) { if (e.target === glossDlg) glossDlg.close(); });
 
             /* ---------------------------------------------------------------
+             * Consent note: shown until dismissed. Remembered only for this tab
+             * (sessionStorage is cleared when the tab closes, so no lasting trace).
+             * ------------------------------------------------------------- */
+            var CONSENT_KEY = 'playlist-consent-seen';
+            function consentSeen() { try { return sessionStorage.getItem(CONSENT_KEY) === '1'; } catch (e) { return false; } }
+            $('#ConsentNote').hidden = consentSeen();
+            $('#ConsentDismiss').addEventListener('click', function () {
+                $('#ConsentNote').hidden = true;
+                try { sessionStorage.setItem(CONSENT_KEY, '1'); } catch (e) { /* ignore */ }
+            });
+
+            /* ---------------------------------------------------------------
              * Boot
              * ------------------------------------------------------------- */
             // Keep sticky column labels below the sticky top bar
@@ -1382,7 +1580,6 @@
                 document.documentElement.style.setProperty('--topbar-h', $('.topbar').offsetHeight + 'px');
             }).observe($('.topbar'));
 
-            renderLegend();
             loadFromHash();
             renderList();
             syncUrl(); // upgrades v1.0 links in place, without adding a history entry
