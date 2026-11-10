@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Privacy: this page may not load anything from anywhere. Everything is inline. -->
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; base-uri 'none'; form-action 'none'">
+        <meta name="referrer" content="no-referrer">
+        <meta name="color-scheme" content="light dark">
+        <link rel="icon" href="data:,">
+        <title>PlayList</title>
+        <style>
+            :root {
+                --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif;
+                --bg: #F6F5FA;
+                --card: #FFFFFF;
+                --card-2: #F1EFF7;
+                --text: #1F1D2B;
+                --muted: #6B6880;
+                --border: #E4E1EE;
+                --accent: #6C4FD8;
+                --accent-ink: #FFFFFF;
+                --accent-soft: #ECE7FD;
+                --focus: #6C4FD8;
+                --shadow: 0 1px 2px rgba(31, 29, 43, .06), 0 4px 16px rgba(31, 29, 43, .05);
+                --sz: 28px;
+                --gap: 4px;
+                --radius: 14px;
+                color-scheme: light;
+            }
+            /* Dark palette: used when the OS asks for it (unless forced light) or when forced dark */
+            @media (prefers-color-scheme: dark) {
+                :root:not([data-theme="light"]) {
+                    --bg: #15141B; --card: #1F1E28; --card-2: #282633; --text: #ECEAF4; --muted: #A19DB5;
+                    --border: #34323F; --accent: #9C86FF; --accent-ink: #15141B; --accent-soft: #2D2843;
+                    --focus: #B6A6FF; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.25);
+                    color-scheme: dark;
+                }
+            }
+            :root[data-theme="dark"] {
+                --bg: #15141B; --card: #1F1E28; --card-2: #282633; --text: #ECEAF4; --muted: #A19DB5;
+                --border: #34323F; --accent: #9C86FF; --accent-ink: #15141B; --accent-soft: #2D2843;
+                --focus: #B6A6FF; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.25);
+                color-scheme: dark;
+            }
+            * { box-sizing: border-box; }
+            html { -webkit-text-size-adjust: 100%; }
+            body {
+                margin: 0;
+                font-family: var(--font);
+                font-size: 16px;
+                line-height: 1.45;
+                background: var(--bg);
+                color: var(--text);
+            }
+            button, input, textarea { font: inherit; color: inherit; }
+            :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+            .wrap { max-width: 1680px; margin: 0 auto; padding: 0 24px; }
+            .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+            /* Top bar */
+            .topbar {
+                position: sticky; top: 0; z-index: 10;
+                background: color-mix(in srgb, var(--bg) 88%, transparent);
+                backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+                border-bottom: 1px solid var(--border);
+            }
+            .topbar-inner { display: flex; align-items: center; gap: 16px; padding-top: 12px; padding-bottom: 8px; }
+            .brand { flex: 1; min-width: 0; }
+            .brand h1 { margin: 0; font-size: 24px; letter-spacing: -0.02em; line-height: 1.2; }
+            .tagline { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+            .top-actions { display: flex; gap: 8px; align-items: center; }
+            .progress-row { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; font-size: 14px; color: var(--muted); }
+            .bar { flex: 1; height: 8px; border-radius: 99px; background: var(--card-2); overflow: hidden; }
+            .bar > i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: inherit; transition: width .25s ease; }
+            #OverallText { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+            /* Buttons */
+            .btn {
+                display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+                min-height: 40px; padding: 8px 16px; border-radius: 10px;
+                border: 1px solid var(--border); background: var(--card); cursor: pointer;
+                font-weight: 600; font-size: 15px; transition: background .15s, border-color .15s, transform .1s;
+            }
+            .btn:hover { border-color: var(--accent); }
+            .btn:active { transform: translateY(1px); }
+            .btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+            .btn-primary:hover { filter: brightness(1.08); }
+            .btn-small { min-height: 32px; padding: 4px 12px; font-size: 14px; font-weight: 500; }
+            .icon-btn {
+                width: 40px; height: 40px; display: inline-grid; place-items: center;
+                border-radius: 10px; border: 1px solid var(--border); background: var(--card); cursor: pointer; padding: 0;
+            }
+            .icon-btn:hover { border-color: var(--accent); }
+            .icon-btn svg { width: 20px; height: 20px; }
+
+            /* Control panel */
+            .panel {
+                background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+                box-shadow: var(--shadow); padding: 16px 20px; margin: 20px 0 16px;
+                display: grid; grid-template-columns: 1fr auto; gap: 16px 24px; align-items: center;
+            }
+            .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 0; padding: 0; list-style: none; font-size: 15px; }
+            .legend li { display: inline-flex; align-items: center; gap: 8px; }
+            .legend .dot { width: 24px; height: 24px; }
+            .hint { margin: 0; color: var(--muted); font-size: 14px; grid-column: 1 / -1; }
+            .share { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+            .name-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+            .name-field input {
+                min-height: 40px; width: 220px; max-width: 100%; padding: 8px 12px; border-radius: 10px;
+                border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 15px;
+            }
+            .switch-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; grid-column: 1 / -1; }
+            .switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; font-size: 15px; }
+            .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+            .switch .track { width: 44px; height: 26px; border-radius: 99px; background: var(--card-2); border: 1px solid var(--border); position: relative; transition: background .2s; flex: none; }
+            .switch .track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--card); box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s; }
+            .switch input:checked + .track { background: var(--accent); border-color: var(--accent); }
+            .switch input:checked + .track::after { transform: translateX(18px); }
+            .switch input:focus-visible + .track { outline: 3px solid var(--focus); outline-offset: 2px; }
+            .switch small { font-weight: 400; color: var(--muted); }
+            .spacer { flex: 1; }
+            #Status { font-size: 14px; color: var(--muted); min-height: 1.4em; grid-column: 1 / -1; margin-top: -8px; }
+            #Status:empty { display: none; }
+            #ShareLinkBox { width: 100%; grid-column: 1 / -1; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); font-size: 13px; }
+
+            .notice {
+                border-radius: 12px; padding: 12px 16px; margin: 0 0 16px; font-size: 15px;
+                background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+            }
+            .notice strong { font-weight: 700; }
+
+            /* Sections (multi-column, reflows on its own) */
+            .sections { columns: 380px 4; column-gap: 16px; }
+            .section {
+                break-inside: avoid; display: block; margin: 0 0 16px;
+                background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+                box-shadow: var(--shadow); overflow: hidden; overflow: clip; /* clip keeps sticky column labels working */
+            }
+            .section > summary {
+                list-style: none; cursor: pointer; padding: 14px 16px 12px; display: grid;
+                grid-template-columns: 1fr auto auto; align-items: center; gap: 2px 12px;
+            }
+            .section > summary::-webkit-details-marker { display: none; }
+            .section > summary:hover { background: var(--card-2); }
+            .sec-title { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+            .sec-count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+            .section.done .sec-count { color: var(--accent); font-weight: 700; }
+            .chev { width: 18px; height: 18px; transition: transform .2s; color: var(--muted); }
+            .section[open] .chev { transform: rotate(180deg); }
+            .sec-bar { grid-column: 1 / -1; height: 4px; margin-top: 8px; }
+            .items { list-style: none; margin: 0; padding: 0 16px 12px; }
+            .fields-head { display: flex; justify-content: flex-end; gap: 12px; padding: 4px 0 2px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+            .fields-head span { width: calc(var(--sz) * 5 + var(--gap) * 4); text-align: center; }
+            .fields-wrap { padding-bottom: 0; }
+            .item {
+                display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px 12px;
+                padding: 8px 0; border-top: 1px solid var(--border);
+            }
+            .item:first-child { border-top: none; }
+            .item-name { flex: 1 1 8rem; min-width: 0; font-size: 15px; }
+            .item.multi .item-name { flex-basis: 100%; }
+            .item.answered .item-name { font-weight: 600; }
+            .choices { display: flex; gap: var(--gap); }
+
+            /* Choice dots: ring + symbol when unselected, filled + symbol when selected */
+            .dot, .choice {
+                --c: #999; --ink: #fff;
+                width: var(--sz); height: var(--sz); flex: none; border-radius: 50%;
+                display: inline-grid; place-items: center; padding: 0;
+                font-size: 14px; font-weight: 800; line-height: 1;
+                border: 2px solid var(--c); background: var(--c); color: var(--ink);
+            }
+            .lv1 { --c: var(--l1); --ink: var(--l1-ink); }
+            .lv2 { --c: var(--l2); --ink: var(--l2-ink); }
+            .lv3 { --c: var(--l3); --ink: var(--l3-ink); }
+            .lv4 { --c: var(--l4); --ink: var(--l4-ink); }
+            .lv5 { --c: var(--l5); --ink: var(--l5-ink); }
+            .dot.lv0 { background: transparent; border: 2px dashed var(--muted); }
+            .choice {
+                cursor: pointer; background: color-mix(in srgb, var(--c) 10%, var(--card));
+                color: color-mix(in srgb, var(--c) 75%, var(--text));
+                transition: background .15s, transform .15s, box-shadow .15s, opacity .15s;
+                -webkit-tap-highlight-color: transparent;
+            }
+            .choice .sym { opacity: .55; }
+            .choice:hover { background: color-mix(in srgb, var(--c) 28%, var(--card)); }
+            .choice:hover .sym { opacity: .9; }
+            .choices.has-sel .choice:not([aria-pressed="true"]) { opacity: .5; }
+            .choices.has-sel .choice:not([aria-pressed="true"]):hover { opacity: .9; }
+            .choice[aria-pressed="true"] {
+                background: var(--c); color: var(--ink); transform: scale(1.08);
+                box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--c);
+            }
+            .choice[aria-pressed="true"] .sym { opacity: 1; }
+
+            footer { color: var(--muted); font-size: 14px; padding: 8px 0 40px; }
+            footer h2 { font-size: 16px; color: var(--text); margin: 8px 0 6px; }
+            footer ul { margin: 0; padding-left: 20px; }
+
+            /* Dialogs */
+            dialog {
+                border: 1px solid var(--border); border-radius: 18px; padding: 0; background: var(--card); color: var(--text);
+                width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 24px); box-shadow: 0 20px 60px rgba(0,0,0,.35);
+            }
+            dialog::backdrop { background: rgba(15, 12, 25, .6); }
+            .dlg { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+            .dlg h2 { margin: 0; font-size: 20px; }
+            .dlg p { margin: 0; color: var(--muted); font-size: 14px; }
+            .dlg-head { display: flex; align-items: center; gap: 12px; }
+            .dlg-head h2 { flex: 1; }
+            .dlg-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+            #ListText {
+                width: 100%; height: min(55vh, 520px); resize: vertical; padding: 12px; border-radius: 10px;
+                border: 1px solid var(--border); background: var(--bg); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px;
+            }
+            #ListError { color: var(--l5); font-weight: 600; }
+            #ListError:empty { display: none; }
+            .g-meta { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 700; }
+            .g-item { font-size: 22px; font-weight: 700; margin: 0; }
+            .g-field { color: var(--accent); }
+            .g-options { display: grid; gap: 8px; }
+            .g-opt {
+                display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 8px 14px; border-radius: 12px;
+                border: 2px solid var(--border); background: var(--bg); cursor: pointer; text-align: left; font-size: 16px;
+            }
+            .g-opt:hover { border-color: var(--accent); }
+            .g-opt[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 700; }
+            .g-opt .lbl { flex: 1; }
+            .g-opt kbd { font-family: inherit; font-size: 12px; border: 1px solid var(--border); border-radius: 6px; padding: 2px 7px; color: var(--muted); background: var(--card); }
+            .g-up { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+            .g-up li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); }
+            .g-up .dot { --sz: 18px; font-size: 10px; border-width: 1.5px; }
+
+            @media (max-width: 760px) {
+                .panel { grid-template-columns: 1fr; }
+                .share { justify-content: flex-start; }
+            }
+            @media (max-width: 600px) {
+                :root { --sz: 30px; --gap: 3px; }
+                .wrap { padding: 0 10px; }
+                .topbar-inner { gap: 8px; }
+                .brand h1 { font-size: 20px; }
+                .tagline { font-size: 13px; }
+                .btn-label { display: none; }
+                .panel { padding: 14px; margin-top: 12px; }
+                .legend { gap: 8px 14px; font-size: 14px; }
+                .name-field { flex: 1 1 100%; }
+                .name-field input { width: 100%; }
+                .share .btn { flex: 1 1 40%; }
+                .sections { columns: 1; }
+                .items { padding: 0 10px 10px; }
+                .section > summary { padding: 12px 10px 10px; }
+                .fields-head { gap: 8px; }
+                .item { gap: 6px 8px; }
+                .kbd-hint { display: none; }
+                .share .btn { white-space: nowrap; padding: 8px 10px; font-size: 14px; }
+                /* keep the column labels in view while scrolling a long section */
+                .fields-wrap { position: sticky; top: var(--topbar-h, 0px); z-index: 2; background: var(--card); border-bottom: 1px solid var(--border); }
+            }
+            @media (prefers-reduced-motion: reduce) {
+                * { transition: none !important; }
+            }
+        </style>
+    </head>
+    <body>
+        <header class="topbar">
+            <div class="wrap topbar-inner">
+                <div class="brand">
+                    <h1>PlayList</h1>
+                    <p class="tagline">Your data is yours. Nothing leaves this device.</p>
+                </div>
+                <div class="top-actions">
+                    <button id="GuidedBtn" class="btn" type="button" aria-label="Guided mode" title="Answer one item at a time">
+                        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        <span class="btn-label">Guided mode</span>
+                    </button>
+                    <button id="EditBtn" class="icon-btn" type="button" aria-label="Edit list" title="Edit list">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.830 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    </button>
+                    <button id="ThemeBtn" class="icon-btn" type="button" aria-label="Theme: automatic" title="Theme: automatic">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="wrap progress-row">
+                <div class="bar" id="OverallBar" role="progressbar" aria-label="Overall progress" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"><i></i></div>
+                <span id="OverallText">0 of 0 answered</span>
+            </div>
+        </header>
+
+        <main class="wrap">
+            <section class="panel" aria-label="Legend and sharing">
+                <ul class="legend" id="Legend" aria-label="Legend"></ul>
+                <div class="share">
+                    <label class="name-field">Name on image (optional)
+                        <input type="text" id="Name" maxlength="40" autocomplete="off" spellcheck="false" placeholder="e.g. Sam &amp; Alex">
+                    </label>
+                    <button id="DownloadBtn" class="btn btn-primary" type="button">
+                        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+                        Download image
+                    </button>
+                    <button id="CopyBtn" class="btn" type="button">
+                        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+                        Copy share link
+                    </button>
+                </div>
+                <div id="Status" role="status" aria-live="polite"></div>
+                <div class="switch-row">
+                    <label class="switch">
+                        <input type="checkbox" id="PrivateToggle" role="switch">
+                        <span class="track" aria-hidden="true"></span>
+                        <span>Private mode <small>(keeps answers in memory only, not in the address bar or history)</small></span>
+                    </label>
+                    <span class="spacer"></span>
+                    <button id="ExpandAll" class="btn btn-small" type="button">Expand all</button>
+                    <button id="CollapseAll" class="btn btn-small" type="button">Collapse all</button>
+                </div>
+                <p class="hint">Tap a dot to answer, tap it again to clear.<span class="kbd-hint"> Keyboard: Tab between items, &larr;/&rarr; to move, 1&ndash;5 to pick, 0 to clear.</span></p>
+            </section>
+
+            <div id="PrivateBanner" class="notice" hidden>
+                <strong>Private mode is on.</strong> Answers live only in this tab's memory and vanish when you close or reload it. Use &ldquo;Copy share link&rdquo; to keep or send them.
+            </div>
+            <div id="LinkNotice" class="notice" hidden></div>
+
+            <div id="InputList" class="sections"></div>
+
+            <footer>
+                <h2>How your privacy is protected</h2>
+                <ul>
+                    <li>This page is a single file. It loads no scripts, fonts, trackers or analytics, and its security policy blocks all network requests.</li>
+                    <li>Your answers are stored only after the <code>#</code> in the link, which browsers never send to any server. Private mode doesn't even put them there.</li>
+                    <li>The image is drawn and saved on your device. Nothing is uploaded.</li>
+                    <li>Anyone you give a share link to can see the answers in it.</li>
+                </ul>
+            </footer>
+        </main>
+
+        <dialog id="EditDialog" aria-labelledby="EditTitle">
+            <div class="dlg">
+                <div class="dlg-head"><h2 id="EditTitle">Edit list</h2></div>
+                <p>Lines starting with <code>#</code> are sections, <code>(A, B)</code> lists the columns for that section, and <code>*</code> lines are items. Answers to unchanged items are kept. Custom lists are included in share links.</p>
+                <label for="ListText" class="sr-only">List text</label>
+                <textarea id="ListText" spellcheck="false"></textarea>
+                <div id="ListError" role="alert"></div>
+                <div class="dlg-actions">
+                    <button type="button" class="btn" id="ListReset">Restore default</button>
+                    <span class="spacer"></span>
+                    <button type="button" class="btn" id="ListCancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="ListApply">Apply</button>
+                </div>
+            </div>
+        </dialog>
+
+        <dialog id="GuidedDialog" aria-labelledby="GItem">
+            <div class="dlg">
+                <div class="dlg-head">
+                    <span class="g-meta" id="GMeta" style="flex:1"></span>
+                    <button type="button" class="icon-btn" id="GClose" aria-label="Close guided mode">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                    </button>
+                </div>
+                <div class="bar" id="GBar" aria-hidden="true"><i></i></div>
+                <h2 class="g-item" id="GItem"></h2>
+                <div class="g-options" id="GOptions" role="group" aria-label="Choose an answer"></div>
+                <ul class="g-up" id="GUp" aria-label="Coming up"></ul>
+                <div class="dlg-actions">
+                    <button type="button" class="btn" id="GPrev">&larr; Previous</button>
+                    <span class="spacer"></span>
+                    <button type="button" class="btn btn-primary" id="GNext">Next &rarr;</button>
+                </div>
+                <p>Keys: 0&ndash;5 to answer, &uarr;/&darr; to move, Esc to close.</p>
+            </div>
+        </dialog>
+
+        <script>
+        'use strict';
+        (function () {
+            /* ---------------------------------------------------------------
+             * Levels. One source of truth for the page, legend and image.
+             * The index is what gets stored in share links.
+             * ------------------------------------------------------------- */
+            var LEVELS = [
+                { name: 'Not entered', color: '#FFFFFF', ink: '#6B6880', sym: '' },
+                { name: 'Favorite',    color: '#E8559E', ink: '#FFFFFF', sym: '\u2665' }, // heart
+                { name: 'Like',        color: '#2E9E58', ink: '#FFFFFF', sym: '\u2713' }, // check
+                { name: 'Okay',        color: '#E2B203', ink: '#1F1D2B', sym: '~' },
+                { name: 'Maybe',       color: '#EF7D22', ink: '#1F1D2B', sym: '?' },
+                { name: 'No',          color: '#C93838', ink: '#FFFFFF', sym: '\u2715' }  // cross
+            ];
+            for (var li = 1; li < LEVELS.length; li++) {
+                document.documentElement.style.setProperty('--l' + li, LEVELS[li].color);
+                document.documentElement.style.setProperty('--l' + li + '-ink', LEVELS[li].ink);
+            }
+
+            /* ---------------------------------------------------------------
+             * Default list for share-link format "v2".
+             * DO NOT reorder, add or remove items here: links without an
+             * embedded list are decoded against this exact list (by position).
+             * To change the default list, add a new list + format version (v3)
+             * and keep this one so v2 links keep working. Fixing spelling is safe.
+             * It also matches v1.0's list position-for-position, so old v1.0
+             * links still open.
+             * ------------------------------------------------------------- */
+            var DEFAULT_LIST_TEXT = [
+                '#Play Style', '(General)', '* Same room, same bed', '* Same room, separate beds', '* Separate rooms', '',
+                '#Play Location', '(General)', '* Club', '* Resort', '* Hotel takeover', '* Hotel room', '* Hosting at home', '* Party', '',
+                '#Safety', '(General)', '* Condom', '* Regular testing', '',
+                '#Sexual Preference', '(Him, Her)', '* Opposite sex', '* Same sex', '',
+                '#Groupings', '(General)', '* Parallel Play', '* FFM', '* FMF', '* MFM', '* MMF', '* MFFM', '* MFMF', '* Orgy', '* Gangbang', '',
+                '#Activities (Him)', '(Giving, Receiving)', '* Kissing', '* Handjob / fingering', '* Oral', '* Swallowing', '* Penetrative sex',
+                '* Anal touch', '* Anal sex, pegging', '* Rimming', '* Double penetration', '* Dildos', '* Plugs', '',
+                '#Activities (Her)', '(Giving, Receiving)', '* Kissing', '* Handjob / fingering', '* Oral', '* Swallowing', '* Penetrative sex (PIV)',
+                '* Penetrative sex (strap on)', '* Anal touch', '* Anal sex, pegging', '* Rimming', '* Double penetration', '* Dildos', '* Plugs', '* Vibrators', '',
+                '#Observation', '(General)', '* Exhibitionism', '* Voyeurism', '',
+                '#Kinks (Him)', '(Giving, Receiving)', '* Blindfold', '* Collar', '* Gag', '* Leash', '* Bondage', '* Hair pulling', '* Light pain',
+                '* Cock/Pussy slapping', '* Spanking', '* Nipple clamps', '* Flogging', '',
+                '#Kinks (Her)', '(Giving, Receiving)', '* Blindfold', '* Collar', '* Gag', '* Leash', '* Bondage', '* Hair pulling', '* Light pain',
+                '* Cock/Pussy slapping', '* Spanking', '* Nipple clamps', '* Flogging'
+            ].join('\n');
+
+            var $ = function (sel, root) { return (root || document).querySelector(sel); };
+            var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
+            var el = function (tag, attrs, children) {
+                var node = document.createElement(tag);
+                if (attrs) Object.keys(attrs).forEach(function (k) {
+                    if (k === 'class') node.className = attrs[k];
+                    else if (k === 'text') node.textContent = attrs[k];
+                    else node.setAttribute(k, attrs[k]);
+                });
+                (children || []).forEach(function (c) { if (c) node.appendChild(c); });
+                return node;
+            };
+
+            /* ---------------------------------------------------------------
+             * List parsing (same text format as v1.0)
+             * ------------------------------------------------------------- */
+            function parseList(text) {
+                var lines = String(text).replace(/\r/g, '').split('\n');
+                var list = [], cat = null, seen = {}, total = 0;
+                function close() {
+                    if (!cat) return null;
+                    if (!cat.fields || !cat.fields.length) return '"' + cat.name + '" needs a (columns) line, e.g. (General).';
+                    if (!cat.items.length) return '"' + cat.name + '" has no * items.';
+                    list.push(cat);
+                    return null;
+                }
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i].trim();
+                    if (!line) continue;
+                    if (line[0] === '#') {
+                        var err = close(); if (err) return { error: err };
+                        var name = line.substring(1).trim();
+                        if (!name) return { error: 'Line ' + (i + 1) + ': section name is empty.' };
+                        if (seen[name]) return { error: 'Section "' + name + '" appears twice.' };
+                        seen[name] = true;
+                        cat = { name: name, fields: null, items: [] };
+                    } else if (!cat) {
+                        return { error: 'Line ' + (i + 1) + ': start with a # section line.' };
+                    } else if (line[0] === '(') {
+                        cat.fields = line.replace(/^\(|\)$/g, '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+                        if (cat.fields.length > 4) return { error: '"' + cat.name + '": at most 4 columns per section.' };
+                    } else if (line[0] === '*') {
+                        var item = line.substring(1).trim();
+                        if (!item) continue;
+                        if (cat.items.indexOf(item) >= 0) return { error: '"' + item + '" is listed twice in "' + cat.name + '".' };
+                        cat.items.push(item);
+                        if (++total > 2000) return { error: 'The list is too long (max 2000 items).' };
+                    } else {
+                        return { error: 'Line ' + (i + 1) + ' should start with #, ( or *.' };
+                    }
+                }
+                var err2 = close(); if (err2) return { error: err2 };
+                if (!list.length) return { error: 'The list is empty.' };
+                return { list: list };
+            }
+            function serializeList(list) {
+                return list.map(function (c) {
+                    return '#' + c.name + '\n(' + c.fields.join(', ') + ')\n' + c.items.map(function (i) { return '* ' + i; }).join('\n');
+                }).join('\n\n');
+            }
+            function keyOf(cat, item, field) { return cat + '\u241F' + item + '\u241F' + field; }
+            // Order = section, item, column. Same order v1.0 used for its hash.
+            function slotsOf(list) {
+                var out = [];
+                list.forEach(function (c, ci) {
+                    c.items.forEach(function (item) {
+                        c.fields.forEach(function (field) {
+                            out.push({ cat: c.name, item: item, field: field, ci: ci, key: keyOf(c.name, item, field), multi: c.fields.length > 1 });
+                        });
+                    });
+                });
+                return out;
+            }
+
+            var DEFAULT_LIST = parseList(DEFAULT_LIST_TEXT).list;
+            var DEFAULT_SERIALIZED = serializeList(DEFAULT_LIST);
+
+            /* ---------------------------------------------------------------
+             * State. Answers live here, in memory. The URL hash is only a mirror.
+             * ------------------------------------------------------------- */
+            var state = {
+                list: DEFAULT_LIST,
+                slots: slotsOf(DEFAULT_LIST),
+                answers: new Map(),       // slot key -> level 1..5
+                privateMode: false,
+                collapsed: new Set()      // section names
+            };
+
+            /* ---------------------------------------------------------------
+             * Share-link encoding
+             *   v2:   "#v2:<answers>" or "#v2:<answers>:<base64url custom list>"
+             *         <answers>: two answers (0-5 each) per base-36 character
+             *   v1.0: untagged legacy hash (positional, decoded with the old code)
+             * ------------------------------------------------------------- */
+            var B36 = '0123456789abcdefghijklmnopqrstuvwxyz';
+            function encodeV2(values) {
+                var s = '';
+                for (var i = 0; i < values.length; i += 2) s += B36[values[i] * 6 + (values[i + 1] || 0)];
+                return s.replace(/0+$/, '');
+            }
+            function decodeV2(s) {
+                var out = [];
+                for (var i = 0; i < s.length; i++) {
+                    var n = B36.indexOf(s[i]);
+                    if (n < 0) throw new Error('bad char');
+                    out.push(Math.floor(n / 6), n % 6);
+                }
+                return out;
+            }
+            function b64urlEncode(str) {
+                var bytes = new TextEncoder().encode(str), bin = '';
+                for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+                return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            }
+            function b64urlDecode(s) {
+                s = s.replace(/-/g, '+').replace(/_/g, '/');
+                while (s.length % 4) s += '=';
+                var bin = atob(s), bytes = new Uint8Array(bin.length);
+                for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+            }
+
+            // Legacy v1.0 decoder, same math as v1.0.0.html so old links decode identically
+            var legacy = {
+                chars: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.=+*^!@',
+                maxPow: function (base, maxVal) { var m = 1; for (var p = 1; Math.pow(base, p) <= maxVal; p++) m = p; return m; },
+                decode: function (base, output) {
+                    var hashBase = legacy.chars.length;
+                    var outputPow = legacy.maxPow(hashBase, Number.MAX_SAFE_INTEGER);
+                    var inputPow = legacy.maxPow(base, Math.pow(hashBase, outputPow));
+                    var values = [];
+                    var numChunks = output.length / outputPow;
+                    for (var i = 0; i < numChunks; i++) {
+                        var chunk = output.substring(i * outputPow, (i + 1) * outputPow);
+                        var chunkInt = 0;
+                        for (var c = 0; c < chunk.length; c++) {
+                            chunkInt += Math.pow(hashBase, chunk.length - 1 - c) * legacy.chars.indexOf(chunk[c]);
+                        }
+                        var vals = [];
+                        for (var pow = inputPow - 1; pow >= 0; pow--) {
+                            var posBase = Math.floor(Math.pow(base, pow));
+                            var posVal = Math.floor(chunkInt / posBase);
+                            vals.push(posVal);
+                            chunkInt -= posBase * posVal;
+                        }
+                        vals.reverse();
+                        values = values.concat(vals);
+                    }
+                    return values;
+                }
+            };
+
+            function isCustomList() { return serializeList(state.list) !== DEFAULT_SERIALIZED; }
+            function buildHash() {
+                var values = state.slots.map(function (s) { return state.answers.get(s.key) || 0; });
+                var data = encodeV2(values);
+                var custom = isCustomList();
+                if (!data && !custom) return '';
+                return 'v2:' + data + (custom ? ':' + b64urlEncode(serializeList(state.list)) : '');
+            }
+            function baseUrl() { return location.href.split('#')[0]; }
+            function shareLink() { var h = buildHash(); return baseUrl() + (h ? '#' + h : ''); }
+
+            // Normal mode: mirror answers into the hash with replaceState, so clicks
+            // don't pile up history entries. Private mode: never touch the URL.
+            function syncUrl() {
+                if (state.privateMode) return;
+                var h = buildHash();
+                if (location.hash.slice(1) === h) return;
+                try { history.replaceState(history.state, '', h ? '#' + h : baseUrl()); } catch (e) { /* ignore */ }
+            }
+
+            function showNotice(text) {
+                var n = $('#LinkNotice');
+                n.textContent = text || '';
+                n.hidden = !text;
+            }
+
+            function setList(list) {
+                state.list = list;
+                state.slots = slotsOf(list);
+                var keys = new Set(state.slots.map(function (s) { return s.key; }));
+                Array.from(state.answers.keys()).forEach(function (k) { if (!keys.has(k)) state.answers.delete(k); });
+            }
+
+            function applyValues(values) {
+                state.answers = new Map();
+                state.slots.forEach(function (s, i) {
+                    var v = values[i];
+                    if (v > 0 && v < LEVELS.length) state.answers.set(s.key, v);
+                });
+            }
+
+            // Returns true if the hash held answers that were loaded.
+            function loadFromHash() {
+                var h = location.hash.slice(1);
+                try { h = decodeURIComponent(h); } catch (e) { /* keep raw */ }
+                if (!h) return false;
+                var m = /^v(\d+):/.exec(h);
+                if (m) {
+                    if (m[1] !== '2') {
+                        showNotice('This link was made with a different version of PlayList (format v' + m[1] + ') and can\u2019t be opened here.');
+                        return false;
+                    }
+                    var parts = h.split(':');
+                    var list = DEFAULT_LIST;
+                    if (parts[2]) {
+                        var parsed;
+                        try { parsed = parseList(b64urlDecode(parts[2])); } catch (e) { parsed = { error: 'unreadable' }; }
+                        if (parsed.error) { showNotice('This link\u2019s custom list couldn\u2019t be read, so its answers weren\u2019t loaded.'); return false; }
+                        list = parsed.list;
+                    }
+                    var values;
+                    try { values = decodeV2(parts[1] || ''); } catch (e) { showNotice('This share link looks damaged, so its answers weren\u2019t loaded.'); return false; }
+                    setList(list);
+                    applyValues(values);
+                    showNotice(parts[2] ? 'This link uses a custom list, which has been loaded.' : '');
+                    return true;
+                }
+                // Untagged: a v1.0 link. It is positional against the default list.
+                if (h.length >= 10 && /^[a-zA-Z0-9\-_.=+*^!@]+$/.test(h)) {
+                    setList(DEFAULT_LIST);
+                    applyValues(legacy.decode(LEVELS.length, h));
+                    showNotice('Opened a link from PlayList v1.0. It has been upgraded to the new link format.');
+                    return true;
+                }
+                return false;
+            }
+
+            /* ---------------------------------------------------------------
+             * Rendering (DOM built with textContent only; list text may come
+             * from a link, so it is never treated as HTML)
+             * ------------------------------------------------------------- */
+            var groupsByKey = new Map();   // slot key -> .choices element
+            var sectionEls = [];
+
+            function chevron() {
+                var ns = 'http://www.w3.org/2000/svg';
+                var svg = document.createElementNS(ns, 'svg');
+                svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('class', 'chev'); svg.setAttribute('aria-hidden', 'true');
+                svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); svg.setAttribute('stroke-width', '2.4');
+                var p = document.createElementNS(ns, 'path'); p.setAttribute('d', 'M6 9l6 6 6-6'); svg.appendChild(p);
+                return svg;
+            }
+
+            function renderLegend() {
+                var ul = $('#Legend'); ul.textContent = '';
+                LEVELS.forEach(function (lv, i) {
+                    var dot = el('span', { class: 'dot lv' + i, 'aria-hidden': 'true', text: lv.sym });
+                    ul.appendChild(el('li', null, [dot, el('span', { text: lv.name })]));
+                });
+            }
+
+            function renderList() {
+                var root = $('#InputList');
+                root.textContent = '';
+                groupsByKey = new Map();
+                sectionEls = [];
+                state.list.forEach(function (cat) {
+                    var details = el('details', { class: 'section' });
+                    if (!state.collapsed.has(cat.name)) details.open = true;
+                    var count = el('span', { class: 'sec-count' });
+                    var bar = el('div', { class: 'bar sec-bar', 'aria-hidden': 'true' }, [el('i')]);
+                    details.appendChild(el('summary', null, [el('span', { class: 'sec-title', text: cat.name }), count, chevron(), bar]));
+                    details.addEventListener('toggle', function () {
+                        if (details.open) state.collapsed.delete(cat.name); else state.collapsed.add(cat.name);
+                    });
+                    var multi = cat.fields.length > 1;
+                    if (multi) {
+                        var head = el('div', { class: 'fields-head', 'aria-hidden': 'true' });
+                        cat.fields.forEach(function (f) { head.appendChild(el('span', { text: f })); });
+                        details.appendChild(el('div', { class: 'items fields-wrap' }, [head]));
+                    }
+                    var ul = el('ul', { class: 'items' });
+                    cat.items.forEach(function (item) {
+                        var li = el('li', { class: 'item' + (multi ? ' multi' : '') });
+                        li.appendChild(el('span', { class: 'item-name', text: item }));
+                        cat.fields.forEach(function (field) {
+                            var key = keyOf(cat.name, item, field);
+                            var group = el('div', { class: 'choices', role: 'group', 'aria-label': item + (multi ? ', ' + field : ''), 'data-key': key });
+                            for (var lv = 1; lv < LEVELS.length; lv++) {
+                                group.appendChild(el('button', {
+                                    type: 'button', class: 'choice lv' + lv, 'data-level': lv, 'aria-pressed': 'false',
+                                    'aria-label': LEVELS[lv].name, title: LEVELS[lv].name, tabindex: lv === 1 ? '0' : '-1'
+                                }, [el('span', { class: 'sym', 'aria-hidden': 'true', text: LEVELS[lv].sym })]));
+                            }
+                            groupsByKey.set(key, group);
+                            li.appendChild(group);
+                        });
+                        ul.appendChild(li);
+                    });
+                    details.appendChild(ul);
+                    root.appendChild(details);
+                    sectionEls.push({ details: details, count: count, bar: bar.firstChild, cat: cat });
+                });
+                state.slots.forEach(function (s) { paintGroup(s.key); });
+                updateProgress();
+            }
+
+            function paintGroup(key) {
+                var group = groupsByKey.get(key);
+                if (!group) return;
+                var v = state.answers.get(key) || 0;
+                group.classList.toggle('has-sel', v > 0);
+                var buttons = group.children;
+                for (var i = 0; i < buttons.length; i++) {
+                    var on = (i + 1) === v;
+                    buttons[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+                    buttons[i].tabIndex = (v ? on : i === 0) ? 0 : -1;
+                }
+                var li = group.parentNode;
+                li.classList.toggle('answered', !!li.querySelector('.choices.has-sel'));
+            }
+
+            function countAnswered() {
+                var n = 0;
+                state.slots.forEach(function (s) { if (state.answers.get(s.key)) n++; });
+                return n;
+            }
+
+            function updateProgress() {
+                var total = state.slots.length, done = 0;
+                var perCat = state.list.map(function () { return 0; });
+                state.slots.forEach(function (s) { if (state.answers.get(s.key)) { done++; perCat[s.ci]++; } });
+                sectionEls.forEach(function (se, i) {
+                    var n = se.cat.items.length * se.cat.fields.length;
+                    se.count.textContent = perCat[i] + ' of ' + n + ' answered';
+                    se.bar.style.width = (n ? perCat[i] / n * 100 : 0) + '%';
+                    se.details.classList.toggle('done', perCat[i] === n);
+                });
+                $('#OverallText').textContent = done + ' of ' + total + ' answered';
+                var ob = $('#OverallBar');
+                ob.setAttribute('aria-valuemax', total);
+                ob.setAttribute('aria-valuenow', done);
+                ob.firstChild.style.width = (total ? done / total * 100 : 0) + '%';
+            }
+
+            function setAnswer(key, level) {
+                if (level > 0) state.answers.set(key, level); else state.answers.delete(key);
+                paintGroup(key);
+                updateProgress();
+                syncUrl();
+            }
+
+            /* Choice interaction: click + keyboard (roving tabindex per group) */
+            $('#InputList').addEventListener('click', function (e) {
+                var btn = e.target.closest('.choice');
+                if (!btn) return;
+                var key = btn.parentNode.getAttribute('data-key');
+                var lv = +btn.getAttribute('data-level');
+                setAnswer(key, (state.answers.get(key) || 0) === lv ? 0 : lv);
+            });
+            $('#InputList').addEventListener('keydown', function (e) {
+                var btn = e.target.closest('.choice');
+                if (!btn || e.altKey || e.ctrlKey || e.metaKey) return;
+                var group = btn.parentNode, key = group.getAttribute('data-key');
+                var buttons = Array.prototype.slice.call(group.children), idx = buttons.indexOf(btn);
+                var focusIn = function (g, i) {
+                    Array.prototype.forEach.call(g.children, function (x) { x.tabIndex = -1; });
+                    g.children[i].tabIndex = 0; g.children[i].focus();
+                };
+                if (e.key === 'ArrowRight') focusIn(group, (idx + 1) % buttons.length);
+                else if (e.key === 'ArrowLeft') focusIn(group, (idx + buttons.length - 1) % buttons.length);
+                else if (e.key === 'Home') focusIn(group, 0);
+                else if (e.key === 'End') focusIn(group, buttons.length - 1);
+                else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    var groups = $$('#InputList details[open] .choices');
+                    var gi = groups.indexOf(group) + (e.key === 'ArrowDown' ? 1 : -1);
+                    if (gi >= 0 && gi < groups.length) focusIn(groups[gi], idx);
+                }
+                else if (/^[1-5]$/.test(e.key)) { setAnswer(key, +e.key); focusIn(group, +e.key - 1); }
+                else if (e.key === '0' || e.key === 'Delete' || e.key === 'Backspace') setAnswer(key, 0);
+                else return;
+                e.preventDefault();
+            });
+
+            $('#ExpandAll').addEventListener('click', function () { sectionEls.forEach(function (s) { s.details.open = true; }); });
+            $('#CollapseAll').addEventListener('click', function () { sectionEls.forEach(function (s) { s.details.open = false; }); });
+
+            /* Status messages */
+            var statusTimer = null;
+            function flash(msg) {
+                var s = $('#Status');
+                s.textContent = msg;
+                clearTimeout(statusTimer);
+                statusTimer = setTimeout(function () { s.textContent = ''; }, 6000);
+            }
+
+            /* ---------------------------------------------------------------
+             * Private mode
+             * ------------------------------------------------------------- */
+            $('#PrivateToggle').addEventListener('change', function () {
+                state.privateMode = this.checked;
+                $('#PrivateBanner').hidden = !state.privateMode;
+                if (state.privateMode) {
+                    try { history.replaceState(history.state, '', baseUrl()); } catch (e) { /* ignore */ }
+                    flash('Private mode on: answers removed from the address bar.');
+                } else {
+                    syncUrl();
+                    flash('Private mode off: answers are kept in the address bar again.');
+                }
+            });
+            window.addEventListener('beforeunload', function (e) {
+                if (state.privateMode && state.answers.size) { e.preventDefault(); e.returnValue = ''; }
+            });
+
+            /* ---------------------------------------------------------------
+             * Copy share link (built on demand, works in private mode too)
+             * ------------------------------------------------------------- */
+            $('#CopyBtn').addEventListener('click', function () {
+                var link = shareLink();
+                var done = function () { flash(state.answers.size ? 'Link copied. Anyone with it can see your answers.' : 'Link copied (no answers yet).'); };
+                var fallback = function () {
+                    var box = $('#ShareLinkBox');
+                    if (!box) {
+                        box = el('input', { id: 'ShareLinkBox', type: 'text', readonly: 'readonly', 'aria-label': 'Share link' });
+                        $('.panel').appendChild(box);
+                    }
+                    box.value = link; box.focus(); box.select();
+                    var ok = false;
+                    try { ok = document.execCommand('copy'); } catch (e) { /* ignore */ }
+                    if (ok) done(); else flash('Copy the link shown below to share it.');
+                };
+                if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(link).then(done, fallback);
+                else fallback();
+            });
+
+            /* ---------------------------------------------------------------
+             * Theme toggle (auto -> light -> dark). Not stored anywhere.
+             * ------------------------------------------------------------- */
+            var THEMES = ['auto', 'light', 'dark'];
+            var THEME_ICONS = {
+                auto: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>',
+                light: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+                dark: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" fill="currentColor"/>'
+            };
+            var themeIdx = 0;
+            $('#ThemeBtn').addEventListener('click', function () {
+                themeIdx = (themeIdx + 1) % THEMES.length;
+                var t = THEMES[themeIdx];
+                if (t === 'auto') document.documentElement.removeAttribute('data-theme');
+                else document.documentElement.setAttribute('data-theme', t);
+                var label = 'Theme: ' + (t === 'auto' ? 'automatic' : t);
+                this.setAttribute('aria-label', label); this.title = label;
+                this.querySelector('svg').innerHTML = THEME_ICONS[t]; // static markup only
+            });
+
+            /* ---------------------------------------------------------------
+             * Edit list
+             * ------------------------------------------------------------- */
+            var editDlg = $('#EditDialog');
+            $('#EditBtn').addEventListener('click', function () {
+                $('#ListText').value = serializeList(state.list);
+                $('#ListError').textContent = '';
+                editDlg.showModal();
+            });
+            $('#ListCancel').addEventListener('click', function () { editDlg.close(); });
+            $('#ListReset').addEventListener('click', function () { $('#ListText').value = DEFAULT_LIST_TEXT; $('#ListError').textContent = ''; });
+            $('#ListApply').addEventListener('click', function () {
+                var r = parseList($('#ListText').value);
+                if (r.error) { $('#ListError').textContent = r.error; return; }
+                setList(r.list);
+                renderList();
+                syncUrl();
+                editDlg.close();
+                flash(isCustomList() ? 'List updated. Share links will include your custom list.' : 'List updated.');
+            });
+            editDlg.addEventListener('click', function (e) { if (e.target === editDlg) editDlg.close(); });
+
+            /* ---------------------------------------------------------------
+             * Guided mode (one item at a time)
+             * ------------------------------------------------------------- */
+            var gDlg = $('#GuidedDialog'), gIndex = 0, gTimer = null;
+            function gNorm(i) { var n = state.slots.length; return ((i % n) + n) % n; }
+            function renderGuided() {
+                var n = state.slots.length, pos = gNorm(gIndex), s = state.slots[pos];
+                $('#GMeta').textContent = s.cat + ' \u00B7 ' + (pos + 1) + ' of ' + n;
+                var title = $('#GItem'); title.textContent = '';
+                if (s.multi) title.appendChild(el('span', { class: 'g-field', text: s.field + ': ' }));
+                title.appendChild(document.createTextNode(s.item));
+                $('#GBar').firstChild.style.width = (n ? countAnswered() / n * 100 : 0) + '%';
+                var cur = state.answers.get(s.key) || 0;
+                var opts = $('#GOptions'); opts.textContent = '';
+                LEVELS.forEach(function (lv, i) {
+                    opts.appendChild(el('button', { type: 'button', class: 'g-opt', 'aria-pressed': cur === i ? 'true' : 'false', 'data-level': i }, [
+                        el('span', { class: 'dot lv' + i, 'aria-hidden': 'true', text: lv.sym }),
+                        el('span', { class: 'lbl', text: i ? lv.name : 'Skip / not entered' }),
+                        el('kbd', { text: String(i) })
+                    ]));
+                });
+                var up = $('#GUp'); up.textContent = '';
+                for (var k = 1; k <= 3 && k < n; k++) {
+                    var ns = state.slots[gNorm(gIndex + k)], v = state.answers.get(ns.key) || 0;
+                    up.appendChild(el('li', null, [
+                        el('span', { class: 'dot lv' + v, 'aria-hidden': 'true', text: LEVELS[v].sym }),
+                        el('span', { text: (ns.multi ? ns.field + ': ' : '') + ns.item + ' \u2014 ' + ns.cat })
+                    ]));
+                }
+            }
+            function gGo(delta) { clearTimeout(gTimer); gIndex = gNorm(gIndex + delta); renderGuided(); }
+            function gPick(level) {
+                setAnswer(state.slots[gNorm(gIndex)].key, level);
+                renderGuided();
+                clearTimeout(gTimer);
+                gTimer = setTimeout(function () { gGo(1); }, 180);
+            }
+            $('#GuidedBtn').addEventListener('click', function () {
+                var first = state.slots.findIndex(function (s) { return !state.answers.get(s.key); });
+                gIndex = first < 0 ? 0 : first;
+                renderGuided();
+                gDlg.showModal();
+            });
+            $('#GOptions').addEventListener('click', function (e) {
+                var b = e.target.closest('.g-opt'); if (b) gPick(+b.getAttribute('data-level'));
+            });
+            $('#GPrev').addEventListener('click', function () { gGo(-1); });
+            $('#GNext').addEventListener('click', function () { gGo(1); });
+            $('#GClose').addEventListener('click', function () { gDlg.close(); });
+            gDlg.addEventListener('close', function () { clearTimeout(gTimer); });
+            gDlg.addEventListener('click', function (e) { if (e.target === gDlg) gDlg.close(); });
+            gDlg.addEventListener('keydown', function (e) {
+                if (e.altKey || e.ctrlKey || e.metaKey) return;
+                if (/^[0-5]$/.test(e.key)) gPick(+e.key);
+                else if (e.key === 'ArrowDown') gGo(1);
+                else if (e.key === 'ArrowUp') gGo(-1);
+                else return;
+                e.preventDefault();
+            });
+
+            /* ---------------------------------------------------------------
+             * Image export: drawn locally on a canvas, saved via a blob: URL.
+             * Always uses the light palette so shared images look the same.
+             * ------------------------------------------------------------- */
+            var IMG = {
+                font: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif',
+                bg: '#F6F5FA', card: '#FFFFFF', border: '#E4E1EE', text: '#1F1D2B', muted: '#6B6880', accent: '#6C4FD8', empty: '#B9B4CC'
+            };
+            function roundRect(ctx, x, y, w, h, r) {
+                ctx.beginPath();
+                ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+                ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+            }
+            function fitText(ctx, text, maxW) {
+                if (ctx.measureText(text).width <= maxW) return text;
+                while (text.length > 1 && ctx.measureText(text + '\u2026').width > maxW) text = text.slice(0, -1);
+                return text + '\u2026';
+            }
+            function drawDot(ctx, cx, cy, r, level) {
+                var lv = LEVELS[level];
+                ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                if (level) { ctx.fillStyle = lv.color; ctx.fill(); }
+                else {
+                    ctx.fillStyle = '#FFFFFF'; ctx.fill();
+                    ctx.setLineDash([2.5, 2]); ctx.strokeStyle = IMG.empty; ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]);
+                }
+                if (lv.sym) {
+                    ctx.fillStyle = lv.ink; ctx.font = '800 ' + Math.round(r * 1.15) + 'px ' + IMG.font;
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(lv.sym, cx, cy + 0.5);
+                    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+                }
+            }
+            function drawImage(name) {
+                var numCols = 4, colW = 330, gap = 16, pad = 28, headerH = 118;
+                var titleH = 32, subH = 18, rowH = 26, cardPad = 14, cardGap = 16, dotR = 9, dotStep = 23;
+                var cats = state.list.map(function (c) {
+                    return { cat: c, h: cardPad * 2 + titleH + (c.fields.length > 1 ? subH : 0) + c.items.length * rowH };
+                });
+                var total = cats.reduce(function (a, c) { return a + c.h + cardGap; }, 0);
+                var avg = total / numCols, cols = [], ci = 0;
+                for (var i = 0; i < numCols; i++) cols.push({ h: 0, cats: [] });
+                cats.forEach(function (c) {
+                    if (cols[ci].h > 0 && cols[ci].h + c.h / 2 > avg && ci < numCols - 1) ci++;
+                    cols[ci].cats.push(c); cols[ci].h += c.h + cardGap;
+                });
+                var tallest = Math.max.apply(null, cols.map(function (c) { return c.h; }));
+                var W = pad * 2 + numCols * colW + (numCols - 1) * gap;
+                var H = pad + headerH + tallest + 28;
+                var scale = 2;
+                var canvas = document.createElement('canvas');
+                canvas.width = W * scale; canvas.height = H * scale;
+                var ctx = canvas.getContext('2d');
+                ctx.scale(scale, scale);
+                ctx.fillStyle = IMG.bg; ctx.fillRect(0, 0, W, H);
+
+                // Header: title, name, progress, legend
+                ctx.fillStyle = IMG.text; ctx.font = '800 30px ' + IMG.font;
+                ctx.fillText('PlayList', pad, pad + 28);
+                var tw = ctx.measureText('PlayList').width;
+                if (name) {
+                    ctx.fillStyle = IMG.accent; ctx.font = '600 24px ' + IMG.font;
+                    ctx.fillText(fitText(ctx, name, 700), pad + tw + 14, pad + 28);
+                }
+                ctx.fillStyle = IMG.muted; ctx.font = '14px ' + IMG.font;
+                ctx.fillText(countAnswered() + ' of ' + state.slots.length + ' answered', pad, pad + 54);
+                var lx = pad, ly = pad + 86;
+                LEVELS.forEach(function (lv, i) {
+                    drawDot(ctx, lx + 11, ly, 11, i);
+                    ctx.fillStyle = IMG.text; ctx.font = '600 15px ' + IMG.font;
+                    ctx.fillText(lv.name, lx + 28, ly + 5);
+                    lx += 28 + ctx.measureText(lv.name).width + 26;
+                });
+
+                // Section cards
+                cols.forEach(function (col, c) {
+                    var x = pad + c * (colW + gap), y = pad + headerH;
+                    col.cats.forEach(function (entry) {
+                        var cat = entry.cat, multi = cat.fields.length > 1;
+                        roundRect(ctx, x, y, colW, entry.h, 14);
+                        ctx.fillStyle = IMG.card; ctx.fill();
+                        ctx.strokeStyle = IMG.border; ctx.lineWidth = 1; ctx.stroke();
+                        var cy = y + cardPad + 18;
+                        ctx.fillStyle = IMG.text; ctx.font = '700 17px ' + IMG.font;
+                        ctx.fillText(fitText(ctx, cat.name, colW - cardPad * 2), x + cardPad, cy);
+                        if (multi) {
+                            cy += subH;
+                            ctx.fillStyle = IMG.muted; ctx.font = '600 12px ' + IMG.font;
+                            ctx.fillText(fitText(ctx, cat.fields.join(' \u00B7 '), colW - cardPad * 2), x + cardPad, cy);
+                        }
+                        cy += 14;
+                        cat.items.forEach(function (item) {
+                            var mid = cy + rowH / 2;
+                            cat.fields.forEach(function (field, fi) {
+                                drawDot(ctx, x + cardPad + dotR + fi * dotStep, mid, dotR, state.answers.get(keyOf(cat.name, item, field)) || 0);
+                            });
+                            var tx = x + cardPad + cat.fields.length * dotStep + 6;
+                            ctx.fillStyle = IMG.text; ctx.font = '14px ' + IMG.font;
+                            ctx.fillText(fitText(ctx, item, x + colW - cardPad - tx), tx, mid + 5);
+                            cy += rowH;
+                        });
+                        y += entry.h + cardGap;
+                    });
+                });
+                ctx.fillStyle = IMG.muted; ctx.font = '12px ' + IMG.font;
+                ctx.fillText('Made with PlayList \u00B7 created on this device, never uploaded', pad, H - 14);
+                return canvas;
+            }
+
+            $('#DownloadBtn').addEventListener('click', function () {
+                var btn = this;
+                var name = $('#Name').value.trim();
+                btn.disabled = true;
+                drawImage(name).toBlob(function (blob) {
+                    btn.disabled = false;
+                    if (!blob) { flash('Sorry, the image could not be created.'); return; }
+                    var url = URL.createObjectURL(blob);
+                    var slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                    var a = el('a', { href: url, download: 'playlist' + (slug ? '-' + slug : '') + '.png' });
+                    document.body.appendChild(a); a.click(); a.remove();
+                    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+                    flash('Image saved to your device.');
+                }, 'image/png');
+            });
+
+            /* ---------------------------------------------------------------
+             * Boot
+             * ------------------------------------------------------------- */
+            // Keep sticky column labels below the sticky top bar
+            if (window.ResizeObserver) new ResizeObserver(function () {
+                document.documentElement.style.setProperty('--topbar-h', $('.topbar').offsetHeight + 'px');
+            }).observe($('.topbar'));
+
+            renderLegend();
+            loadFromHash();
+            renderList();
+            syncUrl(); // upgrades v1.0 links in place, without adding a history entry
+            window.addEventListener('hashchange', function () {
+                if (loadFromHash()) { renderList(); syncUrl(); }
+            });
+        })();
+        </script>
+    </body>
+</html>
