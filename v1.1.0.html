@@ -266,7 +266,43 @@
                 display: inline-grid; place-items: center; font: italic 700 11px/1 Georgia, "Times New Roman", serif; text-transform: none;
             }
             .term-btn:hover .info-i, .term-btn:focus-visible .info-i { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-            .fh-cell { display: inline-flex; justify-content: center; }
+            .fh-cell { display: inline-flex; justify-content: center; min-width: 0; }
+            .fh-cell .term-btn { max-width: 100%; }
+            .fh-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            /* Sections with 3+ person columns (a triad): one labelled row per person */
+            .section.wide .fields-wrap { display: none; }
+            .section.wide .item .choices { flex-basis: 100%; }
+            .section.wide .item .choices::before {
+                content: attr(data-label); flex: 1; min-width: 0; align-self: center; font-size: 13px; font-weight: 600;
+                color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            }
+            /* Person switcher (phones only) */
+            .person-switch { display: none; }
+            .person-switch[hidden] { display: none !important; }
+            .person-switch button {
+                flex: 0 0 auto; min-height: 36px; padding: 6px 14px; border-radius: 99px; border: 1px solid var(--border);
+                background: var(--card); cursor: pointer; font-weight: 600; font-size: 14px; max-width: 12em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            }
+            .person-switch button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+            .person-switch .ps-label { font-size: 13px; color: var(--muted); align-self: center; flex: none; }
+            /* Setup dialog */
+            .hh-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+            .hh-opt {
+                display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px; border-radius: 12px; min-height: 64px;
+                border: 2px solid var(--border); background: var(--bg); cursor: pointer; text-align: left;
+            }
+            .hh-opt:hover { border-color: var(--accent); }
+            .hh-opt[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); }
+            .hh-opt b { font-size: 16px; }
+            .hh-opt span { font-size: 13px; color: var(--muted); }
+            .hh-names { display: grid; gap: 8px; }
+            .hh-names label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+            .hh-names input { min-height: 44px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); font-size: 16px; }
+            .hh-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+            .hh-presets:empty { display: none; }
+            #SetupError { color: #B42318; font-weight: 600; }
+            :root[data-theme="dark"] #SetupError { color: #F7908A; }
+            #SetupError:empty { display: none; }
             dialog.term { position: fixed; inset: auto; margin: 0; width: min(360px, calc(100vw - 16px)); }
             dialog.term::backdrop { background: rgba(15, 12, 25, .18); }
             dialog.term .dlg { gap: 6px; padding: 16px 18px 18px; }
@@ -323,7 +359,18 @@
                 /* keep the column labels in view while scrolling a long section */
                 dialog.glossary { inset: auto 0 0 0; margin: 0; width: 100%; max-width: 100%; max-height: 88vh; border-radius: 20px 20px 0 0; border-bottom: 0; }
                 .top-actions { gap: 6px; }
-                .fields-wrap { position: sticky; top: var(--topbar-h, 0px); z-index: 2; background: var(--card); border-bottom: 1px solid var(--border); }
+                .fields-wrap { position: sticky; top: calc(var(--topbar-h, 0px) + var(--switch-h, 0px)); z-index: 2; background: var(--card); border-bottom: 1px solid var(--border); }
+                .person-switch {
+                    display: flex; gap: 6px; overflow-x: auto; padding: 8px 2px; margin: -8px -2px 4px; scrollbar-width: none;
+                    position: sticky; top: var(--topbar-h, 0px); z-index: 4; background: color-mix(in srgb, var(--bg) 94%, transparent);
+                    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+                }
+                #InputList[data-view="0"] [data-person]:not([data-person="0"]),
+                #InputList[data-view="1"] [data-person]:not([data-person="1"]),
+                #InputList[data-view="2"] [data-person]:not([data-person="2"]) { display: none; }
+                .hh-options { grid-template-columns: 1fr; }
+                .hh-opt { min-height: 52px; flex-direction: row; align-items: baseline; gap: 10px; }
+                .top-actions .icon-btn, .top-actions .btn { width: 38px; min-width: 38px; height: 38px; min-height: 38px; padding: 0; }
             }
             @media (prefers-reduced-motion: reduce) {
                 * { transition: none !important; }
@@ -345,6 +392,9 @@
                     <button id="GlossaryBtn" class="btn" type="button" aria-label="Glossary" aria-haspopup="dialog" title="What the terms mean">
                         <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/></svg>
                         <span class="btn-label">Glossary</span>
+                    </button>
+                    <button id="SetupBtn" class="icon-btn" type="button" aria-label="Who&rsquo;s filling this in" aria-haspopup="dialog" title="Who&rsquo;s filling this in">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2a5 5 0 0 1 6 4.8"/></svg>
                     </button>
                     <button id="EditBtn" class="icon-btn" type="button" aria-label="Edit list" title="Edit list">
                         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.830 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -399,7 +449,8 @@
             </div>
             <div id="LinkNotice" class="notice" hidden></div>
 
-            <div id="InputList" class="sections"></div>
+            <div id="PersonSwitch" class="person-switch" role="group" aria-label="Show answers for" hidden></div>
+            <div id="InputList" class="sections" data-view="all"></div>
 
             <footer>
                 <h2>How your privacy is protected</h2>
@@ -417,7 +468,7 @@
         <dialog id="EditDialog" aria-labelledby="EditTitle">
             <div class="dlg">
                 <div class="dlg-head"><h2 id="EditTitle">Edit list</h2></div>
-                <p>Lines starting with <code>#</code> are sections, <code>(A, B)</code> lists the columns for that section, and <code>*</code> lines are items. Add a definition after <code>::</code>, e.g. <code>* Kissing :: Kissing on the lips</code> (max 300 characters). Add <code>[safety]</code> after a section name, e.g. <code>#Safety [safety]</code>, to answer it with Required / Preferred / Open / N/A. Standard terms already have built-in definitions. Answers to unchanged items are kept. Custom lists, including any definitions you add, are included in share links.</p>
+                <p>Lines starting with <code>#</code> are sections, <code>(A, B)</code> lists the columns for that section, and <code>*</code> lines are items. Add a definition after <code>::</code>, e.g. <code>* Kissing :: Kissing on the lips</code> (max 300 characters). Add <code>[safety]</code> after a section name, e.g. <code>#Safety [safety]</code>, to answer it with Required / Preferred / Open / N/A. A section ending in a person&rsquo;s name in brackets, e.g. <code>#Kinks (Alex)</code>, or a column with their name belongs to that person. Standard terms already have built-in definitions. Answers to unchanged items are kept. Custom lists, including any definitions you add, are included in share links.</p>
                 <label for="ListText" class="sr-only">List text</label>
                 <textarea id="ListText" spellcheck="false"></textarea>
                 <div id="ListError" role="alert"></div>
@@ -426,6 +477,27 @@
                     <span class="spacer"></span>
                     <button type="button" class="btn" id="ListCancel">Cancel</button>
                     <button type="button" class="btn btn-primary" id="ListApply">Apply</button>
+                </div>
+            </div>
+        </dialog>
+
+        <dialog id="SetupDialog" aria-labelledby="SetupTitle">
+            <div class="dlg">
+                <div class="dlg-head"><h2 id="SetupTitle">Who&rsquo;s filling this in?</h2></div>
+                <p>Pick what fits you. You can change it any time with the people button at the top.</p>
+                <div class="hh-options" role="radiogroup" aria-labelledby="SetupTitle">
+                    <button type="button" class="hh-opt" role="radio" data-type="couple" aria-checked="true"><b>A couple</b><span>Two people, any genders</span></button>
+                    <button type="button" class="hh-opt" role="radio" data-type="single" aria-checked="false"><b>A single</b><span>Just you</span></button>
+                    <button type="button" class="hh-opt" role="radio" data-type="triad" aria-checked="false"><b>A triad</b><span>Three people</span></button>
+                </div>
+                <div class="hh-names" id="SetupNames"></div>
+                <div class="hh-presets" id="SetupPresets"></div>
+                <p>Names are optional. They label each person&rsquo;s columns and the image, and they&rsquo;re saved in your share link. Private mode keeps them out of the address bar.</p>
+                <p id="SetupError" role="alert"></p>
+                <div class="dlg-actions">
+                    <button type="button" class="btn" id="SetupCancel">Not now</button>
+                    <span class="spacer"></span>
+                    <button type="button" class="btn btn-primary" id="SetupSave">Start</button>
                 </div>
             </div>
         </dialog>
@@ -502,10 +574,12 @@
             // Sections tagged [safety] use this scale instead. Same 0-5 storage, so links encode the same way.
             var SAFETY_LEVELS = [
                 { name: 'Not entered', color: '#FFFFFF', ink: '#6B6880', sym: '' },
-                { name: 'Required',    color: '#0F766E', ink: '#FFFFFF', sym: '!' },
-                { name: 'Preferred',   color: '#2778C4', ink: '#FFFFFF', sym: '+' },
-                { name: 'Open',        color: '#A9A5C2', ink: '#1F1D2B', sym: '\u2218' }, // ring operator
-                { name: 'N/A',         color: '#D9D6E3', ink: '#4A4760', sym: '\u2013' }  // dash
+                // Bright blue -> light blue -> sand -> pale grey: a clear light/dark ramp that stays apart from
+                // the charcoal No and the pink Favorite with red-green colorblindness too.
+                { name: 'Required',    color: '#2563EB', ink: '#FFFFFF', sym: '!' },
+                { name: 'Preferred',   color: '#8DBDF2', ink: '#10233F', sym: '+' },
+                { name: 'Open',        color: '#DCCBA3', ink: '#3A2F17', sym: '\u2218' }, // ring operator
+                { name: 'N/A',         color: '#E4E2EA', ink: '#4A4760', sym: '\u2013' }  // dash
             ];
             var SCALES = {
                 like:   { levels: LEVELS, cls: 'lv' },
@@ -546,14 +620,12 @@
             ].join('\n');
 
             /* ---------------------------------------------------------------
-             * Default list for share-link format "v3".
-             * Same rule as above: links without an embedded list are decoded
-             * against this exact list by position. To change it, freeze it
-             * like LIST_V2_TEXT and add a v4.
+             * Frozen list for share-link format "v3" (Him/Her, before setup).
+             * Same rule as above: DO NOT reorder, add or remove items.
              * "Play Style" from v2 is merged into Boundaries. Sections tagged
              * [safety] use the Required / Preferred / Open / N/A scale.
              * ------------------------------------------------------------- */
-            var DEFAULT_LIST_TEXT = [
+            var LIST_V3_TEXT = [
                 '#Boundaries', '(General)', '* Social only', '* Soft swap', '* Oral only', '* Full swap', '* Kissing other people',
                 '* Same room, same bed', '* Same room, separate beds', '* Separate rooms', '* Independent play', '',
                 '#Agreements [safety]', '(General)', '* Check in before escalating', '* Stop if either partner signals', '* Agreed safe word or signal',
@@ -575,19 +647,73 @@
             ].join('\n');
 
             /* ---------------------------------------------------------------
+             * Households ("Who's filling this in?") and the default list for
+             * share-link format "v4", built from the household.
+             * DO NOT reorder, add or remove items in defaultListText(): v4 links
+             * without an embedded list are decoded against it by position.
+             * To change it, freeze a copy and add a v5.
+             * ------------------------------------------------------------- */
+            var HOUSEHOLDS = {
+                couple: { code: 'c', defaults: ['Partner 1', 'Partner 2'] },
+                single: { code: 's', defaults: ['Me'] },
+                triad:  { code: 't', defaults: ['Partner 1', 'Partner 2', 'Partner 3'] }
+            };
+            var CODE_TYPES = { c: 'couple', s: 'single', t: 'triad' };
+            var RESERVED_LABELS = ['general', 'giving', 'receiving'];
+            var LABEL_MAX = 20;
+            // Labels become section and column names, so characters with a meaning in the list format are removed.
+            function cleanLabel(s) { return String(s == null ? '' : s).replace(/[()\[\],:#*\u241F\r\n\t]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, LABEL_MAX).trim(); }
+            function makeHousehold(type, names) {
+                var H = HOUSEHOLDS[type];
+                if (!H) return { error: 'Unknown household.' };
+                var labels = H.defaults.map(function (d, i) { return cleanLabel(names && names[i]) || d; });
+                var seen = {};
+                for (var i = 0; i < labels.length; i++) {
+                    var low = labels[i].toLowerCase();
+                    if (RESERVED_LABELS.indexOf(low) >= 0) return { error: '\u201c' + labels[i] + '\u201d is already used for a column. Please pick another name.' };
+                    if (seen[low]) return { error: 'Each person needs a different name.' };
+                    seen[low] = true;
+                }
+                return { type: type, labels: labels, custom: labels.some(function (l, i) { return l !== H.defaults[i]; }) };
+            }
+            var DEFAULT_HH = makeHousehold('couple');
+            var LEGACY_HH = makeHousehold('couple', ['Him', 'Her']); // v1-v3 lists are Him / Her
+
+            var ACTIVITY_ITEMS = ['Kissing', 'Handjob / fingering', 'Oral', 'Swallowing', 'Penetrative sex', 'Penetrative sex (strap on)', 'Anal touch',
+                'Anal sex, pegging', 'Rimming', 'Double penetration', 'Dildos', 'Plugs', 'Vibrators'];
+            var KINK_ITEMS = ['Blindfold', 'Collar', 'Gag', 'Leash', 'Bondage', 'Hair pulling', 'Light pain', 'Cock/Pussy slapping', 'Spanking', 'Nipple clamps', 'Flogging'];
+            function defaultListText(hh) {
+                var L = hh.labels, many = L.length > 1, out = [];
+                function sec(name, cols, items) { out.push('#' + name, '(' + cols.join(', ') + ')'); items.forEach(function (i) { out.push('* ' + i); }); out.push(''); }
+                sec('Boundaries', ['General'], ['Social only', 'Soft swap', 'Oral only', 'Full swap', 'Kissing other people', 'Same room, same bed',
+                    'Same room, separate beds', 'Separate rooms'].concat(many ? ['Independent play'] : []));
+                sec('Agreements [safety]', ['General'], ['Check in before escalating', 'Stop if anyone signals', 'Agreed safe word or signal', 'Anyone can veto']);
+                sec('Safety [safety]', ['General'], ['Condoms for penetrative sex', 'Fresh condom for each partner', 'Condoms or dams for oral',
+                    'Regular STI testing', 'Recent results shared', 'Sober or limited alcohol', 'No photos or videos']);
+                sec('Play Location', ['General'], ['Club', 'Resort', 'Hotel takeover', 'Hotel room', 'Hosting at home', 'Party']);
+                sec('Sexual Preference', L, ['Women', 'Men', 'Nonbinary people']);
+                sec('Groupings', ['General'], (many ? ['Parallel Play'] : []).concat(['Threesome, any genders', 'FFM', 'FMF', 'MFM', 'MMF',
+                    'Foursome, any genders', 'MFFM', 'MFMF', 'Orgy', 'Gangbang']));
+                L.forEach(function (l) { sec('Activities (' + l + ')', ['Giving', 'Receiving'], ACTIVITY_ITEMS); });
+                sec('Observation', ['General'], ['Exhibitionism', 'Voyeurism']);
+                L.forEach(function (l) { sec('Kinks (' + l + ')', ['Giving', 'Receiving'], KINK_ITEMS); });
+                return out.join('\n').trim();
+            }
+
+            /* ---------------------------------------------------------------
              * Built-in glossary. Shown for matching terms in any list (an
              * explicit "* Term :: description" in an edited list wins).
              * Never put into share links: every copy of the page already has it.
              * ------------------------------------------------------------- */
             var GLOSSARY = {
                 sections: {
-                    'Boundaries': 'The big-picture lines for the two of you: how far play goes, whether kissing is part of it, and how close you want to be to each other. Talk these through first, since everything else builds on them.',
+                    'Boundaries': 'The big-picture lines: how far play goes, whether kissing is part of it, and how close you want to be to each other. Talk these through first, since everything else builds on them.',
                     'Agreements': 'The ground rules you agree on before anyone plays. They use the Required / Preferred / Open scale, because they\u2019re about what you need rather than what you enjoy.',
                     'Play Style': 'How close you like to be to the other couple when things get intimate: sharing a bed, sharing a room, or having your own space.',
                     'Play Location': 'Where you feel comfortable meeting up and playing, from clubs and resorts to private homes.',
                     'Safety': 'The safer-sex habits that matter to you. Agreeing on these before you meet anyone helps everyone relax and enjoy themselves.',
-                    'Sexual Preference': 'Who each of you is open to playing with. The Him and Her columns let each partner answer for themselves.',
-                    'Groupings': 'The mix of people you\u2019re open to playing with. The letters stand for who\u2019s involved (F = woman, M = man). People read these combos differently, so always talk through what you mean.',
+                    'Sexual Preference': 'Who each person is open to playing with, answered in their own column. Trans people count as the gender they are.',
+                    'Groupings': 'The mix of people you\u2019re open to playing with. The letters are lifestyle shorthand (F for a woman, M for a man), and the order often hints at who\u2019s in the middle. They don\u2019t fit everyone and people read them differently, so talk through what each of you means.',
                     'Activities (Him)': 'Sexual activities for him: things he\u2019d like to do with others (Giving) and have done to him (Receiving).',
                     'Activities (Her)': 'Sexual activities for her: things she\u2019d like to do with others (Giving) and have done to her (Receiving).',
                     'Observation': 'Watching and being watched: how much you enjoy having an audience, or being one.',
@@ -605,7 +731,7 @@
                     'N/A': 'Doesn\u2019t apply to you, or not something you need to decide on.'
                 },
                 columns: {
-                    'General': 'One answer for the two of you as a couple.',
+                    'General': 'One answer for the two of you together.',
                     'Him': 'His own answer, so each partner can speak for themselves.',
                     'Her': 'Her own answer, so each partner can speak for themselves.',
                     'Giving': 'Doing this to or for someone else.',
@@ -617,7 +743,7 @@
                     'Oral only': 'Oral is as far as it goes with others, with no intercourse. Some couples count this as soft swap; others draw the soft-swap line before oral.',
                     'Full swap': 'Going all the way with someone else, including intercourse. Most couples pair this with clear safer-sex rules they\u2019ve agreed on beforehand.',
                     'Kissing other people': 'Whether kissing on the lips is on the table with others. For many couples it feels more intimate than sex, so some keep it just for each other.',
-                    'Independent play': 'Playing with someone else when your partner isn\u2019t there, like a solo date. Agree on what\u2019s okay and how you\u2019ll share about it afterwards.',
+                    'Independent play': 'Playing with someone else when your partner (or partners) isn\u2019t there, like a solo date. Agree on what\u2019s okay and how you\u2019ll share about it afterwards.',
                     'Check in before escalating': 'Pausing to ask before moving on to something new, like from kissing to oral. A quick look or a word keeps everyone on the same page.',
                     'Stop if either partner signals': 'If either of you gives the signal, play pauses or stops, no questions asked. You can talk it over later, once everyone feels ready.',
                     'Agreed safe word or signal': 'A word or gesture you\u2019ve chosen together that means \u201cslow down\u201d or \u201cstop.\u201d A gesture helps in loud clubs, or when talking is hard.',
@@ -642,7 +768,14 @@
                     'Regular testing': 'Getting tested for STIs on a regular schedule and being open to sharing recent results. It\u2019s normal to ask when someone was last tested.',
                     'Opposite sex': 'Open to playing with people of the other sex.',
                     'Same sex': 'Open to playing with people of the same sex, such as a woman with another woman.',
-                    'Parallel Play': 'Each couple plays with their own partner, side by side, with no swapping. A popular, low-pressure way to start.',
+                    'Parallel Play': 'Everyone plays with their own partner or partners, side by side, with no swapping. A popular, low-pressure way to start.',
+                    'Women': 'Open to playing with women, trans women included.',
+                    'Men': 'Open to playing with men, trans men included.',
+                    'Nonbinary people': 'Open to playing with people who aren\u2019t only a man or a woman. Ask about names, pronouns and the words they like for their bodies.',
+                    'Threesome, any genders': 'Three people playing together, whatever their genders. Handy when the letter combos don\u2019t fit; talk through who does what with whom.',
+                    'Foursome, any genders': 'Four people playing together, often two couples, whatever their genders. Talk through who plays with whom, and whether anyone stays just with their partner.',
+                    'Stop if anyone signals': 'If anyone gives the signal, play pauses or stops, no questions asked. You can talk it over later, once everyone feels ready.',
+                    'Anyone can veto': 'Any of you can say no to a person or a situation, before or during play, and everyone else respects it without pressure.',
                     'FFM': 'A threesome with two women and one man. Usually means the women are also intimate with each other. People use these letters differently, so talk it through.',
                     'FMF': 'A threesome with two women and one man, usually with him in the middle: both women focus on him rather than on each other. Usage varies, so check what everyone means.',
                     'MFM': 'A threesome with two men and one woman, usually with her in the middle: the men focus on her, not on each other. Usage varies, so talk it through.',
@@ -760,9 +893,27 @@
                 }).join('\n\n');
             }
             // Definition lookup: the list's own definition first, then the built-in glossary.
-            function sectionDef(cat) { return cat.def || (cat.scale === 'safety' && GLOSSARY.scaledSections[cat.name]) || GLOSSARY.sections[cat.name] || ''; }
+            function sectionDef(cat) {
+                var d = cat.def || (cat.scale === 'safety' && GLOSSARY.scaledSections[cat.name]) || GLOSSARY.sections[cat.name];
+                if (d) return d;
+                var m = /^(Activities|Kinks) \((.+)\)$/.exec(cat.name);
+                if (m && personIndex(m[2]) >= 0) return m[1] === 'Activities'
+                    ? 'Sexual activities for ' + m[2] + ': things they\u2019d like to do with others (Giving) and have done to them (Receiving).'
+                    : 'Kink and BDSM play for ' + m[2] + ', from light and playful to more intense. Start slowly, agree on limits and a safeword, and check in often.';
+                return '';
+            }
             function itemDef(cat, item) { return (cat.defs && cat.defs[item]) || GLOSSARY.items[item] || ''; }
-            function columnDef(field) { return GLOSSARY.columns[field] || ''; }
+            function columnDef(field) {
+                if (field === 'General') {
+                    var n = state.household.labels.length;
+                    return n === 1 ? 'Your answer.' : n === 3 ? 'One answer for the three of you together.' : GLOSSARY.columns.General;
+                }
+                if (GLOSSARY.columns[field]) return GLOSSARY.columns[field];
+                return personIndex(field) >= 0 ? field + '\u2019s own answer, so everyone speaks for themselves.' : '';
+            }
+            function personIndex(label) { return state.household.labels.indexOf(label); }
+            // Which person a section belongs to ("Kinks (Alex)"), or -1
+            function sectionPerson(name) { var m = /\(([^()]*)\)$/.exec(name); return m ? personIndex(m[1]) : -1; }
             function keyOf(cat, item, field) { return cat + '\u241F' + item + '\u241F' + field; }
             // Order = section, item, column. Same order v1.0 used for its hash.
             function slotsOf(list) {
@@ -777,8 +928,15 @@
                 return out;
             }
 
-            var DEFAULT_LIST = parseList(DEFAULT_LIST_TEXT).list;
-            var DEFAULT_SERIALIZED = serializeList(DEFAULT_LIST);
+            var defaultCache = {};
+            function defaultListFor(hh) {
+                var k = hh.type + '\u241F' + hh.labels.join('\u241F');
+                if (!defaultCache[k]) { var l = parseList(defaultListText(hh)).list; defaultCache[k] = { list: l, ser: serializeList(l) }; }
+                return defaultCache[k];
+            }
+            var DEFAULT_LIST = defaultListFor(DEFAULT_HH).list;
+            var LIST_V3 = parseList(LIST_V3_TEXT).list;
+            var V3_SERIALIZED = serializeList(LIST_V3);
             var LIST_V2 = parseList(LIST_V2_TEXT, { noTags: true }).list;
             var V2_SERIALIZED = serializeList(LIST_V2);
             function hasSafetyScale(list) { return list.some(function (c) { return c.scale === 'safety'; }); }
@@ -787,6 +945,8 @@
              * State. Answers live here, in memory. The URL hash is only a mirror.
              * ------------------------------------------------------------- */
             var state = {
+                household: DEFAULT_HH,    // who is filling it in; labels name the per-person columns
+                view: -1,                 // phone person switcher: -1 = everyone
                 list: DEFAULT_LIST,
                 slots: slotsOf(DEFAULT_LIST),
                 answers: new Map(),       // slot key -> level 1..5
@@ -796,8 +956,13 @@
 
             /* ---------------------------------------------------------------
              * Share-link encoding
+             *   v4:   "#v4:<household>:<answers>" or "#v4:<household>:<answers>:<base64url custom list>"
+             *         <household>: c (couple), s (single) or t (triad), plus
+             *         ".<base64url names, one per line>" when names were typed.
+             *         Default list = defaultListText(household).
              *   v3:   "#v3:<answers>" or "#v3:<answers>:<base64url custom list>"
-             *         Default list = DEFAULT_LIST_TEXT; custom lists may carry [safety] tags.
+             *         Default list = LIST_V3_TEXT (Him / Her). Still read, and still
+             *         written while a v3 list is open, like v2 below.
              *   v2:   "#v2:<answers>" or "#v2:<answers>:<base64url custom list>"
              *         Default list = LIST_V2_TEXT. Still read, and still written
              *         while a v2 list is open, so an old link stays as it was.
@@ -862,18 +1027,31 @@
                 }
             };
 
+            function encodeHousehold(hh) { return HOUSEHOLDS[hh.type].code + (hh.custom ? '.' + b64urlEncode(hh.labels.join('\n')) : ''); }
+            function decodeHousehold(str) {
+                var m = /^([cst])(?:\.([A-Za-z0-9_-]+))?$/.exec(str || '');
+                if (!m) return null;
+                var type = CODE_TYPES[m[1]], names = null;
+                if (m[2]) { try { names = b64urlDecode(m[2]).split('\n'); } catch (e) { return null; } }
+                if (names && names.length !== HOUSEHOLDS[type].defaults.length) return null;
+                var hh = makeHousehold(type, names);
+                return hh.error ? null : hh;
+            }
             function listKind() {
                 var s = serializeList(state.list);
-                return s === DEFAULT_SERIALIZED ? 'default' : s === V2_SERIALIZED ? 'v2' : 'custom';
+                if (s === defaultListFor(state.household).ser) return 'default';
+                return s === V3_SERIALIZED ? 'v3' : s === V2_SERIALIZED ? 'v2' : 'custom';
             }
             function isCustomList() { return listKind() === 'custom'; }
             function buildHash() {
                 var values = state.slots.map(function (s) { return state.answers.get(s.key) || 0; });
                 var data = encodeV2(values);
                 var kind = listKind();
-                if (kind === 'v2') return 'v2:' + data; // previous list, kept as-is until the user switches
-                if (kind === 'default') return data ? 'v3:' + data : '';
-                return 'v3:' + data + ':' + b64urlEncode(serializeList(state.list));
+                if (kind === 'v2') return 'v2:' + data; // earlier lists, kept as-is until the user switches
+                if (kind === 'v3') return 'v3:' + data;
+                var hh = encodeHousehold(state.household);
+                if (kind === 'default') return (data || hh !== 'c') ? 'v4:' + hh + ':' + data : '';
+                return 'v4:' + hh + ':' + data + ':' + b64urlEncode(serializeList(state.list));
             }
             function baseUrl() { return location.href.split('#')[0]; }
             function shareLink() { var h = buildHash(); return baseUrl() + (h ? '#' + h : ''); }
@@ -894,37 +1072,87 @@
                 n.hidden = !text;
             }
 
-            // Shown for links made with the previous (v2) list: answers stay exactly as saved,
+            // Shown for links made with an earlier (v1-v3) list: answers stay exactly as saved,
             // and the user can choose to move to the new list.
             function showUpgradeNotice(prefix) {
                 var n = $('#LinkNotice');
                 n.textContent = '';
-                n.appendChild(el('span', { text: (prefix ? prefix + ' ' : '') + 'This link uses the previous list, so its answers are shown exactly as saved. The new list adds Boundaries, Agreements and a Required / Preferred / Open scale for safety.' }));
+                n.appendChild(el('span', { text: (prefix ? prefix + ' ' : '') + 'This link uses an earlier list, so its answers are shown exactly as saved. The new list adds Boundaries and Agreements, a Required / Preferred / Open scale for safety, and lets you name each person.' }));
                 n.appendChild(el('button', { type: 'button', class: 'btn btn-small', id: 'UpgradeBtn', text: 'Switch to the new list' }));
                 n.classList.add('has-action');
                 n.hidden = false;
             }
-            // v2 list -> default list. Same-named items carry over; Play Style moved into Boundaries.
-            // Old Safety answers used the like/dislike scale, so they are not carried into the Required scale.
+            // Earlier list -> new default list (couple, Him / Her, renameable in setup).
+            // v2: Play Style moved into Boundaries; old like-scale Safety answers are not carried into the Required scale.
+            // v3: renamed items, and Sexual Preference "Opposite / Same sex" becomes Women / Men per person.
             var V2_MOVED = { 'Play Style': 'Boundaries' }, V2_DROPPED = { 'Safety': true };
-            function upgradeList() {
-                if (listKind() !== 'v2') return;
-                var keys = new Set(slotsOf(DEFAULT_LIST).map(function (s) { return s.key; }));
+            var V3_RENAMED = { 'Stop if either partner signals': 'Stop if anyone signals', 'Either partner can veto': 'Anyone can veto', 'Penetrative sex (PIV)': 'Penetrative sex' };
+            var V3_SEXPREF = { 'Opposite sex': { Him: 'Women', Her: 'Men' }, 'Same sex': { Him: 'Men', Her: 'Women' } };
+            function upgradeList(quiet) {
+                var kind = listKind();
+                if (kind !== 'v2' && kind !== 'v3') return;
+                var target = defaultListFor(LEGACY_HH).list;
+                var keys = new Set(slotsOf(target).map(function (s) { return s.key; }));
                 var next = new Map(), kept = 0, safety = 0, other = 0;
                 state.answers.forEach(function (v, k) {
                     var p = k.split('\u241F');
-                    if (V2_DROPPED[p[0]]) { safety++; return; }
-                    var nk = keyOf(V2_MOVED[p[0]] || p[0], p[1], p[2]);
+                    if (kind === 'v2') {
+                        if (V2_DROPPED[p[0]]) { safety++; return; }
+                        p[0] = V2_MOVED[p[0]] || p[0];
+                    }
+                    if (p[0] === 'Sexual Preference' && V3_SEXPREF[p[1]]) p[1] = V3_SEXPREF[p[1]][p[2]];
+                    else if (V3_RENAMED[p[1]]) p[1] = V3_RENAMED[p[1]];
+                    var nk = keyOf(p[0], p[1], p[2]);
                     if (keys.has(nk)) { next.set(nk, v); kept++; } else other++;
                 });
-                setList(DEFAULT_LIST);
+                state.household = LEGACY_HH;
+                setList(target);
                 state.answers = next;
                 renderList();
                 syncUrl();
                 showNotice('');
-                flash('Switched to the new list. ' + kept + ' answer' + (kept === 1 ? '' : 's') + ' carried over.' +
+                if (!quiet) flash('Switched to the new list. ' + kept + ' answer' + (kept === 1 ? '' : 's') + ' carried over.' +
                     (safety ? ' Safety now uses Required / Preferred / Open / N/A, so please answer it again.' : '') +
-                    (other ? ' ' + other + ' could not be matched.' : ''));
+                    (other ? ' ' + other + ' could not be matched.' : '') + ' Use the people button to rename Him and Her.');
+                return { kept: kept, dropped: safety + other };
+            }
+
+            // Move answers to new person labels by position (person 1 -> person 1 ...). null = that person was removed.
+            function relabelName(name, from, to) {
+                var m = /^(.*) \(([^()]*)\)$/.exec(name), i = m ? from.indexOf(m[2]) : -1;
+                if (i < 0) return name;
+                return i < to.length ? m[1] + ' (' + to[i] + ')' : null;
+            }
+            function relabelField(f, from, to) { var i = from.indexOf(f); return i < 0 ? f : (i < to.length ? to[i] : null); }
+            function relabelKey(k, from, to) {
+                var p = k.split('\u241F'), c = relabelName(p[0], from, to), f = relabelField(p[2], from, to);
+                return c == null || f == null ? null : keyOf(c, p[1], f);
+            }
+            // Returns an error message, or null when the household was applied.
+            function applyHousehold(hh) {
+                var kind = listKind();
+                if (kind === 'v2' || kind === 'v3') { upgradeList(true); kind = 'default'; }
+                var from = state.household.labels, to = hh.labels, list;
+                if (kind === 'custom') {
+                    if (to.length !== from.length) return 'Your list has been edited, so only the names can change here. Restore the default list (gear button) to change who\u2019s filling it in.';
+                    var renamed = state.list.map(function (c) {
+                        return { name: relabelName(c.name, from, to), fields: c.fields.map(function (f) { return relabelField(f, from, to); }), items: c.items, def: c.def, defs: c.defs, scale: c.scale };
+                    });
+                    var parsed = parseList(serializeList(renamed));
+                    if (parsed.error) return 'Those names clash with your list: ' + parsed.error;
+                    list = parsed.list;
+                } else list = defaultListFor(hh).list;
+                var before = state.answers.size, next = new Map();
+                state.answers.forEach(function (v, k) { var nk = relabelKey(k, from, to); if (nk) next.set(nk, v); });
+                state.household = hh;
+                state.answers = next;
+                setList(list);
+                state.view = -1;
+                renderList();
+                syncUrl();
+                var lost = before - state.answers.size;
+                flash(lost ? lost + ' answer' + (lost === 1 ? '' : 's') + ' for people no longer in the list were cleared.' : 'Saved. Columns now show ' + to.join(', ') + '.');
+                return null;
             }
             $('#LinkNotice').addEventListener('click', function (e) { if (e.target.closest('#UpgradeBtn')) upgradeList(); });
 
@@ -951,29 +1179,38 @@
                 var m = /^v(\d+):/.exec(h);
                 if (m) {
                     var ver = m[1];
-                    if (ver !== '2' && ver !== '3') {
+                    if (ver !== '2' && ver !== '3' && ver !== '4') {
                         showNotice('This link was made with a different version of PlayList (format v' + ver + ') and can\u2019t be opened here.');
                         return false;
                     }
-                    var parts = h.split(':');
-                    var list = ver === '2' ? LIST_V2 : DEFAULT_LIST;
-                    if (parts[2]) {
+                    var parts = h.split(':'), hh = LEGACY_HH, at = 1;
+                    if (ver === '4') {
+                        hh = decodeHousehold(parts[1]);
+                        if (!hh) { showNotice('This share link looks damaged, so its answers weren\u2019t loaded.'); return false; }
+                        at = 2;
+                    }
+                    var list = ver === '2' ? LIST_V2 : ver === '3' ? LIST_V3 : defaultListFor(hh).list;
+                    if (parts[at + 1]) {
                         var parsed;
-                        try { parsed = parseList(b64urlDecode(parts[2]), { noTags: ver === '2' }); } catch (e) { parsed = { error: 'unreadable' }; }
+                        try { parsed = parseList(b64urlDecode(parts[at + 1]), { noTags: ver === '2' }); } catch (e) { parsed = { error: 'unreadable' }; }
                         if (parsed.error) { showNotice('This link\u2019s custom list couldn\u2019t be read, so its answers weren\u2019t loaded.'); return false; }
                         list = parsed.list;
                     }
                     var values;
-                    try { values = decodeV2(parts[1] || ''); } catch (e) { showNotice('This share link looks damaged, so its answers weren\u2019t loaded.'); return false; }
+                    try { values = decodeV2(parts[at] || ''); } catch (e) { showNotice('This share link looks damaged, so its answers weren\u2019t loaded.'); return false; }
+                    state.household = hh;
+                    state.view = -1;
                     setList(list);
                     applyValues(values);
-                    if (parts[2]) showNotice('This link uses a custom list, which has been loaded.');
-                    else if (ver === '2') showUpgradeNotice('');
+                    if (parts[at + 1]) showNotice('This link uses a custom list, which has been loaded.');
+                    else if (ver !== '4') showUpgradeNotice('');
                     else showNotice('');
                     return true;
                 }
                 // Untagged: a v1.0 link. It is positional against the v2 list (same items).
                 if (h.length >= 10 && /^[a-zA-Z0-9\-_.=+*^!@]+$/.test(h)) {
+                    state.household = LEGACY_HH;
+                    state.view = -1;
                     setList(LIST_V2);
                     applyValues(legacy.decode(LEVELS.length, h));
                     showUpgradeNotice('Opened a link from PlayList v1.0. It has been upgraded to the new link format.');
@@ -1033,14 +1270,36 @@
                 return b;
             }
 
+            function renderSwitch() {
+                var box = $('#PersonSwitch'), L = state.household.labels;
+                box.textContent = '';
+                box.hidden = L.length < 2;
+                if (box.hidden) { state.view = -1; }
+                else {
+                    box.appendChild(el('span', { class: 'ps-label', text: 'Show:' }));
+                    [-1].concat(L.map(function (_, i) { return i; })).forEach(function (i) {
+                        box.appendChild(el('button', { type: 'button', 'data-view': String(i), 'aria-pressed': state.view === i ? 'true' : 'false', text: i < 0 ? 'Everyone' : L[i] }));
+                    });
+                }
+                $('#InputList').setAttribute('data-view', state.view < 0 ? 'all' : String(state.view));
+            }
+            $('#PersonSwitch').addEventListener('click', function (e) {
+                var b = e.target.closest('button'); if (!b) return;
+                state.view = +b.getAttribute('data-view');
+                renderSwitch();
+            });
+
             function renderList() {
                 renderLegend();
+                renderSwitch();
                 var root = $('#InputList');
                 root.textContent = '';
                 groupsByKey = new Map();
                 sectionEls = [];
                 state.list.forEach(function (cat) {
-                    var details = el('details', { class: 'section' });
+                    var details = el('details', { class: 'section' + (cat.fields.length > 2 ? ' wide' : '') });
+                    var owner = sectionPerson(cat.name);
+                    if (owner >= 0) details.setAttribute('data-person', String(owner));
                     if (!state.collapsed.has(cat.name)) details.open = true;
                     var count = el('span', { class: 'sec-count' });
                     var bar = el('div', { class: 'bar sec-bar', 'aria-hidden': 'true' }, [el('i')]);
@@ -1055,10 +1314,11 @@
                     if (multi) {
                         var head = el('div', { class: 'fields-head' });
                         cat.fields.forEach(function (f) {
-                            var cell = el('span', { class: 'fh-cell' });
+                            var cell = el('span', { class: 'fh-cell', title: f });
+                            if (personIndex(f) >= 0) cell.setAttribute('data-person', String(personIndex(f)));
                             if (columnDef(f)) {
                                 var fb = termButton({ kind: 'column', cat: cat.name, field: f }, f + ', what this column means');
-                                fb.insertBefore(document.createTextNode(f), fb.firstChild);
+                                fb.insertBefore(el('span', { class: 'fh-text', text: f }), fb.firstChild);
                                 cell.appendChild(fb);
                             } else cell.textContent = f;
                             head.appendChild(cell);
@@ -1077,7 +1337,8 @@
                         li.appendChild(nameEl);
                         cat.fields.forEach(function (field) {
                             var key = keyOf(cat.name, item, field);
-                            var group = el('div', { class: 'choices', role: 'group', 'aria-label': item + (multi ? ', ' + field : ''), 'data-key': key });
+                            var group = el('div', { class: 'choices', role: 'group', 'aria-label': item + (multi ? ', ' + field : ''), 'data-key': key, 'data-label': field });
+                            if (multi && personIndex(field) >= 0) group.setAttribute('data-person', String(personIndex(field)));
                             for (var lv = 1; lv < sc.levels.length; lv++) {
                                 group.appendChild(el('button', {
                                     type: 'button', class: 'choice ' + sc.cls + lv, 'data-level': lv, 'aria-pressed': 'false',
@@ -1255,7 +1516,7 @@
                 editDlg.showModal();
             });
             $('#ListCancel').addEventListener('click', function () { editDlg.close(); });
-            $('#ListReset').addEventListener('click', function () { $('#ListText').value = DEFAULT_LIST_TEXT; $('#ListError').textContent = ''; });
+            $('#ListReset').addEventListener('click', function () { $('#ListText').value = defaultListText(state.household); $('#ListError').textContent = ''; });
             $('#ListApply').addEventListener('click', function () {
                 var r = parseList($('#ListText').value);
                 if (r.error) { $('#ListError').textContent = r.error; return; }
@@ -1580,16 +1841,81 @@
             });
 
             /* ---------------------------------------------------------------
+             * "Who's filling this in?" setup. Offered once per tab when the page
+             * opens without a link; always available from the people button.
+             * ------------------------------------------------------------- */
+            var SETUP_KEY = 'playlist-setup-seen';
+            var setupDlg = $('#SetupDialog'), setupType = 'couple';
+            function renderSetup(names) {
+                $$('.hh-opt', setupDlg).forEach(function (b) { b.setAttribute('aria-checked', b.getAttribute('data-type') === setupType ? 'true' : 'false'); b.tabIndex = b.getAttribute('data-type') === setupType ? 0 : -1; });
+                var box = $('#SetupNames'); box.textContent = '';
+                HOUSEHOLDS[setupType].defaults.forEach(function (d, i) {
+                    var input = el('input', { type: 'text', maxlength: String(LABEL_MAX), autocomplete: 'off', spellcheck: 'false', placeholder: d, 'data-i': String(i) });
+                    input.value = (names && names[i]) || '';
+                    box.appendChild(el('label', null, [document.createTextNode(setupType === 'single' ? 'Your name or label (optional)' : 'Person ' + (i + 1) + ' (optional)'), input]));
+                });
+                var pr = $('#SetupPresets'); pr.textContent = '';
+                if (setupType === 'couple') pr.appendChild(el('button', { type: 'button', class: 'btn btn-small', 'data-preset': 'Him|Her', text: 'Use Him & Her' }));
+                $('#SetupError').textContent = '';
+            }
+            function setupNames() { return $$('#SetupNames input').map(function (i) { return i.value; }); }
+            function openSetup(first) {
+                var hh = state.household;
+                setupType = hh.type;
+                renderSetup(hh.custom ? hh.labels : null);
+                $('#SetupSave').textContent = first ? 'Start' : 'Save';
+                setupDlg.showModal();
+            }
+            $('.hh-options').addEventListener('click', function (e) {
+                var b = e.target.closest('.hh-opt'); if (!b) return;
+                var typed = setupNames();
+                setupType = b.getAttribute('data-type');
+                renderSetup(typed);
+                b.focus();
+            });
+            $('.hh-options').addEventListener('keydown', function (e) {
+                if (['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].indexOf(e.key) < 0) return;
+                var types = ['couple', 'single', 'triad'], i = types.indexOf(setupType) + (e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : 2);
+                var typed = setupNames();
+                setupType = types[i % 3]; renderSetup(typed);
+                $('.hh-opt[data-type="' + setupType + '"]').focus();
+                e.preventDefault();
+            });
+            $('#SetupPresets').addEventListener('click', function (e) {
+                var b = e.target.closest('[data-preset]'); if (!b) return;
+                renderSetup(b.getAttribute('data-preset').split('|'));
+            });
+            $('#SetupSave').addEventListener('click', function () {
+                var hh = makeHousehold(setupType, setupNames());
+                if (hh.error) { $('#SetupError').textContent = hh.error; return; }
+                var err = applyHousehold(hh);
+                if (err) { $('#SetupError').textContent = err; return; }
+                setupDlg.close();
+            });
+            $('#SetupCancel').addEventListener('click', function () { setupDlg.close(); });
+            setupDlg.addEventListener('close', function () { try { sessionStorage.setItem(SETUP_KEY, '1'); } catch (e) { /* ignore */ } });
+            setupDlg.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); $('#SetupSave').click(); } });
+            $('#SetupBtn').addEventListener('click', function () { openSetup(false); });
+
+            /* ---------------------------------------------------------------
              * Boot
              * ------------------------------------------------------------- */
             // Keep sticky column labels below the sticky top bar
             if (window.ResizeObserver) new ResizeObserver(function () {
                 document.documentElement.style.setProperty('--topbar-h', $('.topbar').offsetHeight + 'px');
             }).observe($('.topbar'));
+            // ...and below the sticky person switcher on phones
+            if (window.ResizeObserver) new ResizeObserver(function () {
+                var sw = $('#PersonSwitch');
+                document.documentElement.style.setProperty('--switch-h', (getComputedStyle(sw).position === 'sticky' ? sw.offsetHeight : 0) + 'px');
+            }).observe($('#PersonSwitch'));
 
-            loadFromHash();
+            var fromLink = loadFromHash();
             renderList();
             syncUrl(); // upgrades v1.0 links in place, without adding a history entry
+            var setupSeen = false;
+            try { setupSeen = sessionStorage.getItem(SETUP_KEY) === '1'; } catch (e) { /* ignore */ }
+            if (!fromLink && !location.hash && !setupSeen) openSetup(true);
             window.addEventListener('hashchange', function () {
                 if (loadFromHash()) { renderList(); syncUrl(); }
             });
