@@ -37,6 +37,12 @@
                     color-scheme: dark;
                 }
             }
+            /* Dark mode: No keeps its dark slate fill and white X, with a light edge so it stands out on dark cards */
+            @media (prefers-color-scheme: dark) {
+                :root:not([data-theme="light"]) .lv5 { --c: #4A5162; --edge: #A3AABB; }
+                :root:not([data-theme="light"]) #ListError { color: #F7908A; }
+            }
+            :root[data-theme="dark"] .lv5 { --c: #4A5162; --edge: #A3AABB; }
             :root[data-theme="dark"] {
                 --bg: #15141B; --card: #1F1E28; --card-2: #282633; --text: #ECEAF4; --muted: #A19DB5;
                 --border: #34323F; --accent: #9C86FF; --accent-ink: #15141B; --accent-soft: #2D2843;
@@ -171,7 +177,7 @@
                 width: var(--sz); height: var(--sz); flex: none; border-radius: 50%;
                 display: inline-grid; place-items: center; padding: 0;
                 font-size: 14px; font-weight: 800; line-height: 1;
-                border: 2px solid var(--c); background: var(--c); color: var(--ink);
+                border: 2px solid var(--edge, var(--c)); background: var(--c); color: var(--ink);
             }
             .lv1 { --c: var(--l1); --ink: var(--l1-ink); }
             .lv2 { --c: var(--l2); --ink: var(--l2-ink); }
@@ -202,7 +208,7 @@
             .choices.has-sel .choice:not([aria-pressed="true"]):hover { opacity: .9; }
             .choice[aria-pressed="true"] {
                 background: var(--c); color: var(--ink); transform: scale(1.08);
-                box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--c);
+                box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--edge, var(--c));
             }
             .choice[aria-pressed="true"] .sym { opacity: 1; }
 
@@ -226,7 +232,8 @@
                 width: 100%; height: min(55vh, 520px); resize: vertical; padding: 12px; border-radius: 10px;
                 border: 1px solid var(--border); background: var(--bg); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px;
             }
-            #ListError { color: var(--l5); font-weight: 600; }
+            #ListError { color: #B42318; font-weight: 600; }
+            :root[data-theme="dark"] #ListError { color: #F7908A; }
             #ListError:empty { display: none; }
             .g-meta { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 700; }
             .g-item { font-size: 22px; font-weight: 700; margin: 0; }
@@ -490,7 +497,7 @@
                 { name: 'Like',        color: '#2E9E58', ink: '#FFFFFF', sym: '\u2713' }, // check
                 { name: 'Okay',        color: '#E2B203', ink: '#1F1D2B', sym: '~' },
                 { name: 'Maybe',       color: '#EF7D22', ink: '#1F1D2B', sym: '?' },
-                { name: 'No',          color: '#C93838', ink: '#FFFFFF', sym: '\u2715' }  // cross
+                { name: 'No',          color: '#3D4452', ink: '#FFFFFF', sym: '\u2715' }  // cross on dark slate: never confused with the pink Favorite, even with red-green colorblindness
             ];
             // Sections tagged [safety] use this scale instead. Same 0-5 storage, so links encode the same way.
             var SAFETY_LEVELS = [
