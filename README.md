@@ -12,5 +12,5 @@ PlayList is a single HTML file that runs entirely in your browser:
 
 ## Versions
 
-- [v1.1.0](https://playstyler.github.io/PlayList/v1.1.0.html): refreshed design, dark mode, progress, private mode, versioned share links (`#v4:...`), a "Who's filling this in?" setup (couple, single or triad, with optional names), Boundaries and Agreements sections, a Required / Preferred / Open / N/A scale for safety, a consent note, and a safer image export (discreet style, phone-sized layout, optional name). Opens `#v3:`, `#v2:` and v1.0.0 links exactly as they were saved.
+- [v1.1.0](https://playstyler.github.io/PlayList/v1.1.0.html): refreshed design, dark mode, progress, private mode, versioned share links (`#v4:...`), a "Who's filling this in?" setup (couple, single or triad, with optional names), Boundaries and Agreements sections, a Required / Preferred / Open / N/A scale for safety, a consent note, and a safer image export (discreet style, phone-sized layout, optional name), and a Compare view for two households' links, read on the device only. Opens `#v3:`, `#v2:` and v1.0.0 links exactly as they were saved.
 - [v1.0.0](https://playstyler.github.io/PlayList/v1.0.0.html): original version, kept so existing links keep working.
