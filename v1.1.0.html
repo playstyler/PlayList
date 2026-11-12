@@ -141,8 +141,8 @@
                 background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
             }
             .notice strong { font-weight: 700; }
-            .notice.has-action, .notice.consent { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
-            .notice.has-action > span, .notice.consent > p { flex: 1 1 16rem; margin: 0; }
+            .notice.has-action { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+            .notice.has-action > span { flex: 1 1 16rem; margin: 0; }
 
             /* Sections (multi-column, reflows on its own) */
             .sections { columns: 380px 4; column-gap: 16px; }
@@ -153,18 +153,18 @@
             }
             .section > summary {
                 list-style: none; cursor: pointer; padding: 14px 16px 12px; display: grid;
-                grid-template-columns: 1fr auto auto; align-items: center; gap: 2px 12px;
+                grid-template-columns: 1fr auto; align-items: center; gap: 2px 12px;
             }
             .section > summary::-webkit-details-marker { display: none; }
             .section > summary:hover { background: var(--card-2); }
             .sec-title { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
-            .sec-count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-            .section.done .sec-count { color: var(--accent); font-weight: 700; }
+            .sec-title .term-btn { min-height: 32px; }
             .chev { width: 18px; height: 18px; transition: transform .2s; color: var(--muted); }
             .section[open] .chev { transform: rotate(180deg); }
-            .sec-bar { grid-column: 1 / -1; height: 4px; margin-top: 8px; }
+            .sec-bar { grid-column: 1 / -1; height: 3px; margin-top: 6px; }
             .items { list-style: none; margin: 0; padding: 0 16px 12px; }
-            .fields-head { display: flex; justify-content: flex-end; gap: 12px; padding: 4px 0 2px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+            .fields-head { display: flex; justify-content: flex-end; gap: 12px; padding: 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+            .fields-head .term-btn { min-height: 24px; }
             .fields-head > .fh-cell { width: calc(var(--sz) * 5 + var(--gap) * 4); text-align: center; }
             .fields-wrap { padding-bottom: 0; }
             .item {
@@ -198,6 +198,7 @@
             .dot.lv0, .dot.sv0 { background: transparent; border: 2px dashed var(--muted); }
             .legend .legend-break { flex-basis: 100%; height: 0; }
             .legend .legend-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+            .sec-scale-wrap { display: none; }
             .sec-scale { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0; padding: 0 0 6px; list-style: none; font-size: 13px; color: var(--muted); }
             .sec-scale li { display: inline-flex; align-items: center; gap: 5px; }
             .sec-scale .dot { --sz: 18px; font-size: 10px; border-width: 1.5px; }
@@ -260,15 +261,15 @@
                 cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; min-height: 28px;
                 text-transform: inherit; letter-spacing: inherit;
             }
-            .item-name .term-btn { display: inline; padding: 4px 0; min-height: 0; line-height: inherit; }
-            .item-name .term-btn .info-i { display: inline-grid; vertical-align: -2px; margin-left: 6px; }
-            .term-btn:hover { text-decoration: underline dotted; text-underline-offset: 3px; }
-            .term-btn.icon-only { min-width: 28px; justify-content: center; vertical-align: middle; margin: -4px 0 -4px 2px; }
-            .info-i {
-                width: 16px; height: 16px; flex: none; border-radius: 50%; border: 1.5px solid currentColor; color: var(--muted);
-                display: inline-grid; place-items: center; font: italic 700 11px/1 Georgia, "Times New Roman", serif; text-transform: none;
+            /* A term with a definition: dotted underline, tap or Enter opens it */
+            .term-btn {
+                text-decoration: underline dotted; text-decoration-thickness: 1.5px; text-underline-offset: 4px;
+                text-decoration-color: color-mix(in srgb, var(--muted) 75%, transparent); -webkit-tap-highlight-color: transparent;
             }
-            .term-btn:hover .info-i, .term-btn:focus-visible .info-i { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+            .term-btn:hover { text-decoration-color: var(--accent); text-decoration-style: solid; }
+            .term-btn:focus-visible { outline-offset: 1px; }
+            /* inline padding grows the tap area without moving the text */
+            .item-name .term-btn { display: inline; padding: 7px 0; min-height: 0; line-height: inherit; }
             .fh-cell { display: inline-flex; justify-content: center; min-width: 0; }
             .fh-cell .term-btn { max-width: 100%; }
             .fh-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -417,6 +418,7 @@
                 .kbd-hint { display: none; }
                 /* each safety section carries its own scale key, so the panel stays short */
                 .legend .legend-break, .legend .ls { display: none; }
+                .sec-scale-wrap { display: block; }
                 .share .btn { white-space: nowrap; padding: 8px 10px; font-size: 14px; }
                 /* keep the column labels in view while scrolling a long section */
                 dialog.glossary { inset: auto 0 0 0; margin: 0; width: 100%; max-width: 100%; max-height: 88vh; border-radius: 20px 20px 0 0; border-bottom: 0; }
@@ -453,9 +455,6 @@
                 .theme-btn2 { display: inline-flex; }
                 .switch-row { gap: 10px; }
                 .notice { padding: 10px 12px; font-size: 14px; margin-bottom: 10px; }
-                .notice.consent { gap: 6px 10px; flex-wrap: nowrap; }
-                .notice.consent > p { flex: 1 1 auto; }
-                .notice.consent .btn { white-space: nowrap; flex: none; }
                 .ex-row { grid-template-columns: 1fr; }
                 dialog.compare { width: 100%; max-width: 100%; height: 100%; max-height: 100%; margin: 0; border: 0; border-radius: 0; }
                 dialog.compare .dlg { padding: 14px 12px 20px; }
@@ -542,10 +541,6 @@
                 </div>
             </section>
 
-            <div id="ConsentNote" class="notice consent" role="note" hidden>
-                <p><strong>This is a starting point for a conversation, not a contract.</strong> Anyone can change their mind at any time.</p>
-                <button type="button" class="btn btn-small" id="ConsentDismiss">Got it</button>
-            </div>
             <div id="PrivateBanner" class="notice" hidden>
                 <strong>Private mode is on.</strong> Answers live only in this tab's memory and vanish when you close or reload it. Use &ldquo;Copy share link&rdquo; to keep or send them.
             </div>
@@ -1443,7 +1438,8 @@
                     ul.appendChild(el('li', { class: 'ls', title: GLOSSARY.scale[lv.name] }, [dot, el('span', { text: lv.name })]));
                 });
             }
-            // Small key at the top of each Required-scale section (the panel legend hides it on phones)
+            // Key for the Required scale, shown once, at the top of the first section that uses it, on phones
+            // (on wider screens the panel legend has it). Each dot also has its name as a tooltip.
             function scaleKey() {
                 var ul = el('ul', { class: 'sec-scale', 'aria-label': 'Scale for this section' });
                 SAFETY_LEVELS.forEach(function (lv, i) {
@@ -1453,13 +1449,11 @@
                 return ul;
             }
 
-            // A button that opens a definition. iconOnly: just the (i), labelled for screen readers.
-            function termButton(ref, label, iconOnly) {
-                var b = el('button', { type: 'button', class: 'term-btn' + (iconOnly ? ' icon-only' : ''), 'aria-haspopup': 'dialog', 'aria-label': label, 'data-kind': ref.kind, 'data-cat': ref.cat });
+            // A term that opens its definition: the word itself is the button (dotted underline).
+            function termButton(ref, label) {
+                var b = el('button', { type: 'button', class: 'term-btn', 'aria-haspopup': 'dialog', 'aria-label': label, 'data-kind': ref.kind, 'data-cat': ref.cat, title: 'What does this mean?' });
                 if (ref.item != null) b.setAttribute('data-item', ref.item);
                 if (ref.field != null) b.setAttribute('data-field', ref.field);
-                b.appendChild(el('span', { class: 'info-i', 'aria-hidden': 'true', text: 'i' }));
-                if (!iconOnly) b.title = 'What does this mean?';
                 return b;
             }
 
@@ -1489,21 +1483,23 @@
                 root.textContent = '';
                 groupsByKey = new Map();
                 sectionEls = [];
+                var keyShown = false;
                 state.list.forEach(function (cat) {
                     var details = el('details', { class: 'section' + (cat.fields.length > 2 ? ' wide' : '') });
                     var owner = sectionPerson(cat.name);
                     if (owner >= 0) details.setAttribute('data-person', String(owner));
                     if (!state.collapsed.has(cat.name)) details.open = true;
-                    var count = el('span', { class: 'sec-count' });
+                    var count = el('span', { class: 'sec-count sr-only' }); // read out, not shown
                     var bar = el('div', { class: 'bar sec-bar', 'aria-hidden': 'true' }, [el('i')]);
-                    var title = el('span', { class: 'sec-title', text: cat.name });
-                    if (sectionDef(cat)) title.appendChild(termButton({ kind: 'section', cat: cat.name }, 'About ' + cat.name, true));
+                    var title = el('span', { class: 'sec-title' });
+                    if (sectionDef(cat)) { var stb = termButton({ kind: 'section', cat: cat.name }, cat.name + ', about this section'); stb.textContent = cat.name; title.appendChild(stb); }
+                    else title.textContent = cat.name;
                     details.appendChild(el('summary', null, [title, count, chevron(), bar]));
                     details.addEventListener('toggle', function () {
                         if (details.open) state.collapsed.delete(cat.name); else state.collapsed.add(cat.name);
                     });
                     var multi = cat.fields.length > 1, sc = scaleOf(cat);
-                    if (cat.scale === 'safety') details.appendChild(el('div', { class: 'items' }, [scaleKey()]));
+                    if (cat.scale === 'safety' && !keyShown) { keyShown = true; details.appendChild(el('div', { class: 'items sec-scale-wrap' }, [scaleKey()])); }
                     if (multi) {
                         var head = el('div', { class: 'fields-head' });
                         cat.fields.forEach(function (f) {
@@ -2176,10 +2172,10 @@
                 });
                 return res;
             }
-            function cmpTerm(kind, title, desc, context) {
-                if (!desc) return null;
-                var b = el('button', { type: 'button', class: 'term-btn icon-only', 'aria-haspopup': 'dialog', 'aria-label': 'What does \u201c' + title + '\u201d mean?' });
-                b.appendChild(el('span', { class: 'info-i', 'aria-hidden': 'true', text: 'i' }));
+            // The word itself opens its definition (dotted underline); plain text when there is none.
+            function cmpTerm(text, title, desc, context) {
+                if (!desc) return document.createTextNode(text);
+                var b = el('button', { type: 'button', class: 'term-btn', 'aria-haspopup': 'dialog', title: 'What does this mean?', text: text });
                 b._term = { title: title, context: context, desc: desc };
                 return b;
             }
@@ -2194,8 +2190,7 @@
             }
             function sectionDefFor(sec, scale) { return (scale === 'safety' && GLOSSARY.scaledSections[sec]) || GLOSSARY.sections[sec] || ''; }
             function cmpRow(c, r) {
-                var name = el('span', { class: 'cmp-name' }, [document.createTextNode(r.item)]);
-                var t = cmpTerm('item', r.item, r.def || GLOSSARY.items[r.item], r.sec); if (t) name.appendChild(t);
+                var name = el('span', { class: 'cmp-name' }, [cmpTerm(r.item, r.item, r.def || GLOSSARY.items[r.item], r.sec)]);
                 if (r.dir) name.appendChild(el('small', { text: r.dir }));
                 if (r.why) name.appendChild(el('small', { class: 'cmp-why', text: r.why }));
                 var sides = el('span', { class: 'cmp-sides' });
@@ -2208,8 +2203,7 @@
                 rows.forEach(function (r) {
                     if (r.sec !== last) {
                         last = r.sec;
-                        var h = el('h4', null, [document.createTextNode(r.sec)]);
-                        var t = cmpTerm('section', r.sec, sectionDefFor(r.sec, r.scale), 'Section'); if (t) h.appendChild(t);
+                        var h = el('h4', null, [cmpTerm(r.sec, r.sec, sectionDefFor(r.sec, r.scale), 'Section')]);
                         box.appendChild(h);
                     }
                     box.appendChild(cmpRow(c, r));
@@ -2230,17 +2224,22 @@
                 var total = res.first.length + res.both.length + res.talk.length + res.no.length;
                 body.appendChild(el('p', { class: 'cmp-summary', text: 'You (' + hhText(c.A) + ') and them (' + hhText(c.B) + '): ' +
                     res.first.length + ' to agree on first, ' + res.both.length + ' both into it, ' + res.talk.length + ' worth talking about, ' + res.no.length + ' not for us.' }));
-                var modeHelp = el('p', { class: 'cmp-note' }, [document.createTextNode(c.mode === 'hh'
-                    ? 'Comparing households as a whole: a No from anyone counts.'
-                    : 'Comparing ' + personName(c, 'A', c.pa) + ' with ' + personName(c, 'B', c.pb) + '. Giving is matched with the other person\u2019s Receiving.')]);
-                var mt = cmpTerm('mode', c.mode === 'hh' ? 'Households' : 'Person by person', GLOSSARY.compare[c.mode === 'hh' ? 'Households' : 'Person by person'], 'Compare'); if (mt) modeHelp.appendChild(mt);
+                var modeHelp = el('p', { class: 'cmp-note' });
+                if (c.mode === 'hh') {
+                    modeHelp.appendChild(document.createTextNode('Comparing '));
+                    modeHelp.appendChild(cmpTerm('households as a whole', 'Households', GLOSSARY.compare.Households, 'Compare'));
+                    modeHelp.appendChild(document.createTextNode(': a No from anyone counts.'));
+                } else {
+                    modeHelp.appendChild(document.createTextNode('Comparing ' + personName(c, 'A', c.pa) + ' with ' + personName(c, 'B', c.pb) + '. '));
+                    modeHelp.appendChild(cmpTerm('Giving is matched with the other person\u2019s Receiving', 'Person by person', GLOSSARY.compare['Person by person'], 'Compare'));
+                    modeHelp.appendChild(document.createTextNode('.'));
+                }
                 body.appendChild(modeHelp);
                 CMP_GROUPS.forEach(function (gdef) {
                     var rows = res[gdef.id];
                     if (gdef.id === 'first' && !rows.length) return;
                     var box = el('section', { class: 'cmp-group ' + gdef.id, 'data-group': gdef.id, 'aria-label': gdef.title });
-                    var h = el('h3', null, [document.createTextNode(gdef.title)]);
-                    var t = cmpTerm('group', gdef.title, GLOSSARY.compare[gdef.title], 'Compare'); if (t) h.appendChild(t);
+                    var h = el('h3', null, [cmpTerm(gdef.title, gdef.title, GLOSSARY.compare[gdef.title], 'Compare')]);
                     h.appendChild(el('span', { class: 'n', text: String(rows.length) }));
                     box.appendChild(h);
                     if (gdef.id === 'first') box.appendChild(el('p', { class: 'cmp-desc', text: gdef.desc }));
@@ -2252,8 +2251,7 @@
                 if (res.neither && c.mode === 'hh') body.appendChild(el('p', { class: 'cmp-note', text: res.neither + ' rule' + (res.neither === 1 ? '' : 's') + ' neither household needs (Open or N/A on both sides).' }));
                 if (res.ref.length && c.mode === 'hh') {
                     var rb = el('section', { class: 'cmp-group ref', 'data-group': 'ref' });
-                    var rh = el('h3', null, [document.createTextNode('Who\u2019s open to whom')]);
-                    var rt = cmpTerm('group', 'Who\u2019s open to whom', GLOSSARY.compare['Who\u2019s open to whom'], 'Compare'); if (rt) rh.appendChild(rt);
+                    var rh = el('h3', null, [cmpTerm('Who\u2019s open to whom', 'Who\u2019s open to whom', GLOSSARY.compare['Who\u2019s open to whom'], 'Compare')]);
                     rb.appendChild(rh);
                     cmpSections(c, res.ref, rb);
                     body.appendChild(rb);
@@ -2497,18 +2495,6 @@
             $('#GlossSearch').addEventListener('input', renderGlossary);
             $('#GlossClose').addEventListener('click', function () { glossDlg.close(); });
             glossDlg.addEventListener('click', function (e) { if (e.target === glossDlg) glossDlg.close(); });
-
-            /* ---------------------------------------------------------------
-             * Consent note: shown until dismissed. Remembered only for this tab
-             * (sessionStorage is cleared when the tab closes, so no lasting trace).
-             * ------------------------------------------------------------- */
-            var CONSENT_KEY = 'playlist-consent-seen';
-            function consentSeen() { try { return sessionStorage.getItem(CONSENT_KEY) === '1'; } catch (e) { return false; } }
-            $('#ConsentNote').hidden = consentSeen();
-            $('#ConsentDismiss').addEventListener('click', function () {
-                $('#ConsentNote').hidden = true;
-                try { sessionStorage.setItem(CONSENT_KEY, '1'); } catch (e) { /* ignore */ }
-            });
 
             /* ---------------------------------------------------------------
              * "Who's filling this in?" setup. Offered once per tab when the page
