@@ -106,23 +106,44 @@
             .icon-btn:hover { border-color: var(--accent); }
             .icon-btn svg { width: 20px; height: 20px; }
 
-            /* Control panel */
-            .panel {
-                background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-                box-shadow: var(--shadow); padding: 16px 20px; margin: 20px 0 16px;
-                display: grid; grid-template-columns: 1fr auto; gap: 16px 24px; align-items: center;
+            /* Flat header: Guided, Share and a "more" menu */
+            .brand { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 12px; }
+            .brand .tagline { flex-basis: 100%; }
+            .menu-wrap { position: relative; }
+            .menu {
+                position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 300px; max-width: calc(100vw - 20px);
+                background: var(--card); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 12px 36px rgba(0,0,0,.22);
+                padding: 6px; display: flex; flex-direction: column; gap: 2px;
             }
-            .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 0; padding: 0; list-style: none; font-size: 15px; }
-            .legend li { display: inline-flex; align-items: center; gap: 8px; }
-            .legend .dot { width: 24px; height: 24px; }
-            .hint { margin: 0; color: var(--muted); font-size: 14px; grid-column: 1 / -1; }
-            .share { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+            .menu[hidden] { display: none; }
+            .menu-item {
+                display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 8px 12px; border: 0; border-radius: 10px;
+                background: none; text-align: left; font-size: 15px; font-weight: 500; cursor: pointer;
+            }
+            .menu-item:hover { background: var(--card-2); }
+            .menu-item svg { width: 20px; height: 20px; flex: none; color: var(--muted); }
+            .menu-note { margin: 4px 12px 6px; font-size: 13px; color: var(--muted); }
+            .menu-switch { padding: 10px 12px; border-top: 1px solid var(--border); margin-top: 4px; font-weight: 500; align-items: flex-start; }
+            .menu-switch small { display: block; font-size: 13px; margin-top: 2px; }
+            [aria-expanded="true"].icon-btn { border-color: var(--accent); background: var(--accent-soft); }
+            .private-badge {
+                display: inline-flex; align-items: center; gap: 5px; min-height: 28px; padding: 2px 10px; border-radius: 99px; cursor: pointer;
+                border: 1px solid var(--accent); background: var(--accent-soft); color: var(--text); font-size: 13px; font-weight: 600; align-self: center;
+            }
+            .private-badge[hidden] { display: none; }
+            .private-badge svg { width: 16px; height: 16px; }
+            .status-row:has(#Status:empty) { display: none; }
+            .status-row { padding-bottom: 8px; }
+            /* One-line legend under the header (no card) */
+            .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin: 14px 0 12px; padding: 0; list-style: none; font-size: 14px; color: var(--muted); }
+            .legend li { display: inline-flex; align-items: center; gap: 6px; }
+            .legend .dot { --sz: 20px; font-size: 11px; border-width: 1.5px; }
+            .legend-break { width: 1px; height: 18px; background: var(--border); }
             .name-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
             .name-field input {
                 min-height: 40px; width: 220px; max-width: 100%; padding: 8px 12px; border-radius: 10px;
                 border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 15px;
             }
-            .switch-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; grid-column: 1 / -1; }
             .switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; font-size: 15px; }
             .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
             .switch .track { width: 44px; height: 26px; border-radius: 99px; background: var(--card-2); border: 1px solid var(--border); position: relative; transition: background .2s; flex: none; }
@@ -132,50 +153,83 @@
             .switch input:focus-visible + .track { outline: 3px solid var(--focus); outline-offset: 2px; }
             .switch small { font-weight: 400; color: var(--muted); }
             .spacer { flex: 1; }
-            #Status { font-size: 14px; color: var(--muted); min-height: 1.4em; grid-column: 1 / -1; margin-top: -8px; }
+            #Status { font-size: 14px; color: var(--muted); min-height: 1.4em; }
             #Status:empty { display: none; }
-            #ShareLinkBox { width: 100%; grid-column: 1 / -1; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); font-size: 13px; }
+            #ShareLinkBox { width: 100%; margin-top: 6px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); font-size: 13px; }
 
             .notice {
-                border-radius: 12px; padding: 12px 16px; margin: 0 0 16px; font-size: 15px;
-                background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+                border-radius: 10px; padding: 8px 12px; margin: 0 0 12px; font-size: 14px; color: var(--muted);
+                background: var(--card); border: 1px solid var(--border);
             }
+            .notice .link-btn { background: none; border: 0; padding: 2px; font: inherit; font-weight: 600; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
             .notice strong { font-weight: 700; }
-            .notice.has-action { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
-            .notice.has-action > span { flex: 1 1 16rem; margin: 0; }
+            .notice.has-action { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
 
             /* Sections (multi-column, reflows on its own) */
             .sections { columns: 380px 4; column-gap: 16px; }
+            .section.merged { column-span: all; }
             .section {
                 break-inside: avoid; display: block; margin: 0 0 16px;
                 background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
                 box-shadow: var(--shadow); overflow: hidden; overflow: clip; /* clip keeps sticky column labels working */
             }
             .section > summary {
-                list-style: none; cursor: pointer; padding: 14px 16px 12px; display: grid;
+                list-style: none; cursor: pointer; padding: 12px 16px 8px; display: grid;
                 grid-template-columns: 1fr auto; align-items: center; gap: 2px 12px;
             }
             .section > summary::-webkit-details-marker { display: none; }
             .section > summary:hover { background: var(--card-2); }
-            .sec-title { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+            .sec-title { font-size: 16px; font-weight: 650; letter-spacing: -0.005em; }
+            .sec-title .who { font-weight: 500; color: var(--muted); }
             .sec-title .term-btn { min-height: 32px; }
             .chev { width: 18px; height: 18px; transition: transform .2s; color: var(--muted); }
             .section[open] .chev { transform: rotate(180deg); }
             .sec-bar { grid-column: 1 / -1; height: 3px; margin-top: 6px; }
             .items { list-style: none; margin: 0; padding: 0 16px 12px; }
-            .fields-head { display: flex; justify-content: flex-end; gap: 12px; padding: 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+            .fields-head { display: flex; justify-content: flex-end; align-items: flex-end; gap: var(--cell-gap); padding: 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+            .fields-head.persons { gap: var(--group-gap); }
             .fields-head .term-btn { min-height: 24px; }
-            .fields-head > .fh-cell { width: calc(var(--sz) * 5 + var(--gap) * 4); text-align: center; }
+            .fh-cell { width: var(--chip-w); text-align: center; }
+            .fh-group { display: flex; flex-direction: column; align-items: stretch; }
+            .fh-person { text-align: center; font-size: 12px; text-transform: none; letter-spacing: 0; color: var(--text); padding: 2px 0; border-bottom: 1px solid var(--border); margin-bottom: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .fh-fields { display: flex; gap: var(--cell-gap); }
             .fields-wrap { padding-bottom: 0; }
             .item {
                 display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px 12px;
-                padding: 8px 0; border-top: 1px solid var(--border);
+                padding: 6px 0; border-top: 1px solid var(--border);
             }
             .item:first-child { border-top: none; }
             .item-name { flex: 1 1 8rem; min-width: 0; font-size: 15px; }
-            .item.multi .item-name { flex-basis: 100%; }
             .item.answered .item-name { font-weight: 600; }
-            .choices { display: flex; gap: var(--gap); }
+            /* Answer chips: one per cell; tapping one opens that cell's scale only */
+            :root { --chip-w: 100px; --cell-gap: 8px; --group-gap: 22px; }
+            .cells { display: flex; align-items: center; gap: var(--cell-gap); margin-left: auto; }
+            .cells.persons { gap: var(--group-gap); }
+            .pgroup { display: flex; align-items: center; gap: var(--cell-gap); }
+            .pg-label { display: none; }
+            .chip {
+                --c: transparent; --ink: var(--muted);
+                width: var(--chip-w); min-height: 34px; padding: 0 8px; border-radius: 99px; flex: none; cursor: pointer;
+                display: inline-flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; overflow: hidden;
+                font-size: 13px; font-weight: 600; color: var(--muted); background: transparent; border: 1.5px dashed var(--ring);
+                -webkit-tap-highlight-color: transparent; transition: background .15s, border-color .15s;
+            }
+            .chip:hover { border-color: var(--accent); color: var(--text); }
+            .chip.set { border-style: solid; background: var(--c); color: var(--ink); border-color: var(--edge, var(--c)); }
+            .chip .sym { font-weight: 800; }
+            .chip .chip-lbl { overflow: hidden; text-overflow: ellipsis; }
+            .chip[aria-expanded="true"] { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--accent); }
+            .choices { display: none; gap: var(--gap); align-items: center; }
+            .choices.open { display: flex; }
+            .item.open { background: var(--accent-soft); border-radius: 10px; margin: 0 -8px; padding-left: 8px; padding-right: 8px; }
+            .item.open + .item { border-top-color: transparent; }
+            .item.single.open .cells { display: none; }
+            .item.single .choices.open { margin-left: auto; }
+            .item:not(.single) .choices.open { flex-basis: 100%; justify-content: flex-end; padding: 2px 0 4px; }
+            .item:not(.single) .choices.open::before {
+                content: attr(data-label); margin-right: auto; min-width: 0; font-size: 13px; font-weight: 600; color: var(--muted);
+                overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            }
 
             /* Choice dots: ring + symbol when unselected, filled + symbol when selected */
             .dot, .choice {
@@ -196,8 +250,7 @@
             .sv3 { --c: var(--s3); --ink: var(--s3-ink); }
             .sv4 { --c: var(--s4); --ink: var(--s4-ink); --edge: var(--s4-edge); }
             .dot.lv0, .dot.sv0 { background: transparent; border: 2px dashed var(--muted); }
-            .legend .legend-break { flex-basis: 100%; height: 0; }
-            .legend .legend-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+            .legend .legend-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
             .sec-scale-wrap { display: none; }
             .sec-scale { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0; padding: 0 0 6px; list-style: none; font-size: 13px; color: var(--muted); }
             .sec-scale li { display: inline-flex; align-items: center; gap: 5px; }
@@ -211,14 +264,14 @@
                 -webkit-tap-highlight-color: transparent;
             }
             .choice:hover { background: color-mix(in srgb, var(--c) 16%, var(--card)); border-color: var(--edge, var(--c)); color: var(--text); }
-            .choice[aria-pressed="true"] {
+            .choice[aria-checked="true"] {
                 background: var(--c); color: var(--ink); border-color: var(--edge, var(--c)); transform: scale(1.08);
                 box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--edge, var(--c));
             }
 
-            footer { color: var(--muted); font-size: 14px; padding: 8px 0 40px; }
-            footer h2 { font-size: 16px; color: var(--text); margin: 8px 0 6px; }
-            footer ul { margin: 0; padding-left: 20px; }
+            footer { color: var(--muted); font-size: 14px; padding: 4px 0 40px; }
+            footer p { margin: 0 0 4px; }
+            footer strong { color: var(--text); }
 
             /* Dialogs */
             dialog {
@@ -273,13 +326,6 @@
             .fh-cell { display: inline-flex; justify-content: center; min-width: 0; }
             .fh-cell .term-btn { max-width: 100%; }
             .fh-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            /* Sections with 3+ person columns (a triad): one labelled row per person */
-            .section.wide .fields-wrap { display: none; }
-            .section.wide .item .choices { flex-basis: 100%; }
-            .section.wide .item .choices::before {
-                content: attr(data-label); flex: 1; min-width: 0; align-self: center; font-size: 13px; font-weight: 600;
-                color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-            }
             /* Person switcher (phones only) */
             .person-switch { display: none; }
             .person-switch[hidden] { display: none !important; }
@@ -289,9 +335,7 @@
             }
             .person-switch button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
             .person-switch .ps-label { font-size: 13px; color: var(--muted); align-self: center; flex: none; }
-            /* Panel "More" (phones) and export dialog */
-            .more-btn, .theme-btn2 { display: none; }
-            .panel-more { grid-column: 1 / -1; display: grid; gap: 12px 24px; }
+            /* Export dialog */
             .ex-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
             .ex-opt { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg); cursor: pointer; }
             .ex-opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
@@ -393,12 +437,8 @@
             /* Mid widths: header buttons go icon-only so the tagline keeps its row */
             @media (max-width: 960px) {
                 .top-actions .btn-label { display: none; }
-                .top-actions .btn { width: 40px; min-width: 40px; padding: 0; }
+                .top-actions .btn:not(#ShareBtn) { width: 40px; min-width: 40px; padding: 0; }
                 .tagline { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-            }
-            @media (max-width: 760px) {
-                .panel { grid-template-columns: 1fr; }
-                .share { justify-content: flex-start; }
             }
             @media (max-width: 600px) {
                 :root { --sz: 30px; --gap: 3px; }
@@ -408,18 +448,28 @@
                 .tagline { font-size: 13px; }
                 .btn-label { display: none; }
 
-                .legend { gap: 8px 14px; font-size: 14px; }
 
                 .sections { columns: 1; }
                 .items { padding: 0 10px 10px; }
                 .section > summary { padding: 12px 10px 10px; }
-                .fields-head { gap: 8px; }
+                :root { --chip-w: 96px; --cell-gap: 6px; }
                 .item { gap: 6px 8px; }
-                .kbd-hint { display: none; }
-                /* each safety section carries its own scale key, so the panel stays short */
+                .item.multi .item-name { flex-basis: 100%; }
+                .item.multi .cells { flex-wrap: wrap; justify-content: flex-end; }
+                .chip { min-height: 38px; }
+                /* merged rows: one line per person, the name at the left */
+                .cells.persons { flex-direction: column; align-items: stretch; width: 100%; gap: 6px; }
+                .pgroup { justify-content: flex-end; }
+                .pg-label { display: block; margin-right: auto; min-width: 0; font-size: 13px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                .fh-person { display: none; }
+                #InputList[data-view="all"] .fields-head.persons .fh-group:not(:first-child) { display: none; }
+                /* one person picked: their chips sit on the item's own line */
+                #InputList:not([data-view="all"]) .item.multi .item-name { flex-basis: 8rem; }
+                #InputList:not([data-view="all"]) .cells.persons { width: auto; }
+                #InputList:not([data-view="all"]) .pg-label { display: none; }
+                /* the safety section carries the Required key, so the legend stays one line */
                 .legend .legend-break, .legend .ls { display: none; }
                 .sec-scale-wrap { display: block; }
-                .share .btn { white-space: nowrap; padding: 8px 10px; font-size: 14px; }
                 /* keep the column labels in view while scrolling a long section */
                 dialog.glossary { inset: auto 0 0 0; margin: 0; width: 100%; max-width: 100%; max-height: 88vh; border-radius: 20px 20px 0 0; border-bottom: 0; }
                 .top-actions { gap: 6px; }
@@ -436,25 +486,11 @@
                 /* Compact header + panel: the first question sits as high as possible */
                 .topbar-inner { padding-top: 8px; padding-bottom: 6px; align-items: center; }
                 .brand h1 { font-size: 19px; }
-                .tagline { font-size: 12px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-                .tl-long, .share .xl { display: none; }
-                .panel > * { min-width: 0; }
-                #ThemeBtn { display: none; }
+                .tagline { display: none; }
                 .progress-row { padding-bottom: 8px; font-size: 13px; }
-                .panel { padding: 10px 12px; margin: 10px 0 10px; gap: 10px; }
-                .legend { flex-wrap: nowrap; overflow-x: auto; gap: 12px; font-size: 13px; scrollbar-width: none; }
+                .legend { flex-wrap: nowrap; overflow-x: auto; gap: 12px; font-size: 13px; scrollbar-width: none; margin: 10px 0 8px; }
                 .legend li { gap: 5px; flex: none; }
-                .legend .dot { width: 20px; height: 20px; font-size: 11px; }
-                .legend .legend-empty { display: none; }
-                .share { flex-wrap: nowrap; gap: 6px; }
-                .share .btn { flex: 1 1 auto; min-height: 38px; }
-                .more-btn { display: inline-flex; flex: 0 0 44px !important; padding: 0 !important; }
-                .share .btn { min-height: 44px; }
-                .more-btn[aria-expanded="true"] { border-color: var(--accent); background: var(--accent-soft); }
-                .panel-more:not(.open) { display: none; }
-                .theme-btn2 { display: inline-flex; }
-                .switch-row { gap: 10px; }
-                .notice { padding: 10px 12px; font-size: 14px; margin-bottom: 10px; }
+                .notice { margin-bottom: 10px; }
                 .ex-row { grid-template-columns: 1fr; }
                 dialog.compare { width: 100%; max-width: 100%; height: 100%; max-height: 100%; margin: 0; border: 0; border-radius: 0; }
                 dialog.compare .dlg { padding: 14px 12px 20px; }
@@ -464,7 +500,8 @@
                 .seg button { padding: 6px 10px; }
                 dialog#ExportDialog { max-height: calc(100vh - 16px); overflow: auto; }
                 .hh-opt { min-height: 52px; flex-direction: row; align-items: baseline; gap: 10px; }
-                .top-actions .icon-btn, .top-actions .btn { width: 38px; min-width: 38px; height: 38px; min-height: 38px; padding: 0; }
+                .top-actions .icon-btn, .top-actions .btn { width: 40px; min-width: 40px; height: 40px; min-height: 40px; padding: 0; }
+                .top-actions #ShareBtn { width: auto; padding: 0 16px; }
             }
             @media (prefers-reduced-motion: reduce) {
                 * { transition: none !important; }
@@ -476,89 +513,82 @@
             <div class="wrap topbar-inner">
                 <div class="brand">
                     <h1>PlayList</h1>
-                    <p class="tagline"><span class="tl-long">Your data is yours. </span>Nothing leaves this device.</p>
+                    <button id="PrivateBadge" class="private-badge" type="button" hidden title="Private mode is on: answers live only in this tab and vanish when you close or reload it. Use Copy share link to keep them.">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.2 3.9M6.6 6.6C3.8 8.4 2 12 2 12s4 7 10 7a9.6 9.6 0 0 0 4.4-1.1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+                        <span>Private</span>
+                    </button>
+                    <p class="tagline">Nothing leaves this device.</p>
                 </div>
                 <div class="top-actions">
                     <button id="GuidedBtn" class="btn" type="button" aria-label="Guided mode" title="Answer one item at a time">
                         <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                        <span class="btn-label">Guided mode</span>
+                        <span class="btn-label">Guided</span>
                     </button>
-                    <button id="GlossaryBtn" class="btn" type="button" aria-label="Glossary" aria-haspopup="dialog" title="What the terms mean">
-                        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/></svg>
-                        <span class="btn-label">Glossary</span>
-                    </button>
-                    <button id="CompareBtn" class="btn" type="button" aria-label="Compare with another household" aria-haspopup="dialog" title="Compare with another household">
-                        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>
-                        <span class="btn-label">Compare</span>
-                    </button>
-                    <button id="SetupBtn" class="icon-btn" type="button" aria-label="Who&rsquo;s filling this in" aria-haspopup="dialog" title="Who&rsquo;s filling this in">
-                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2a5 5 0 0 1 6 4.8"/></svg>
-                    </button>
-                    <button id="EditBtn" class="icon-btn" type="button" aria-label="Edit list" title="Edit list">
-                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.830 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                    </button>
-                    <button id="ThemeBtn" class="icon-btn" type="button" aria-label="Theme: automatic" title="Theme: automatic">
-                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>
-                    </button>
+                    <div class="menu-wrap">
+                        <button id="ShareBtn" class="btn btn-primary" type="button" aria-expanded="false" aria-controls="ShareMenu">Share</button>
+                        <div id="ShareMenu" class="menu" hidden>
+                            <button id="CopyBtn" class="menu-item" type="button">
+                                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+                                <span>Copy share link</span>
+                            </button>
+                            <button id="DownloadBtn" class="menu-item" type="button" aria-haspopup="dialog">
+                                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+                                <span>Save as image&hellip;</span>
+                            </button>
+                            <p class="menu-note">Anyone with the link or image can see the answers.</p>
+                        </div>
+                    </div>
+                    <div class="menu-wrap">
+                        <button id="MenuBtn" class="icon-btn" type="button" aria-expanded="false" aria-controls="MoreMenu" aria-label="More" title="More">
+                            <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                        </button>
+                        <div id="MoreMenu" class="menu" hidden>
+                            <button id="CompareBtn" class="menu-item" type="button" aria-haspopup="dialog">
+                                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>
+                                <span>Compare with another household</span>
+                            </button>
+                            <button id="GlossaryBtn" class="menu-item" type="button" aria-haspopup="dialog">
+                                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/></svg>
+                                <span>Glossary</span>
+                            </button>
+                            <button id="SetupBtn" class="menu-item" type="button" aria-haspopup="dialog">
+                                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2a5 5 0 0 1 6 4.8"/></svg>
+                                <span>Who&rsquo;s filling this in</span>
+                            </button>
+                            <button id="EditBtn" class="menu-item" type="button" aria-haspopup="dialog">
+                                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>
+                                <span>Edit list</span>
+                            </button>
+                            <button id="ThemeBtn" class="menu-item" type="button">
+                                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>
+                                <span class="mi-label">Theme: automatic</span>
+                            </button>
+                            <label class="switch menu-switch">
+                                <input type="checkbox" id="PrivateToggle" role="switch">
+                                <span class="track" aria-hidden="true"></span>
+                                <span>Private mode <small>Answers stay in this tab only, not in the address bar or history.</small></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="wrap progress-row">
                 <div class="bar" id="OverallBar" role="progressbar" aria-label="Overall progress" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"><i></i></div>
                 <span id="OverallText">0 of 0 answered</span>
             </div>
+            <div class="wrap status-row"><div id="Status" role="status" aria-live="polite"></div></div>
         </header>
 
         <main class="wrap">
-            <section class="panel" aria-label="Legend and sharing">
-                <ul class="legend" id="Legend" aria-label="Legend"></ul>
-                <div class="share">
-                    <button id="DownloadBtn" class="btn btn-primary" type="button" aria-haspopup="dialog">
-                        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
-                        Download<span class="xl"> image</span>
-                    </button>
-                    <button id="CopyBtn" class="btn" type="button">
-                        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
-                        Copy<span class="xl"> share</span> link
-                    </button>
-                    <button id="MoreBtn" class="btn more-btn" type="button" aria-expanded="false" aria-controls="PanelMore" aria-label="More options">
-                        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
-                    </button>
-                </div>
-                <div id="Status" role="status" aria-live="polite"></div>
-                <div class="panel-more" id="PanelMore">
-                <div class="switch-row">
-                    <label class="switch">
-                        <input type="checkbox" id="PrivateToggle" role="switch">
-                        <span class="track" aria-hidden="true"></span>
-                        <span>Private mode <small>(keeps answers in memory only, not in the address bar or history)</small></span>
-                    </label>
-                    <span class="spacer"></span>
-                    <button id="ExpandAll" class="btn btn-small" type="button">Expand all</button>
-                    <button id="CollapseAll" class="btn btn-small" type="button">Collapse all</button>
-                    <button id="ThemeBtn2" class="btn btn-small theme-btn2" type="button">Theme: automatic</button>
-                </div>
-                <p class="hint">Tap a dot to answer, tap it again to clear.<span class="kbd-hint"> Keyboard: Tab between items, &larr;/&rarr; to move, 1&ndash;5 to pick, 0 to clear.</span></p>
-                </div>
-            </section>
-
-            <div id="PrivateBanner" class="notice" hidden>
-                <strong>Private mode is on.</strong> Answers live only in this tab's memory and vanish when you close or reload it. Use &ldquo;Copy share link&rdquo; to keep or send them.
-            </div>
+            <ul class="legend" id="Legend" aria-label="Legend"></ul>
             <div id="LinkNotice" class="notice" hidden></div>
 
             <div id="PersonSwitch" class="person-switch" role="group" aria-label="Show answers for" hidden></div>
             <div id="InputList" class="sections" data-view="all"></div>
 
             <footer>
-                <h2>How your privacy is protected</h2>
-                <ul>
-                    <li>This page is a single file. It loads no scripts, fonts, trackers or analytics, and its security policy blocks all network requests.</li>
-                    <li>Your answers are stored only after the <code>#</code> in the link, which browsers never send to any server. Private mode doesn't even put them there.</li>
-                    <li>The image is drawn and saved on your device. Nothing is uploaded.</li>
-                    <li>Anyone you give a share link to can see the answers in it.</li>
-                </ul>
-                <h2>About consent</h2>
-                <p>This is a starting point for a conversation, not a contract. Anyone can change their mind at any time.</p>
+                <p><strong>About consent.</strong> This is a starting point for a conversation, not a contract. Anyone can change their mind at any time.</p>
+                <p>Nothing leaves this device. Anyone with a share link can see the answers.</p>
             </footer>
         </main>
 
@@ -1262,11 +1292,11 @@
 
             // Shown for links made with an earlier (v1-v3) list: answers stay exactly as saved,
             // and the user can choose to move to the new list.
-            function showUpgradeNotice(prefix) {
+            function showUpgradeNotice(v1) {
                 var n = $('#LinkNotice');
                 n.textContent = '';
-                n.appendChild(el('span', { text: (prefix ? prefix + ' ' : '') + 'This link uses an earlier list, so its answers are shown exactly as saved. The new list adds Boundaries and Agreements, a Required / Preferred / Open scale for safety, and lets you name each person.' }));
-                n.appendChild(el('button', { type: 'button', class: 'btn btn-small', id: 'UpgradeBtn', text: 'Switch to the new list' }));
+                n.appendChild(el('span', { text: (v1 ? 'Opened a PlayList v1.0 link' : 'Opened a link made with an earlier list') + ', shown exactly as saved.' }));
+                n.appendChild(el('button', { type: 'button', class: 'link-btn', id: 'UpgradeBtn', text: 'Use the new list', title: 'Adds Boundaries and Agreements, a Required / Preferred / Open scale for safety, and names for each person' }));
                 n.classList.add('has-action');
                 n.hidden = false;
             }
@@ -1400,9 +1430,9 @@
                 state.view = -1;
                 setList(d.list);
                 applyValues(d.values);
-                if (d.ver === '1') showUpgradeNotice('Opened a link from PlayList v1.0. It has been upgraded to the new link format.');
+                if (d.ver === '1') showUpgradeNotice(true);
                 else if (d.custom) showNotice('This link uses a custom list, which has been loaded.');
-                else if (d.ver !== '4') showUpgradeNotice('');
+                else if (d.ver !== '4') showUpgradeNotice(false);
                 else showNotice('');
                 return true;
             }
@@ -1426,8 +1456,9 @@
             function renderLegend() {
                 var ul = $('#Legend'); ul.textContent = '';
                 LEVELS.forEach(function (lv, i) {
+                    if (!i) return;
                     var dot = el('span', { class: 'dot lv' + i, 'aria-hidden': 'true', text: lv.sym });
-                    ul.appendChild(el('li', i ? null : { class: 'legend-empty' }, [dot, el('span', { text: lv.name })]));
+                    ul.appendChild(el('li', null, [dot, el('span', { text: lv.name })]));
                 });
                 if (!hasSafetyScale(state.list)) return;
                 ul.appendChild(el('li', { class: 'legend-break', 'aria-hidden': 'true' }));
@@ -1476,72 +1507,147 @@
                 renderSwitch();
             });
 
+            // Person sections with the same items (Activities / Kinks for each person) are shown as one
+            // section with a column group per person. Display only: the list, slot keys and links are unchanged.
+            function displayGroups(list) {
+                var L = state.household.labels, out = [], used = {};
+                function same(a, b) { return a.scale === b.scale && a.items.join('\n') === b.items.join('\n') && a.fields.join('\n') === b.fields.join('\n'); }
+                list.forEach(function (cat, ci) {
+                    if (used[ci]) return;
+                    var m = /^(.*) \(([^()]*)\)$/.exec(cat.name);
+                    if (L.length > 1 && m && m[2] === L[0] && cat.fields.every(function (f) { return personIndex(f) < 0; })) {
+                        var members = L.map(function (lab) {
+                            for (var j = 0; j < list.length; j++) if (!used[j] && list[j].name === m[1] + ' (' + lab + ')' && same(list[j], cat)) return j;
+                            return -1;
+                        });
+                        if (members.indexOf(-1) < 0) {
+                            members.forEach(function (j) { used[j] = true; });
+                            out.push({ base: m[1], cis: members, cat: cat, merged: true });
+                            return;
+                        }
+                    }
+                    used[ci] = true;
+                    out.push({ base: cat.name, cis: [ci], cat: cat, merged: false });
+                });
+                return out;
+            }
+            function mergedDef(g) {
+                if (g.base === 'Activities') return 'Sexual activities: what each person would like to do with others (Giving) and have done to them (Receiving).';
+                if (g.base === 'Kinks') return 'Kink and BDSM play, from light and playful to more intense. Start slowly, agree on limits and a safe word, and check in often.';
+                return sectionDef(g.cat);
+            }
+            // "Activities (Alex)": only the section name opens the glossary; the person's name is plain text.
+            function sectionTitle(g) {
+                var title = el('span', { class: 'sec-title' });
+                var m = !g.merged && /^(.*) \(([^()]*)\)$/.exec(g.base);
+                var who = m && personIndex(m[2]) >= 0 ? m : null;
+                var text = g.merged ? g.base : who ? who[1] : g.base;
+                var def = g.merged ? mergedDef(g) : sectionDef(g.cat);
+                if (def) {
+                    var stb = g.merged ? termButton({ kind: 'merged', cat: g.base }, g.base + ', about this section') : termButton({ kind: 'section', cat: g.cat.name }, g.cat.name + ', about this section');
+                    stb.textContent = text; title.appendChild(stb);
+                } else title.appendChild(document.createTextNode(text));
+                if (who) title.appendChild(el('span', { class: 'who', text: ' (' + who[2] + ')' }));
+                return title;
+            }
+            function fieldHead(catName, f) {
+                var cell = el('span', { class: 'fh-cell', title: f });
+                if (personIndex(f) >= 0) { cell.setAttribute('data-person', String(personIndex(f))); cell.textContent = f; }
+                else if (columnDef(f)) {
+                    var fb = termButton({ kind: 'column', cat: catName, field: f }, f + ', what this column means');
+                    fb.appendChild(el('span', { class: 'fh-text', text: f }));
+                    cell.appendChild(fb);
+                } else cell.textContent = f;
+                return cell;
+            }
+
+            var chipsByKey = new Map(), slotIdx = new Map(), cellUid = 0;
+            function makeCell(li, catName, item, field, label, person, sc) {
+                var key = keyOf(catName, item, field), gid = 'sc' + (++cellUid);
+                var chip = el('button', { type: 'button', class: 'chip', 'aria-expanded': 'false', 'aria-controls': gid, 'data-key': key, 'data-name': item + (label ? ', ' + label : '') });
+                var group = el('div', { class: 'choices', id: gid, role: 'radiogroup', 'aria-label': item + (label ? ', ' + label : ''), 'data-key': key, 'data-label': label });
+                if (person >= 0) { chip.setAttribute('data-person', String(person)); group.setAttribute('data-person', String(person)); }
+                for (var lv = 1; lv < sc.levels.length; lv++) {
+                    group.appendChild(el('button', {
+                        type: 'button', role: 'radio', class: 'choice ' + sc.cls + lv, 'data-level': lv, 'aria-checked': 'false',
+                        'aria-label': sc.levels[lv].name, title: sc.levels[lv].name, tabindex: lv === 1 ? '0' : '-1'
+                    }, [el('span', { class: 'sym', 'aria-hidden': 'true', text: sc.levels[lv].sym })]));
+                }
+                if (slotIdx.has(key)) group.setAttribute('data-slot', String(slotIdx.get(key))); // list order (rows can interleave people)
+                groupsByKey.set(key, group);
+                chipsByKey.set(key, chip);
+                li.appendChild(group);
+                return chip;
+            }
+
             function renderList() {
                 renderLegend();
                 renderSwitch();
+                openKey = null;
                 var root = $('#InputList');
                 root.textContent = '';
                 groupsByKey = new Map();
+                chipsByKey = new Map();
+                slotIdx = new Map();
+                state.slots.forEach(function (sl, i) { slotIdx.set(sl.key, i); });
                 sectionEls = [];
-                var keyShown = false;
-                state.list.forEach(function (cat) {
-                    var details = el('details', { class: 'section' + (cat.fields.length > 2 ? ' wide' : '') });
-                    var owner = sectionPerson(cat.name);
+                var keyShown = false, L = state.household.labels;
+                displayGroups(state.list).forEach(function (g) {
+                    var cat = g.cat, cats = g.cis.map(function (ci) { return state.list[ci]; });
+                    var details = el('details', { class: 'section' + (g.merged ? ' merged' : '') });
+                    var owner = g.merged ? -1 : sectionPerson(cat.name);
                     if (owner >= 0) details.setAttribute('data-person', String(owner));
-                    if (!state.collapsed.has(cat.name)) details.open = true;
+                    if (!state.collapsed.has(g.base)) details.open = true;
                     var count = el('span', { class: 'sec-count sr-only' }); // read out, not shown
                     var bar = el('div', { class: 'bar sec-bar', 'aria-hidden': 'true' }, [el('i')]);
-                    var title = el('span', { class: 'sec-title' });
-                    if (sectionDef(cat)) { var stb = termButton({ kind: 'section', cat: cat.name }, cat.name + ', about this section'); stb.textContent = cat.name; title.appendChild(stb); }
-                    else title.textContent = cat.name;
-                    details.appendChild(el('summary', null, [title, count, chevron(), bar]));
+                    details.appendChild(el('summary', null, [sectionTitle(g), count, chevron(), bar]));
                     details.addEventListener('toggle', function () {
-                        if (details.open) state.collapsed.delete(cat.name); else state.collapsed.add(cat.name);
+                        if (details.open) state.collapsed.delete(g.base); else state.collapsed.add(g.base);
                     });
-                    var multi = cat.fields.length > 1, sc = scaleOf(cat);
+                    var multi = g.merged || cat.fields.length > 1, sc = scaleOf(cat);
                     if (cat.scale === 'safety' && !keyShown) { keyShown = true; details.appendChild(el('div', { class: 'items sec-scale-wrap' }, [scaleKey()])); }
-                    if (multi) {
-                        var head = el('div', { class: 'fields-head' });
-                        cat.fields.forEach(function (f) {
-                            var cell = el('span', { class: 'fh-cell', title: f });
-                            if (personIndex(f) >= 0) cell.setAttribute('data-person', String(personIndex(f)));
-                            if (columnDef(f)) {
-                                var fb = termButton({ kind: 'column', cat: cat.name, field: f }, f + ', what this column means');
-                                fb.insertBefore(el('span', { class: 'fh-text', text: f }), fb.firstChild);
-                                cell.appendChild(fb);
-                            } else cell.textContent = f;
-                            head.appendChild(cell);
+                    if (g.merged) {
+                        var mh = el('div', { class: 'fields-head persons' });
+                        cats.forEach(function (c, pi) {
+                            var fields = el('div', { class: 'fh-fields' });
+                            c.fields.forEach(function (f) { fields.appendChild(fieldHead(c.name, f)); });
+                            mh.appendChild(el('div', { class: 'fh-group', 'data-person': String(pi) }, [el('span', { class: 'fh-person', text: L[pi], title: L[pi] }), fields]));
                         });
+                        details.appendChild(el('div', { class: 'items fields-wrap' }, [mh]));
+                    } else if (multi) {
+                        var head = el('div', { class: 'fields-head' });
+                        cat.fields.forEach(function (f) { head.appendChild(fieldHead(cat.name, f)); });
                         details.appendChild(el('div', { class: 'items fields-wrap' }, [head]));
                     }
                     var ul = el('ul', { class: 'items' });
                     cat.items.forEach(function (item) {
-                        var li = el('li', { class: 'item' + (multi ? ' multi' : '') });
+                        var li = el('li', { class: 'item' + (multi ? ' multi' : ' single') });
                         var nameEl = el('span', { class: 'item-name' });
                         if (itemDef(cat, item)) {
                             var tb = termButton({ kind: 'item', cat: cat.name, item: item }, item + ', show definition');
-                            tb.insertBefore(document.createTextNode(item), tb.firstChild);
+                            if (g.merged) tb.setAttribute('data-ctx', g.base);
+                            tb.textContent = item;
                             nameEl.appendChild(tb);
                         } else nameEl.textContent = item;
                         li.appendChild(nameEl);
-                        cat.fields.forEach(function (field) {
-                            var key = keyOf(cat.name, item, field);
-                            var group = el('div', { class: 'choices', role: 'group', 'aria-label': item + (multi ? ', ' + field : ''), 'data-key': key, 'data-label': field });
-                            if (multi && personIndex(field) >= 0) group.setAttribute('data-person', String(personIndex(field)));
-                            for (var lv = 1; lv < sc.levels.length; lv++) {
-                                group.appendChild(el('button', {
-                                    type: 'button', class: 'choice ' + sc.cls + lv, 'data-level': lv, 'aria-pressed': 'false',
-                                    'aria-label': sc.levels[lv].name, title: sc.levels[lv].name, tabindex: lv === 1 ? '0' : '-1'
-                                }, [el('span', { class: 'sym', 'aria-hidden': 'true', text: sc.levels[lv].sym })]));
-                            }
-                            groupsByKey.set(key, group);
-                            li.appendChild(group);
-                        });
+                        var cells = el('div', { class: 'cells' + (g.merged ? ' persons' : '') });
+                        li.appendChild(cells);
+                        if (g.merged) {
+                            cats.forEach(function (c, pi) {
+                                var pg = el('div', { class: 'pgroup', 'data-person': String(pi) }, [el('span', { class: 'pg-label', 'aria-hidden': 'true', text: L[pi] })]);
+                                c.fields.forEach(function (field) { pg.appendChild(makeCell(li, c.name, item, field, L[pi] + ' \u00B7 ' + field, pi, sc)); });
+                                cells.appendChild(pg);
+                            });
+                        } else {
+                            cat.fields.forEach(function (field) {
+                                cells.appendChild(makeCell(li, cat.name, item, field, multi ? field : '', multi && personIndex(field) >= 0 ? personIndex(field) : -1, sc));
+                            });
+                        }
                         ul.appendChild(li);
                     });
                     details.appendChild(ul);
                     root.appendChild(details);
-                    sectionEls.push({ details: details, count: count, bar: bar.firstChild, cat: cat });
+                    sectionEls.push({ details: details, count: count, bar: bar.firstChild, cat: cat, cis: g.cis });
                 });
                 state.slots.forEach(function (s) { paintGroup(s.key); });
                 updateProgress();
@@ -1555,8 +1661,17 @@
                 var buttons = group.children;
                 for (var i = 0; i < buttons.length; i++) {
                     var on = (i + 1) === v;
-                    buttons[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+                    buttons[i].setAttribute('aria-checked', on ? 'true' : 'false');
                     buttons[i].tabIndex = (v ? on : i === 0) ? 0 : -1;
+                }
+                var chip = chipsByKey.get(key);
+                if (chip) {
+                    var b = v ? buttons[v - 1] : null, lv = b ? b.className.replace(/^choice /, '') : '';
+                    chip.className = 'chip' + (v ? ' set ' + lv : '');
+                    chip.textContent = '';
+                    if (v) chip.appendChild(el('span', { class: 'sym', 'aria-hidden': 'true', text: b.textContent }));
+                    chip.appendChild(el('span', { class: 'chip-lbl', text: v ? b.getAttribute('aria-label') : 'Answer' }));
+                    chip.setAttribute('aria-label', chip.getAttribute('data-name') + ': ' + (v ? b.getAttribute('aria-label') : 'not answered'));
                 }
                 var li = group.parentNode;
                 li.classList.toggle('answered', !!li.querySelector('.choices.has-sel'));
@@ -1572,11 +1687,12 @@
                 var total = state.slots.length, done = 0;
                 var perCat = state.list.map(function () { return 0; });
                 state.slots.forEach(function (s) { if (state.answers.get(s.key)) { done++; perCat[s.ci]++; } });
-                sectionEls.forEach(function (se, i) {
-                    var n = se.cat.items.length * se.cat.fields.length;
-                    se.count.textContent = perCat[i] + ' of ' + n + ' answered';
-                    se.bar.style.width = (n ? perCat[i] / n * 100 : 0) + '%';
-                    se.details.classList.toggle('done', perCat[i] === n);
+                sectionEls.forEach(function (se) {
+                    var n = 0, k = 0;
+                    se.cis.forEach(function (ci) { var c = state.list[ci]; n += c.items.length * c.fields.length; k += perCat[ci]; });
+                    se.count.textContent = k + ' of ' + n + ' answered';
+                    se.bar.style.width = (n ? k / n * 100 : 0) + '%';
+                    se.details.classList.toggle('done', k === n);
                 });
                 $('#OverallText').textContent = done + ' of ' + total + ' answered';
                 var ob = $('#OverallBar');
@@ -1592,40 +1708,82 @@
                 syncUrl();
             }
 
-            /* Choice interaction: click + keyboard (roving tabindex per group) */
+            /* Answer chips: a chip opens its cell's scale (a radiogroup); picking closes it again.
+               Keyboard: Enter/Space on a chip opens the scale, arrows move, Enter picks, Esc closes;
+               1-5 on a chip or a dot answers straight away, 0 clears. */
+            var openKey = null;
+            function openScale(key, focus) {
+                closeScale(false);
+                var g = groupsByKey.get(key), c = chipsByKey.get(key);
+                if (!g || !c) return;
+                g.classList.add('open'); g.parentNode.classList.add('open');
+                c.setAttribute('aria-expanded', 'true');
+                openKey = key;
+                if (focus) (g.querySelector('[aria-checked="true"]') || g.children[0]).focus();
+            }
+            function closeScale(refocus) {
+                if (!openKey) return;
+                var g = groupsByKey.get(openKey), c = chipsByKey.get(openKey);
+                openKey = null;
+                if (g) { g.classList.remove('open'); g.parentNode.classList.remove('open'); }
+                if (c) { c.setAttribute('aria-expanded', 'false'); if (refocus) c.focus(); }
+            }
             $('#InputList').addEventListener('click', function (e) {
+                var chip = e.target.closest('.chip');
+                if (chip) {
+                    var ck = chip.getAttribute('data-key');
+                    if (openKey === ck) closeScale(true); else openScale(ck, true);
+                    return;
+                }
                 var btn = e.target.closest('.choice');
                 if (!btn) return;
                 var key = btn.parentNode.getAttribute('data-key');
                 var lv = +btn.getAttribute('data-level');
                 setAnswer(key, (state.answers.get(key) || 0) === lv ? 0 : lv);
+                if (openKey === key) closeScale(true);
+            });
+            document.addEventListener('pointerdown', function (e) {
+                if (!openKey) return;
+                var g = groupsByKey.get(openKey);
+                if (g && !g.parentNode.contains(e.target)) closeScale(false);
+            });
+            $('#InputList').addEventListener('focusout', function (e) {
+                if (!openKey || !e.relatedTarget) return;
+                var g = groupsByKey.get(openKey);
+                if (g && !g.parentNode.contains(e.relatedTarget)) closeScale(false);
             });
             $('#InputList').addEventListener('keydown', function (e) {
+                if (e.altKey || e.ctrlKey || e.metaKey) return;
+                var chip = e.target.closest('.chip');
+                if (chip) {
+                    var ck = chip.getAttribute('data-key'), n = groupsByKey.get(ck).children.length;
+                    if (/^[1-9]$/.test(e.key) && +e.key <= n) { setAnswer(ck, +e.key); closeScale(false); }
+                    else if (e.key === '0' || e.key === 'Delete' || e.key === 'Backspace') { setAnswer(ck, 0); closeScale(false); }
+                    else if (e.key === 'Escape' && openKey === ck) closeScale(true);
+                    else if (e.key === 'ArrowDown' && openKey !== ck) openScale(ck, true);
+                    else return;
+                    e.preventDefault();
+                    return;
+                }
                 var btn = e.target.closest('.choice');
-                if (!btn || e.altKey || e.ctrlKey || e.metaKey) return;
+                if (!btn) return;
                 var group = btn.parentNode, key = group.getAttribute('data-key');
                 var buttons = Array.prototype.slice.call(group.children), idx = buttons.indexOf(btn);
-                var focusIn = function (g, i) {
-                    Array.prototype.forEach.call(g.children, function (x) { x.tabIndex = -1; });
-                    g.children[i].tabIndex = 0; g.children[i].focus();
+                var focusIn = function (i) {
+                    buttons.forEach(function (x) { x.tabIndex = -1; });
+                    buttons[i].tabIndex = 0; buttons[i].focus();
                 };
-                if (e.key === 'ArrowRight') focusIn(group, (idx + 1) % buttons.length);
-                else if (e.key === 'ArrowLeft') focusIn(group, (idx + buttons.length - 1) % buttons.length);
-                else if (e.key === 'Home') focusIn(group, 0);
-                else if (e.key === 'End') focusIn(group, buttons.length - 1);
-                else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                    var groups = $$('#InputList details[open] .choices');
-                    var gi = groups.indexOf(group) + (e.key === 'ArrowDown' ? 1 : -1);
-                    if (gi >= 0 && gi < groups.length) focusIn(groups[gi], idx);
-                }
-                else if (/^[1-5]$/.test(e.key) && +e.key <= buttons.length) { setAnswer(key, +e.key); focusIn(group, +e.key - 1); }
-                else if (e.key === '0' || e.key === 'Delete' || e.key === 'Backspace') setAnswer(key, 0);
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') focusIn((idx + 1) % buttons.length);
+                else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') focusIn((idx + buttons.length - 1) % buttons.length);
+                else if (e.key === 'Home') focusIn(0);
+                else if (e.key === 'End') focusIn(buttons.length - 1);
+                else if (/^[1-9]$/.test(e.key) && +e.key <= buttons.length) { setAnswer(key, +e.key); closeScale(true); }
+                else if (e.key === '0' || e.key === 'Delete' || e.key === 'Backspace') { setAnswer(key, 0); closeScale(true); }
+                else if (e.key === 'Escape') closeScale(true);
                 else return;
                 e.preventDefault();
+                e.stopPropagation();
             });
-
-            $('#ExpandAll').addEventListener('click', function () { sectionEls.forEach(function (s) { s.details.open = true; }); });
-            $('#CollapseAll').addEventListener('click', function () { sectionEls.forEach(function (s) { s.details.open = false; }); });
 
             /* Status messages */
             var statusTimer = null;
@@ -1641,10 +1799,10 @@
              * ------------------------------------------------------------- */
             $('#PrivateToggle').addEventListener('change', function () {
                 state.privateMode = this.checked;
-                $('#PrivateBanner').hidden = !state.privateMode;
+                $('#PrivateBadge').hidden = !state.privateMode;
                 if (state.privateMode) {
                     try { history.replaceState(history.state, '', baseUrl()); } catch (e) { /* ignore */ }
-                    flash('Private mode on: answers removed from the address bar.');
+                    flash('Private mode on: answers are only in this tab and vanish when you close or reload it. Use Copy share link to keep them.');
                 } else {
                     syncUrl();
                     flash('Private mode off: answers are kept in the address bar again.');
@@ -1664,12 +1822,12 @@
                     var box = $('#ShareLinkBox');
                     if (!box) {
                         box = el('input', { id: 'ShareLinkBox', type: 'text', readonly: 'readonly', 'aria-label': 'Share link' });
-                        $('.panel').appendChild(box);
+                        $('.status-row').appendChild(box);
                     }
                     box.value = link; box.focus(); box.select();
                     var ok = false;
                     try { ok = document.execCommand('copy'); } catch (e) { /* ignore */ }
-                    if (ok) done(); else flash('Copy the link shown below to share it.');
+                    if (ok) done(); else flash('Copy the link shown here to share it.');
                 };
                 if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(link).then(done, fallback);
                 else fallback();
@@ -1692,18 +1850,54 @@
                 else document.documentElement.setAttribute('data-theme', t);
                 var label = 'Theme: ' + (t === 'auto' ? 'automatic' : t);
                 var b = $('#ThemeBtn');
-                b.setAttribute('aria-label', label); b.title = label;
+                b.querySelector('.mi-label').textContent = label;
                 b.querySelector('svg').innerHTML = THEME_ICONS[t]; // static markup only
-                $('#ThemeBtn2').textContent = label;
             }
             $('#ThemeBtn').addEventListener('click', cycleTheme);
-            $('#ThemeBtn2').addEventListener('click', cycleTheme);
 
-            /* Panel "More" toggle (phones): private mode, expand/collapse, theme, tips */
-            $('#MoreBtn').addEventListener('click', function () {
-                var open = !$('#PanelMore').classList.contains('open');
-                $('#PanelMore').classList.toggle('open', open);
-                this.setAttribute('aria-expanded', open ? 'true' : 'false');
+            /* Header menus (Share, More): simple disclosures. Picking an item closes the menu and
+               leaves focus on its button, so dialogs hand focus back there when they close. */
+            var MENUS = [[$('#ShareBtn'), $('#ShareMenu')], [$('#MenuBtn'), $('#MoreMenu')]];
+            function setMenu(pair, open) {
+                pair[1].hidden = !open;
+                pair[0].setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
+            function closeMenus(refocus) {
+                MENUS.forEach(function (p) {
+                    if (p[1].hidden) return;
+                    setMenu(p, false);
+                    if (refocus) p[0].focus();
+                });
+            }
+            MENUS.forEach(function (p) {
+                p[0].addEventListener('click', function () {
+                    var open = p[1].hidden;
+                    closeMenus(false);
+                    setMenu(p, open);
+                    if (open) { var first = p[1].querySelector('button, input'); if (first) first.focus(); }
+                });
+                // capture: runs before the item's own handler opens a dialog
+                p[1].addEventListener('click', function (e) {
+                    var item = e.target.closest('.menu-item');
+                    if (item && item.id !== 'ThemeBtn') { setMenu(p, false); p[0].focus(); }
+                }, true);
+                p[1].addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') { e.preventDefault(); setMenu(p, false); p[0].focus(); return; }
+                    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+                    var items = $$('.menu-item, input', p[1]), i = items.indexOf(document.activeElement);
+                    if (i < 0) return;
+                    e.preventDefault();
+                    items[(i + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length].focus();
+                });
+            });
+            document.addEventListener('pointerdown', function (e) {
+                if (!e.target.closest('.menu-wrap')) closeMenus(false);
+            });
+            document.addEventListener('focusin', function (e) {
+                if (!e.target.closest || !e.target.closest('.menu-wrap')) closeMenus(false);
+            });
+            $('#PrivateBadge').addEventListener('click', function () {
+                flash('Private mode is on: answers live only in this tab and vanish when you close or reload it. Turn it off in the \u00B7\u00B7\u00B7 menu.');
             });
 
             /* ---------------------------------------------------------------
@@ -2408,6 +2602,10 @@
             var mqSheet = window.matchMedia('(max-width: 600px)');
             function findCat(name) { for (var i = 0; i < state.list.length; i++) if (state.list[i].name === name) return state.list[i]; return null; }
             function termInfo(kind, catName, item, field) {
+                if (kind === 'merged') {
+                    var g = displayGroups(state.list).filter(function (x) { return x.merged && x.base === catName; })[0];
+                    return g ? { title: g.base, context: 'Section', desc: mergedDef(g) } : null;
+                }
                 var cat = findCat(catName);
                 if (!cat) return null;
                 if (kind === 'section') return { title: cat.name, context: 'Section', desc: sectionDef(cat) };
@@ -2449,7 +2647,9 @@
                 if (!b) return;
                 e.preventDefault(); // don't toggle the section when the (i) sits in its header
                 e.stopPropagation();
-                openTerm(termInfo(b.getAttribute('data-kind'), b.getAttribute('data-cat'), b.getAttribute('data-item'), b.getAttribute('data-field')), b);
+                var info = termInfo(b.getAttribute('data-kind'), b.getAttribute('data-cat'), b.getAttribute('data-item'), b.getAttribute('data-field'));
+                if (info && b.getAttribute('data-ctx')) info.context = b.getAttribute('data-ctx');
+                openTerm(info, b);
             });
 
             /* Glossary list (searchable) */
