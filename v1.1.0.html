@@ -37,12 +37,17 @@
                     color-scheme: dark;
                 }
             }
-            /* Dark mode: No keeps its dark slate fill and white X, with a light edge so it stands out on dark cards */
+            /* Dark mode: No keeps its dark slate fill and white X, with a light edge so it stands out on dark cards.
+               Light fills drop their dark edge (they already stand out on dark cards). */
             @media (prefers-color-scheme: dark) {
+                :root:not([data-theme="light"]) { --ring: #77738A; --ring-sym: #A19DB5; }
+                :root:not([data-theme="light"]) .lv3, :root:not([data-theme="light"]) .sv2, :root:not([data-theme="light"]) .sv4 { --edge: initial; }
                 :root:not([data-theme="light"]) .lv5 { --c: #4A5162; --edge: #A3AABB; }
                 :root:not([data-theme="light"]) #ListError { color: #F7908A; }
             }
             :root[data-theme="dark"] .lv5 { --c: #4A5162; --edge: #A3AABB; }
+            :root[data-theme="dark"] { --ring: #77738A; --ring-sym: #A19DB5; }
+            :root[data-theme="dark"] .lv3, :root[data-theme="dark"] .sv2, :root[data-theme="dark"] .sv4 { --edge: initial; }
             :root[data-theme="dark"] {
                 --bg: #15141B; --card: #1F1E28; --card-2: #282633; --text: #ECEAF4; --muted: #A19DB5;
                 --border: #34323F; --accent: #9C86FF; --accent-ink: #15141B; --accent-soft: #2D2843;
@@ -50,6 +55,7 @@
                 color-scheme: dark;
             }
             * { box-sizing: border-box; }
+            [hidden] { display: none !important; } /* notices use display:flex; hidden must still win */
             html { -webkit-text-size-adjust: 100%; }
             body {
                 margin: 0;
@@ -181,36 +187,33 @@
             }
             .lv1 { --c: var(--l1); --ink: var(--l1-ink); }
             .lv2 { --c: var(--l2); --ink: var(--l2-ink); }
-            .lv3 { --c: var(--l3); --ink: var(--l3-ink); }
+            .lv3 { --c: var(--l3); --ink: var(--l3-ink); --edge: var(--l3-edge); }
             .lv4 { --c: var(--l4); --ink: var(--l4-ink); }
             .lv5 { --c: var(--l5); --ink: var(--l5-ink); }
             /* Required / Preferred / Open / N/A scale (safety and agreements) */
             .sv1 { --c: var(--s1); --ink: var(--s1-ink); }
-            .sv2 { --c: var(--s2); --ink: var(--s2-ink); }
+            .sv2 { --c: var(--s2); --ink: var(--s2-ink); --edge: var(--s2-edge); }
             .sv3 { --c: var(--s3); --ink: var(--s3-ink); }
-            .sv4 { --c: var(--s4); --ink: var(--s4-ink); }
+            .sv4 { --c: var(--s4); --ink: var(--s4-ink); --edge: var(--s4-edge); }
             .dot.lv0, .dot.sv0 { background: transparent; border: 2px dashed var(--muted); }
             .legend .legend-break { flex-basis: 100%; height: 0; }
             .legend .legend-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
             .sec-scale { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0; padding: 0 0 6px; list-style: none; font-size: 13px; color: var(--muted); }
             .sec-scale li { display: inline-flex; align-items: center; gap: 5px; }
             .sec-scale .dot { --sz: 18px; font-size: 10px; border-width: 1.5px; }
+            /* Unselected answers are quiet neutral rings with a muted symbol (ring 3.3:1 on the card);
+               only the chosen answer shows its colour. The legend keeps the colours. */
+            :root { --ring: #8E8AA0; --ring-sym: #6B6880; }
             .choice {
-                cursor: pointer; background: color-mix(in srgb, var(--c) 10%, var(--card));
-                color: color-mix(in srgb, var(--c) 75%, var(--text));
-                transition: background .15s, transform .15s, box-shadow .15s, opacity .15s;
+                cursor: pointer; background: var(--card); color: var(--ring-sym); border-color: var(--ring);
+                transition: background .15s, transform .15s, box-shadow .15s, border-color .15s;
                 -webkit-tap-highlight-color: transparent;
             }
-            .choice .sym { opacity: .55; }
-            .choice:hover { background: color-mix(in srgb, var(--c) 28%, var(--card)); }
-            .choice:hover .sym { opacity: .9; }
-            .choices.has-sel .choice:not([aria-pressed="true"]) { opacity: .5; }
-            .choices.has-sel .choice:not([aria-pressed="true"]):hover { opacity: .9; }
+            .choice:hover { background: color-mix(in srgb, var(--c) 16%, var(--card)); border-color: var(--edge, var(--c)); color: var(--text); }
             .choice[aria-pressed="true"] {
-                background: var(--c); color: var(--ink); transform: scale(1.08);
+                background: var(--c); color: var(--ink); border-color: var(--edge, var(--c)); transform: scale(1.08);
                 box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--edge, var(--c));
             }
-            .choice[aria-pressed="true"] .sym { opacity: 1; }
 
             footer { color: var(--muted); font-size: 14px; padding: 8px 0 40px; }
             footer h2 { font-size: 16px; color: var(--text); margin: 8px 0 6px; }
@@ -285,6 +288,21 @@
             }
             .person-switch button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
             .person-switch .ps-label { font-size: 13px; color: var(--muted); align-self: center; flex: none; }
+            /* Panel "More" (phones) and export dialog */
+            .more-btn, .theme-btn2 { display: none; }
+            .panel-more { grid-column: 1 / -1; display: grid; gap: 12px 24px; }
+            .ex-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+            .ex-opt { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg); cursor: pointer; }
+            .ex-opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+            .ex-opt input { margin: 3px 0 0; accent-color: var(--accent); }
+            .ex-opt span { display: flex; flex-direction: column; gap: 2px; }
+            .ex-opt small { color: var(--muted); font-size: 13px; }
+            .check { display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; }
+            .check input { width: 18px; height: 18px; accent-color: var(--accent); }
+            .check:has(input:disabled) { color: var(--muted); cursor: default; }
+            #ExportDialog .name-field input { width: 100%; }
+            .ex-preview { border: 1px solid var(--border); border-radius: 12px; background: var(--bg); padding: 8px; display: grid; place-items: center; max-height: 260px; overflow: hidden; }
+            .ex-preview canvas { max-width: 100%; max-height: 244px; width: auto; height: auto; border-radius: 6px; }
             /* Setup dialog */
             .hh-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
             .hh-opt {
@@ -342,11 +360,9 @@
                 .brand h1 { font-size: 20px; }
                 .tagline { font-size: 13px; }
                 .btn-label { display: none; }
-                .panel { padding: 14px; margin-top: 12px; }
+
                 .legend { gap: 8px 14px; font-size: 14px; }
-                .name-field { flex: 1 1 100%; }
-                .name-field input { width: 100%; }
-                .share .btn { flex: 1 1 40%; }
+
                 .sections { columns: 1; }
                 .items { padding: 0 10px 10px; }
                 .section > summary { padding: 12px 10px 10px; }
@@ -369,6 +385,33 @@
                 #InputList[data-view="1"] [data-person]:not([data-person="1"]),
                 #InputList[data-view="2"] [data-person]:not([data-person="2"]) { display: none; }
                 .hh-options { grid-template-columns: 1fr; }
+                /* Compact header + panel: the first question sits as high as possible */
+                .topbar-inner { padding-top: 8px; padding-bottom: 6px; align-items: center; }
+                .brand h1 { font-size: 19px; }
+                .tagline { font-size: 12px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                .tl-long, .share .xl { display: none; }
+                .panel > * { min-width: 0; }
+                #ThemeBtn { display: none; }
+                .progress-row { padding-bottom: 8px; font-size: 13px; }
+                .panel { padding: 10px 12px; margin: 10px 0 10px; gap: 10px; }
+                .legend { flex-wrap: nowrap; overflow-x: auto; gap: 12px; font-size: 13px; scrollbar-width: none; }
+                .legend li { gap: 5px; flex: none; }
+                .legend .dot { width: 20px; height: 20px; font-size: 11px; }
+                .legend .legend-empty { display: none; }
+                .share { flex-wrap: nowrap; gap: 6px; }
+                .share .btn { flex: 1 1 auto; min-height: 38px; }
+                .more-btn { display: inline-flex; flex: 0 0 44px !important; padding: 0 !important; }
+                .share .btn { min-height: 44px; }
+                .more-btn[aria-expanded="true"] { border-color: var(--accent); background: var(--accent-soft); }
+                .panel-more:not(.open) { display: none; }
+                .theme-btn2 { display: inline-flex; }
+                .switch-row { gap: 10px; }
+                .notice { padding: 10px 12px; font-size: 14px; margin-bottom: 10px; }
+                .notice.consent { gap: 6px 10px; flex-wrap: nowrap; }
+                .notice.consent > p { flex: 1 1 auto; }
+                .notice.consent .btn { white-space: nowrap; flex: none; }
+                .ex-row { grid-template-columns: 1fr; }
+                dialog#ExportDialog { max-height: calc(100vh - 16px); overflow: auto; }
                 .hh-opt { min-height: 52px; flex-direction: row; align-items: baseline; gap: 10px; }
                 .top-actions .icon-btn, .top-actions .btn { width: 38px; min-width: 38px; height: 38px; min-height: 38px; padding: 0; }
             }
@@ -382,7 +425,7 @@
             <div class="wrap topbar-inner">
                 <div class="brand">
                     <h1>PlayList</h1>
-                    <p class="tagline">Your data is yours. Nothing leaves this device.</p>
+                    <p class="tagline"><span class="tl-long">Your data is yours. </span>Nothing leaves this device.</p>
                 </div>
                 <div class="top-actions">
                     <button id="GuidedBtn" class="btn" type="button" aria-label="Guided mode" title="Answer one item at a time">
@@ -414,19 +457,20 @@
             <section class="panel" aria-label="Legend and sharing">
                 <ul class="legend" id="Legend" aria-label="Legend"></ul>
                 <div class="share">
-                    <label class="name-field">Name on image (optional)
-                        <input type="text" id="Name" maxlength="40" autocomplete="off" spellcheck="false" placeholder="e.g. Sam &amp; Alex">
-                    </label>
-                    <button id="DownloadBtn" class="btn btn-primary" type="button">
+                    <button id="DownloadBtn" class="btn btn-primary" type="button" aria-haspopup="dialog">
                         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
-                        Download image
+                        Download<span class="xl"> image</span>
                     </button>
                     <button id="CopyBtn" class="btn" type="button">
                         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
-                        Copy share link
+                        Copy<span class="xl"> share</span> link
+                    </button>
+                    <button id="MoreBtn" class="btn more-btn" type="button" aria-expanded="false" aria-controls="PanelMore" aria-label="More options">
+                        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                     </button>
                 </div>
                 <div id="Status" role="status" aria-live="polite"></div>
+                <div class="panel-more" id="PanelMore">
                 <div class="switch-row">
                     <label class="switch">
                         <input type="checkbox" id="PrivateToggle" role="switch">
@@ -436,8 +480,10 @@
                     <span class="spacer"></span>
                     <button id="ExpandAll" class="btn btn-small" type="button">Expand all</button>
                     <button id="CollapseAll" class="btn btn-small" type="button">Collapse all</button>
+                    <button id="ThemeBtn2" class="btn btn-small theme-btn2" type="button">Theme: automatic</button>
                 </div>
                 <p class="hint">Tap a dot to answer, tap it again to clear.<span class="kbd-hint"> Keyboard: Tab between items, &larr;/&rarr; to move, 1&ndash;5 to pick, 0 to clear.</span></p>
+                </div>
             </section>
 
             <div id="ConsentNote" class="notice consent" role="note" hidden>
@@ -477,6 +523,36 @@
                     <span class="spacer"></span>
                     <button type="button" class="btn" id="ListCancel">Cancel</button>
                     <button type="button" class="btn btn-primary" id="ListApply">Apply</button>
+                </div>
+            </div>
+        </dialog>
+
+        <dialog id="ExportDialog" aria-labelledby="ExportTitle">
+            <div class="dlg">
+                <div class="dlg-head">
+                    <h2 id="ExportTitle">Save an image</h2>
+                    <button type="button" class="icon-btn" id="ExportClose" aria-label="Close">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                    </button>
+                </div>
+                <p>The image is drawn on this device and saved straight to it. Nothing is uploaded.</p>
+                <div class="ex-row" role="radiogroup" aria-label="Style">
+                    <label class="ex-opt"><input type="radio" name="ExStyle" value="full" checked><span><b>Full</b><small>Every item and answer</small></span></label>
+                    <label class="ex-opt"><input type="radio" name="ExStyle" value="discreet"><span><b>Discreet</b><small>Section names and answer counts, no item names</small></span></label>
+                </div>
+                <div class="ex-row" role="radiogroup" aria-label="Layout">
+                    <label class="ex-opt"><input type="radio" name="ExLayout" value="narrow"><span><b>Phone</b><small>Narrow, easy to send</small></span></label>
+                    <label class="ex-opt"><input type="radio" name="ExLayout" value="wide"><span><b>Wide</b><small>Four columns, for big screens</small></span></label>
+                </div>
+                <label class="name-field">Name on image (optional)
+                    <input type="text" id="Name" maxlength="40" autocomplete="off" spellcheck="false" placeholder="e.g. Sam &amp; Alex">
+                </label>
+                <label class="check"><input type="checkbox" id="ShowName" disabled> Show the name on the image</label>
+                <div class="ex-preview" id="ExportPreview" aria-label="Preview"></div>
+                <div class="dlg-actions">
+                    <button type="button" class="btn" id="ExportCancel">Cancel</button>
+                    <span class="spacer"></span>
+                    <button type="button" class="btn btn-primary" id="ExportSave">Save image</button>
                 </div>
             </div>
         </dialog>
@@ -565,21 +641,23 @@
              * ------------------------------------------------------------- */
             var LEVELS = [
                 { name: 'Not entered', color: '#FFFFFF', ink: '#6B6880', sym: '' },
-                { name: 'Favorite',    color: '#E8559E', ink: '#FFFFFF', sym: '\u2665' }, // heart
-                { name: 'Like',        color: '#2E9E58', ink: '#FFFFFF', sym: '\u2713' }, // check
-                { name: 'Okay',        color: '#E2B203', ink: '#1F1D2B', sym: '~' },
-                { name: 'Maybe',       color: '#EF7D22', ink: '#1F1D2B', sym: '?' },
+                // White icons reach 4.5:1 on Favorite, Like, Maybe and No. Okay (light) vs Maybe (dark) also
+                // differ in lightness, so they stay apart with red-green colourblindness. edge = ring on white (3:1+).
+                { name: 'Favorite',    color: '#D12E80', ink: '#FFFFFF', sym: '\u2665' }, // heart
+                { name: 'Like',        color: '#187A3E', ink: '#FFFFFF', sym: '\u2713' }, // check
+                { name: 'Okay',        color: '#E2B203', ink: '#1F1D2B', sym: '~', edge: '#8A6C00' },
+                { name: 'Maybe',       color: '#BF530A', ink: '#FFFFFF', sym: '?' },
                 { name: 'No',          color: '#3D4452', ink: '#FFFFFF', sym: '\u2715' }  // cross on dark slate: never confused with the pink Favorite, even with red-green colorblindness
             ];
             // Sections tagged [safety] use this scale instead. Same 0-5 storage, so links encode the same way.
             var SAFETY_LEVELS = [
                 { name: 'Not entered', color: '#FFFFFF', ink: '#6B6880', sym: '' },
-                // Bright blue -> light blue -> sand -> pale grey: a clear light/dark ramp that stays apart from
-                // the charcoal No and the pink Favorite with red-green colorblindness too.
+                // Blue -> light blue -> grey -> pale grey: a light/dark ramp that stays apart from the charcoal
+                // No, the pink Favorite and the yellow Okay with red-green colourblindness too.
                 { name: 'Required',    color: '#2563EB', ink: '#FFFFFF', sym: '!' },
-                { name: 'Preferred',   color: '#8DBDF2', ink: '#10233F', sym: '+' },
-                { name: 'Open',        color: '#DCCBA3', ink: '#3A2F17', sym: '\u2218' }, // ring operator
-                { name: 'N/A',         color: '#E4E2EA', ink: '#4A4760', sym: '\u2013' }  // dash
+                { name: 'Preferred',   color: '#8DBDF2', ink: '#10233F', sym: '+', edge: '#2F6FB8' },
+                { name: 'Open',        color: '#8F8BA3', ink: '#1F1D2B', sym: '\u2218' }, // ring operator
+                { name: 'N/A',         color: '#E4E2EA', ink: '#4A4760', sym: '\u2013', edge: '#6B6880' }  // dash
             ];
             var SCALES = {
                 like:   { levels: LEVELS, cls: 'lv' },
@@ -589,10 +667,12 @@
             for (var li = 1; li < LEVELS.length; li++) {
                 document.documentElement.style.setProperty('--l' + li, LEVELS[li].color);
                 document.documentElement.style.setProperty('--l' + li + '-ink', LEVELS[li].ink);
+                document.documentElement.style.setProperty('--l' + li + '-edge', LEVELS[li].edge || LEVELS[li].color);
             }
             for (var si = 1; si < SAFETY_LEVELS.length; si++) {
                 document.documentElement.style.setProperty('--s' + si, SAFETY_LEVELS[si].color);
                 document.documentElement.style.setProperty('--s' + si + '-ink', SAFETY_LEVELS[si].ink);
+                document.documentElement.style.setProperty('--s' + si + '-edge', SAFETY_LEVELS[si].edge || SAFETY_LEVELS[si].color);
             }
 
             /* ---------------------------------------------------------------
@@ -1239,7 +1319,7 @@
                 var ul = $('#Legend'); ul.textContent = '';
                 LEVELS.forEach(function (lv, i) {
                     var dot = el('span', { class: 'dot lv' + i, 'aria-hidden': 'true', text: lv.sym });
-                    ul.appendChild(el('li', null, [dot, el('span', { text: lv.name })]));
+                    ul.appendChild(el('li', i ? null : { class: 'legend-empty' }, [dot, el('span', { text: lv.name })]));
                 });
                 if (!hasSafetyScale(state.list)) return;
                 ul.appendChild(el('li', { class: 'legend-break', 'aria-hidden': 'true' }));
@@ -1496,14 +1576,25 @@
                 dark: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" fill="currentColor"/>'
             };
             var themeIdx = 0;
-            $('#ThemeBtn').addEventListener('click', function () {
+            function cycleTheme() {
                 themeIdx = (themeIdx + 1) % THEMES.length;
                 var t = THEMES[themeIdx];
                 if (t === 'auto') document.documentElement.removeAttribute('data-theme');
                 else document.documentElement.setAttribute('data-theme', t);
                 var label = 'Theme: ' + (t === 'auto' ? 'automatic' : t);
-                this.setAttribute('aria-label', label); this.title = label;
-                this.querySelector('svg').innerHTML = THEME_ICONS[t]; // static markup only
+                var b = $('#ThemeBtn');
+                b.setAttribute('aria-label', label); b.title = label;
+                b.querySelector('svg').innerHTML = THEME_ICONS[t]; // static markup only
+                $('#ThemeBtn2').textContent = label;
+            }
+            $('#ThemeBtn').addEventListener('click', cycleTheme);
+            $('#ThemeBtn2').addEventListener('click', cycleTheme);
+
+            /* Panel "More" toggle (phones): private mode, expand/collapse, theme, tips */
+            $('#MoreBtn').addEventListener('click', function () {
+                var open = !$('#PanelMore').classList.contains('open');
+                $('#PanelMore').classList.toggle('open', open);
+                this.setAttribute('aria-expanded', open ? 'true' : 'false');
             });
 
             /* ---------------------------------------------------------------
@@ -1613,7 +1704,10 @@
             function drawDot(ctx, cx, cy, r, level, levels) {
                 var lv = (levels || LEVELS)[level];
                 ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
-                if (level) { ctx.fillStyle = lv.color; ctx.fill(); }
+                if (level) {
+                    ctx.fillStyle = lv.color; ctx.fill();
+                    if (lv.edge) { ctx.strokeStyle = lv.edge; ctx.lineWidth = 1.5; ctx.stroke(); }
+                }
                 else {
                     ctx.fillStyle = '#FFFFFF'; ctx.fill();
                     ctx.setLineDash([2.5, 2]); ctx.strokeStyle = IMG.empty; ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]);
@@ -1625,12 +1719,35 @@
                     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
                 }
             }
-            function drawImage(name) {
+            // Softer section names for the discreet image (the person label is kept)
+            var DISCREET_NAMES = { 'Activities': 'Intimacy', 'Kinks': 'Extras', 'Sexual Preference': 'Partners', 'Groupings': 'Group play', 'Observation': 'Watching' };
+            function discreetName(name) {
+                var m = /^(.*?)( \([^()]*\))?$/.exec(name);
+                return (DISCREET_NAMES[m[1]] || m[1]) + (m[2] || '');
+            }
+            function wrapLines(ctx, text, maxW) {
+                var words = text.split(' '), lines = [], line = '';
+                words.forEach(function (w) {
+                    var t = line ? line + ' ' + w : w;
+                    if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t;
+                });
+                if (line) lines.push(line);
+                return lines;
+            }
+            // opts: { name: shown only if set, discreet: hide item names, narrow: 2 columns for phones }
+            function drawImage(opts) {
+                opts = opts || {};
+                var name = opts.name || '', discreet = !!opts.discreet;
                 var hasSafety = hasSafetyScale(state.list);
-                var numCols = 4, colW = 330, gap = 16, pad = 28, headerH = 118 + (hasSafety ? 30 : 0), footH = 50;
+                var numCols = opts.narrow ? 2 : 4, colW = 330, gap = 16, pad = 28, headerH = 118 + (hasSafety ? 30 : 0);
                 var titleH = 32, subH = 18, rowH = 26, cardPad = 14, cardGap = 16, dotR = 9, dotStep = 23;
+                var W = pad * 2 + numCols * colW + (numCols - 1) * gap;
+                var measure = document.createElement('canvas').getContext('2d');
+                measure.font = '600 13px ' + IMG.font;
+                var consentLines = wrapLines(measure, CONSENT_TEXT, W - pad * 2);
+                var footH = 30 + consentLines.length * 18 + (discreet ? 18 : 0);
                 var cats = state.list.map(function (c) {
-                    return { cat: c, h: cardPad * 2 + titleH + (c.fields.length > 1 ? subH : 0) + c.items.length * rowH };
+                    return { cat: c, h: discreet ? cardPad * 2 + titleH + rowH : cardPad * 2 + titleH + (c.fields.length > 1 ? subH : 0) + c.items.length * rowH };
                 });
                 var total = cats.reduce(function (a, c) { return a + c.h + cardGap; }, 0);
                 var avg = total / numCols, cols = [], ci = 0;
@@ -1640,31 +1757,30 @@
                     cols[ci].cats.push(c); cols[ci].h += c.h + cardGap;
                 });
                 var tallest = Math.max.apply(null, cols.map(function (c) { return c.h; }));
-                var W = pad * 2 + numCols * colW + (numCols - 1) * gap;
                 var H = pad + headerH + tallest + footH;
-                var scale = 2;
+                var scale = opts.scale || 2;
                 var canvas = document.createElement('canvas');
-                canvas.width = W * scale; canvas.height = H * scale;
+                canvas.width = Math.round(W * scale); canvas.height = Math.round(H * scale);
                 var ctx = canvas.getContext('2d');
                 ctx.scale(scale, scale);
                 ctx.fillStyle = IMG.bg; ctx.fillRect(0, 0, W, H);
 
-                // Header: title, name, progress, legend
+                // Header: title, name (only when asked for), progress, legend
                 ctx.fillStyle = IMG.text; ctx.font = '800 30px ' + IMG.font;
                 ctx.fillText('PlayList', pad, pad + 28);
                 var tw = ctx.measureText('PlayList').width;
                 if (name) {
                     ctx.fillStyle = IMG.accent; ctx.font = '600 24px ' + IMG.font;
-                    ctx.fillText(fitText(ctx, name, 700), pad + tw + 14, pad + 28);
+                    ctx.fillText(fitText(ctx, name, W - pad * 2 - tw - 14), pad + tw + 14, pad + 28);
                 }
                 ctx.fillStyle = IMG.muted; ctx.font = '14px ' + IMG.font;
-                ctx.fillText(countAnswered() + ' of ' + state.slots.length + ' answered', pad, pad + 54);
+                ctx.fillText(countAnswered() + ' of ' + state.slots.length + ' answered' + (discreet ? ' \u00B7 discreet summary, item names hidden' : ''), pad, pad + 54);
                 var lx = pad, ly = pad + 86;
                 LEVELS.forEach(function (lv, i) {
                     drawDot(ctx, lx + 11, ly, 11, i);
                     ctx.fillStyle = IMG.text; ctx.font = '600 15px ' + IMG.font;
                     ctx.fillText(lv.name, lx + 28, ly + 5);
-                    lx += 28 + ctx.measureText(lv.name).width + 26;
+                    lx += 28 + ctx.measureText(lv.name).width + 22;
                 });
                 if (hasSafety) {
                     lx = pad; ly += 30;
@@ -1676,7 +1792,7 @@
                         drawDot(ctx, lx + 11, ly, 11, i, SAFETY_LEVELS);
                         ctx.fillStyle = IMG.text; ctx.font = '600 15px ' + IMG.font;
                         ctx.fillText(lv.name, lx + 28, ly + 5);
-                        lx += 28 + ctx.measureText(lv.name).width + 26;
+                        lx += 28 + ctx.measureText(lv.name).width + 22;
                     });
                 }
 
@@ -1684,13 +1800,31 @@
                 cols.forEach(function (col, c) {
                     var x = pad + c * (colW + gap), y = pad + headerH;
                     col.cats.forEach(function (entry) {
-                        var cat = entry.cat, multi = cat.fields.length > 1;
+                        var cat = entry.cat, multi = cat.fields.length > 1, levels = scaleOf(cat).levels;
                         roundRect(ctx, x, y, colW, entry.h, 14);
                         ctx.fillStyle = IMG.card; ctx.fill();
                         ctx.strokeStyle = IMG.border; ctx.lineWidth = 1; ctx.stroke();
                         var cy = y + cardPad + 18;
                         ctx.fillStyle = IMG.text; ctx.font = '700 17px ' + IMG.font;
-                        ctx.fillText(fitText(ctx, cat.name, colW - cardPad * 2), x + cardPad, cy);
+                        ctx.fillText(fitText(ctx, discreet ? discreetName(cat.name) : cat.name, colW - cardPad * 2), x + cardPad, cy);
+                        if (discreet) {
+                            // One row: how many answers at each level, no item names
+                            var counts = levels.map(function () { return 0; });
+                            cat.items.forEach(function (item) { cat.fields.forEach(function (f) { counts[state.answers.get(keyOf(cat.name, item, f)) || 0]++; }); });
+                            var mid = cy + 14 + rowH / 2, dx = x + cardPad, any = false;
+                            for (var lvI = 1; lvI < levels.length; lvI++) {
+                                if (!counts[lvI]) continue;
+                                any = true;
+                                drawDot(ctx, dx + dotR, mid, dotR, lvI, levels);
+                                ctx.fillStyle = IMG.text; ctx.font = '600 14px ' + IMG.font;
+                                var label = String(counts[lvI]);
+                                ctx.fillText(label, dx + dotR * 2 + 5, mid + 5);
+                                dx += dotR * 2 + 5 + ctx.measureText(label).width + 14;
+                            }
+                            if (!any) { ctx.fillStyle = IMG.muted; ctx.font = '14px ' + IMG.font; ctx.fillText('Not answered yet', dx, mid + 5); }
+                            y += entry.h + cardGap;
+                            return;
+                        }
                         if (multi) {
                             cy += subH;
                             ctx.fillStyle = IMG.muted; ctx.font = '600 12px ' + IMG.font;
@@ -1700,7 +1834,7 @@
                         cat.items.forEach(function (item) {
                             var mid = cy + rowH / 2;
                             cat.fields.forEach(function (field, fi) {
-                                drawDot(ctx, x + cardPad + dotR + fi * dotStep, mid, dotR, state.answers.get(keyOf(cat.name, item, field)) || 0, scaleOf(cat).levels);
+                                drawDot(ctx, x + cardPad + dotR + fi * dotStep, mid, dotR, state.answers.get(keyOf(cat.name, item, field)) || 0, levels);
                             });
                             var tx = x + cardPad + cat.fields.length * dotStep + 6;
                             ctx.fillStyle = IMG.text; ctx.font = '14px ' + IMG.font;
@@ -1710,26 +1844,65 @@
                         y += entry.h + cardGap;
                     });
                 });
+                var fy = H - footH + 22;
                 ctx.fillStyle = IMG.text; ctx.font = '600 13px ' + IMG.font;
-                ctx.fillText(CONSENT_TEXT, pad, H - 34);
+                consentLines.forEach(function (l) { ctx.fillText(l, pad, fy); fy += 18; });
+                if (discreet) {
+                    ctx.fillStyle = IMG.muted; ctx.font = '12px ' + IMG.font;
+                    ctx.fillText('Discreet version: the share link holds the details.', pad, fy); fy += 18;
+                }
                 ctx.fillStyle = IMG.muted; ctx.font = '12px ' + IMG.font;
-                ctx.fillText('Made with PlayList \u00B7 created on this device, never uploaded', pad, H - 14);
+                ctx.fillText('Made with PlayList \u00B7 created on this device, never uploaded', pad, fy);
                 return canvas;
             }
 
+            /* Export dialog: style, layout, name (off unless typed), live preview */
+            var exportDlg = $('#ExportDialog'), nameTouched = false;
+            function exportOpts(scale) {
+                var nm = $('#Name').value.trim();
+                return {
+                    discreet: $('input[name="ExStyle"]:checked').value === 'discreet',
+                    narrow: $('input[name="ExLayout"]:checked').value === 'narrow',
+                    name: $('#ShowName').checked && nm ? nm : '',
+                    scale: scale
+                };
+            }
+            function renderPreview() {
+                var box = $('#ExportPreview');
+                box.textContent = '';
+                box.appendChild(drawImage(exportOpts(0.6)));
+            }
+            function syncNameBox() {
+                var has = !!$('#Name').value.trim();
+                $('#ShowName').disabled = !has;
+                if (!has) $('#ShowName').checked = false;
+                else if (!nameTouched) $('#ShowName').checked = true;
+            }
             $('#DownloadBtn').addEventListener('click', function () {
-                var btn = this;
-                var name = $('#Name').value.trim();
+                if (!$('input[name="ExLayout"]:checked')) $('input[name="ExLayout"][value="' + (mqSheet.matches ? 'narrow' : 'wide') + '"]').checked = true;
+                syncNameBox();
+                renderPreview();
+                exportDlg.showModal();
+            });
+            $('#Name').addEventListener('input', function () { syncNameBox(); renderPreview(); });
+            $('#ShowName').addEventListener('change', function () { nameTouched = true; renderPreview(); });
+            $$('input[name="ExStyle"], input[name="ExLayout"]').forEach(function (r) { r.addEventListener('change', renderPreview); });
+            $('#ExportCancel').addEventListener('click', function () { exportDlg.close(); });
+            $('#ExportClose').addEventListener('click', function () { exportDlg.close(); });
+            exportDlg.addEventListener('click', function (e) { if (e.target === exportDlg) exportDlg.close(); });
+            $('#ExportSave').addEventListener('click', function () {
+                var btn = this, opts = exportOpts(2);
                 btn.disabled = true;
-                drawImage(name).toBlob(function (blob) {
+                drawImage(opts).toBlob(function (blob) {
                     btn.disabled = false;
                     if (!blob) { flash('Sorry, the image could not be created.'); return; }
                     var url = URL.createObjectURL(blob);
-                    var slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-                    var a = el('a', { href: url, download: 'playlist' + (slug ? '-' + slug : '') + '.png' });
+                    var slug = opts.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                    var a = el('a', { href: url, download: 'playlist' + (opts.discreet ? '-discreet' : '') + (slug ? '-' + slug : '') + '.png' });
                     document.body.appendChild(a); a.click(); a.remove();
                     setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
-                    flash('Image saved to your device.');
+                    exportDlg.close();
+                    flash('Image saved to your device' + (opts.name ? '.' : ', without a name.'));
                 }, 'image/png');
             });
 
