@@ -171,20 +171,23 @@
             .checks > details > summary { list-style: none; cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 12px; min-height: 44px; }
             .checks > details > summary::-webkit-details-marker { display: none; }
             .checks-title { font-weight: 650; font-size: 15px; }
-            .sev-chips { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+            .checks-count { font-size: 13px; font-weight: 700; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 99px; display: inline-grid; place-items: center; background: var(--accent-soft); color: var(--text); }
+            .sev-tag { margin-right: 6px; vertical-align: 1px; }
             .sev-chip, .sev-tag { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
             .sev-chip[data-sev="resolve"], .sev-tag[data-sev="resolve"] { border-color: var(--accent); color: var(--text); background: var(--accent-soft); }
             .checks .chev { margin-left: auto; }
-            @media (max-width: 600px) { .checks-title { flex: 1; } .checks .chev { order: 2; } .sev-chips { order: 3; flex-basis: 100%; } }
             .checks details[open] .chev { transform: rotate(180deg); }
             .checks-body { padding: 0 12px 10px; }
             .checks-intro { margin: 0 0 6px; font-size: 14px; color: var(--muted); }
             .checks-list { list-style: none; margin: 0; padding: 0; }
             .check-note { padding: 10px 0; border-top: 1px solid var(--border); font-size: 15px; }
             .check-note p { margin: 4px 0; line-height: 1.45; }
-            .check-actions { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+            .check-actions { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 14px; }
+            .show-lbl { font-size: 14px; color: var(--muted); }
             .note-btn { background: none; border: 0; padding: 4px 0; min-height: 32px; font: inherit; font-size: 14px; font-weight: 600; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-            .flag-mark { margin-left: 6px; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--accent); color: var(--accent); background: none; cursor: pointer; vertical-align: 1px; white-space: nowrap; }
+            .flag-mark { margin-left: 2px; width: 26px; height: 26px; padding: 5px; border: 0; border-radius: 99px; color: var(--accent); background: none; cursor: pointer; vertical-align: middle; display: inline-grid; place-items: center; }
+            .flag-mark:hover { background: var(--accent-soft); }
+            .flag-mark svg { width: 15px; height: 15px; }
             .item.flash-row { animation: flash-row 1.6s ease-out; }
             @keyframes flash-row { from { background: var(--accent-soft); } to { background: transparent; } }
             dialog.nudge { width: min(400px, calc(100vw - 24px)); }
@@ -397,7 +400,6 @@
                 background: var(--card); cursor: pointer; font-weight: 600; font-size: 14px; max-width: 12em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
             }
             .person-switch button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-            .person-switch .ps-label { font-size: 13px; color: var(--muted); align-self: center; flex: none; }
             /* Export dialog */
             .ex-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
             .ex-opt { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg); cursor: pointer; }
@@ -448,6 +450,7 @@
             .gloss-top { position: sticky; top: 0; z-index: 1; background: var(--card); padding-top: 20px; display: flex; flex-direction: column; gap: 10px; }
             .gloss-search { width: 100%; min-height: 44px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); font-size: 16px; }
             #GlossCount { margin: 0 0 4px; }
+            #GlossCount:empty { display: none; }
             .gloss-list { margin: 0; display: grid; gap: 4px; }
             .gloss-entry { padding: 10px 0; border-top: 1px solid var(--border); }
             .gloss-entry dt { font-weight: 700; font-size: 16px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
@@ -566,7 +569,7 @@
                 dialog.guided .dlg { height: 100%; padding: 14px 14px 18px; gap: 10px; }
                 dialog.guided .g-stage { flex: 1; }
                 dialog.guided .g-card { min-height: 0; }
-                .g-keys { display: none; }
+                .g-keys, .g-opt kbd { display: none; }
                 .hh-opt { min-height: 52px; flex-direction: row; align-items: baseline; gap: 10px; }
                 .top-actions .icon-btn, .top-actions .btn { width: 40px; min-width: 40px; height: 40px; min-height: 40px; padding: 0; }
                 .top-actions #ShareBtn { width: auto; padding: 0 16px; }
@@ -582,7 +585,7 @@
             <div class="wrap topbar-inner">
                 <div class="brand">
                     <h1>PlayList</h1>
-                    <button id="PrivateBadge" class="private-badge" type="button" hidden title="Private mode is on: answers live only in this tab and vanish when you close or reload it. Use Copy share link to keep them.">
+                    <button id="PrivateBadge" class="private-badge" type="button" hidden title="Private mode: answers vanish when this tab closes. Copy the link to keep them.">
                         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.2 3.9M6.6 6.6C3.8 8.4 2 12 2 12s4 7 10 7a9.6 9.6 0 0 0 4.4-1.1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
                         <span>Private</span>
                     </button>
@@ -598,7 +601,7 @@
                         <div id="ShareMenu" class="menu" hidden>
                             <button id="CopyBtn" class="menu-item" type="button">
                                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
-                                <span>Copy share link</span>
+                                <span>Copy link</span>
                             </button>
                             <button id="DownloadBtn" class="menu-item" type="button" aria-haspopup="dialog">
                                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
@@ -614,7 +617,7 @@
                         <div id="MoreMenu" class="menu" hidden>
                             <button id="CompareBtn" class="menu-item" type="button" aria-haspopup="dialog">
                                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>
-                                <span>Compare with another household</span>
+                                <span>Compare households</span>
                             </button>
                             <button id="GlossaryBtn" class="menu-item" type="button" aria-haspopup="dialog">
                                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/></svg>
@@ -635,7 +638,7 @@
                             <label class="switch menu-switch">
                                 <input type="checkbox" id="PrivateToggle" role="switch">
                                 <span class="track" aria-hidden="true"></span>
-                                <span>Private mode <small>Answers stay in this tab only, not in the address bar or history.</small></span>
+                                <span>Private mode <small>Keeps answers out of the address bar and history.</small></span>
                             </label>
                         </div>
                     </div>
@@ -657,8 +660,7 @@
             <div id="InputList" class="sections" data-view="all"></div>
 
             <footer>
-                <p><strong>About consent.</strong> This is a starting point for a conversation, not a contract. Anyone can change their mind at any time.</p>
-                <p>Nothing leaves this device. Anyone with a share link can see the answers.</p>
+                <p>This is a starting point for a conversation, not a contract. Anyone can change their mind at any time.</p>
             </footer>
         </main>
 
@@ -675,7 +677,7 @@
         <dialog id="EditDialog" aria-labelledby="EditTitle">
             <div class="dlg">
                 <div class="dlg-head"><h2 id="EditTitle">Edit list</h2></div>
-                <p>Lines starting with <code>#</code> are sections, <code>(A, B)</code> lists the columns for that section, and <code>*</code> lines are items. Add a definition after <code>::</code>, e.g. <code>* Kissing :: Kissing on the lips</code> (max 300 characters). Add <code>[safety]</code> after a section name, e.g. <code>#Safety [safety]</code>, to answer it with Required / Preferred / Open / N/A. A section ending in a person&rsquo;s name in brackets, e.g. <code>#Kinks (Alex)</code>, or a column with their name belongs to that person. Standard terms already have built-in definitions. Answers to unchanged items are kept. Custom lists, including any definitions you add, are included in share links.</p>
+                <p><code>#</code> section, <code>(A, B)</code> its columns, <code>*</code> item. Add <code>:: text</code> for a definition (up to 300 characters), <code>[safety]</code> after a section for Required / Preferred / Open / N/A, and <code>{A | B | C}</code> after an item for a pick-one question. A person&rsquo;s name in brackets, as in <code>#Kinks (Alex)</code>, makes a section theirs. Unchanged items keep their answers; custom lists go into the share link.</p>
                 <label for="ListText" class="sr-only">List text</label>
                 <textarea id="ListText" spellcheck="false"></textarea>
                 <div id="ListError" role="alert"></div>
@@ -696,14 +698,14 @@
                         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
                     </button>
                 </div>
-                <p>The image is drawn on this device and saved straight to it. Nothing is uploaded.</p>
+                <p>Made and saved on this device.</p>
                 <div class="ex-row" role="radiogroup" aria-label="Style">
                     <label class="ex-opt"><input type="radio" name="ExStyle" value="full" checked><span><b>Full</b><small>Every item and answer</small></span></label>
-                    <label class="ex-opt"><input type="radio" name="ExStyle" value="discreet"><span><b>Discreet</b><small>Section names and answer counts, no item names</small></span></label>
+                    <label class="ex-opt"><input type="radio" name="ExStyle" value="discreet"><span><b>Discreet</b><small>Counts per section, no item names</small></span></label>
                 </div>
                 <div class="ex-row" role="radiogroup" aria-label="Layout">
                     <label class="ex-opt"><input type="radio" name="ExLayout" value="narrow"><span><b>Phone</b><small>Narrow, easy to send</small></span></label>
-                    <label class="ex-opt"><input type="radio" name="ExLayout" value="wide"><span><b>Wide</b><small>Four columns, for big screens</small></span></label>
+                    <label class="ex-opt"><input type="radio" name="ExLayout" value="wide"><span><b>Wide</b><small>Four columns</small></span></label>
                 </div>
                 <label class="name-field">Name on image (optional)
                     <input type="text" id="Name" maxlength="40" autocomplete="off" spellcheck="false" placeholder="e.g. Sam &amp; Alex">
@@ -721,7 +723,7 @@
         <dialog id="SetupDialog" aria-labelledby="SetupTitle">
             <div class="dlg">
                 <div class="dlg-head"><h2 id="SetupTitle">Who&rsquo;s filling this in?</h2></div>
-                <p>Pick what fits you. You can change it any time with the people button at the top.</p>
+                <p>You can change this later in the &middot;&middot;&middot; menu.</p>
                 <div class="hh-options" role="radiogroup" aria-labelledby="SetupTitle">
                     <button type="button" class="hh-opt" role="radio" data-type="couple" aria-checked="true"><b>A couple</b><span>Two people, any genders</span></button>
                     <button type="button" class="hh-opt" role="radio" data-type="single" aria-checked="false"><b>A single</b><span>Just you</span></button>
@@ -729,7 +731,7 @@
                 </div>
                 <div class="hh-names" id="SetupNames"></div>
                 <div class="hh-presets" id="SetupPresets"></div>
-                <p>Names are optional. They label each person&rsquo;s columns and the image, and they&rsquo;re saved in your share link. Private mode keeps them out of the address bar.</p>
+                <p>Names label each person&rsquo;s columns and the image, and go into your share link.</p>
                 <p id="SetupError" role="alert"></p>
                 <div class="dlg-actions">
                     <button type="button" class="btn" id="SetupCancel">Not now</button>
@@ -742,13 +744,13 @@
         <dialog id="CompareDialog" class="compare" aria-labelledby="CmpTitle">
             <div class="dlg">
                 <div class="dlg-head">
-                    <h2 id="CmpTitle">Compare with another household</h2>
+                    <h2 id="CmpTitle">Compare households</h2>
                     <button type="button" class="icon-btn" id="CmpClose" aria-label="Close">
                         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
                     </button>
                 </div>
                 <div id="CmpPaste" class="cmp-step">
-                    <p>Paste the other household&rsquo;s share link. It is read on this device only: it is never added to this page&rsquo;s link or history, nothing is saved, and it is forgotten when you close this.</p>
+                    <p>Read on this device only, never saved, and forgotten when you close this.</p>
                     <label class="name-field" for="CmpLink">Their share link</label>
                     <textarea id="CmpLink" rows="3" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://&hellip;/v1.1.0.html#v4:&hellip;"></textarea>
                     <div id="CmpError" role="alert"></div>
@@ -777,7 +779,7 @@
                     </div>
                     <div id="CmpBody" class="cmp-body"></div>
                     <div class="dlg-actions">
-                        <button type="button" class="btn" id="CmpBack">Use a different link</button>
+                        <button type="button" class="btn" id="CmpBack">Different link</button>
                         <span class="spacer"></span>
                         <button type="button" class="btn" id="CmpImage">Save discreet summary</button>
                         <button type="button" class="btn btn-primary" id="CmpDone">Done</button>
@@ -811,7 +813,7 @@
                         </button>
                     </div>
                     <label for="GlossSearch" class="sr-only">Search terms</label>
-                    <input type="search" id="GlossSearch" class="gloss-search" placeholder="Search terms and descriptions" autocomplete="off" spellcheck="false">
+                    <input type="search" id="GlossSearch" class="gloss-search" placeholder="Search" autocomplete="off" spellcheck="false">
                     <p id="GlossCount" aria-live="polite"></p>
                 </div>
                 <dl class="gloss-list" id="GlossList"></dl>
@@ -834,8 +836,8 @@
                         <h2 class="g-item" id="GItem"></h2>
                         <p class="g-def" id="GDef"></p>
                         <div class="g-options" id="GOptions" role="group" aria-label="Choose an answer"></div>
-                        <button type="button" class="g-clear" id="GClear" hidden>Clear this answer</button>
-                        <p class="g-hint" id="GHint"><span aria-hidden="true">&larr;</span> Swipe left to skip &middot; right to go back <span aria-hidden="true">&rarr;</span></p>
+                        <button type="button" class="g-clear" id="GClear" hidden>Clear</button>
+                        <p class="g-hint" id="GHint">Swipe left to skip, right to go back</p>
                     </article>
                 </div>
                 <div class="dlg-actions">
@@ -843,7 +845,7 @@
                     <span class="spacer"></span>
                     <button type="button" class="btn" id="GNext">Skip <span aria-hidden="true">&rarr;</span></button>
                 </div>
-                <p class="g-keys">Keys: 1&ndash;5 to answer, 0 to clear, &larr;/&rarr; to move, Esc to close.</p>
+                <p class="g-keys">0 clears &middot; &larr; &rarr; move</p>
             </div>
         </dialog>
 
@@ -1464,8 +1466,8 @@
             function showUpgradeNotice(v1) {
                 var n = $('#LinkNotice');
                 n.textContent = '';
-                n.appendChild(el('span', { text: (v1 ? 'Opened a PlayList v1.0 link' : 'Opened a link made with an earlier list') + ', shown exactly as saved.' }));
-                n.appendChild(el('button', { type: 'button', class: 'link-btn', id: 'UpgradeBtn', text: 'Use the new list', title: 'Adds Boundaries and Agreements, a Required / Preferred / Open scale for safety, and names for each person' }));
+                n.appendChild(el('span', { text: (v1 ? 'A PlayList v1.0 link' : 'Made with an earlier list') + ', shown as saved.' }));
+                n.appendChild(el('button', { type: 'button', class: 'link-btn', id: 'UpgradeBtn', text: 'Use the new list', title: 'Moves these answers to the current list' }));
                 n.classList.add('has-action');
                 n.hidden = false;
             }
@@ -1698,7 +1700,6 @@
                 box.hidden = L.length < 2;
                 if (box.hidden) { state.view = -1; }
                 else {
-                    box.appendChild(el('span', { class: 'ps-label', text: 'Show:' }));
                     [-1].concat(L.map(function (_, i) { return i; })).forEach(function (i) {
                         box.appendChild(el('button', { type: 'button', 'data-view': String(i), 'aria-pressed': state.view === i ? 'true' : 'false', text: i < 0 ? 'Everyone' : L[i] }));
                     });
@@ -2066,9 +2067,9 @@
                 if (how === 'Soft swap') {
                     var oral = pickName(BND, LADDER_ORAL);
                     var oh = oral === 'No' ? yesIn(ACT, ['Oral', 'Swallowing']) : [];
-                    if (oh.length) add('A5', 'check', 'Soft swap is marked as not including oral, and ' + names(oh) + ' ' + isAre(oh) + ' also a yes. You may want to include oral in soft swap, or change the ' + names(oh) + ' answers.', [ladKey, keyOf(BND, LADDER_ORAL, 'General')].concat(oh.map(function (h) { return h.key; })));
+                    if (oh.length) add('A5', 'check', 'Soft swap is marked without oral, but ' + names(oh) + ' ' + isAre(oh) + ' a yes. You could include oral in soft swap, or change ' + (isAre(oh) === 'is' ? 'that answer' : 'those answers') + '.', [ladKey, keyOf(BND, LADDER_ORAL, 'General')].concat(oh.map(function (h) { return h.key; })));
                     var ph = yesIn(ACT, ['Penetrative sex', 'Strap-on sex', 'Anal sex', 'Double penetration']);
-                    if (ph.length) add('A6', 'check', 'Soft swap is marked as how far play goes, and ' + names(ph) + ' ' + isAre(ph) + ' also a yes. Soft swap usually stops short of intercourse with others. You may want to change one, or say when each applies.', [ladKey].concat(ph.map(function (h) { return h.key; })));
+                    if (ph.length) add('A6', 'check', 'Soft swap is how far play goes, and ' + names(ph) + ' ' + isAre(ph) + ' a yes. Soft swap usually stops short of intercourse with others. Change one, or say when each applies.', [ladKey].concat(ph.map(function (h) { return h.key; })));
                 }
                 if (ans(BND, 'Kissing other people') === 5) {
                     var kh = yesIn(ACT, ['Kissing']);
@@ -2118,6 +2119,14 @@
                 return p[1] + (who ? ' (' + who + (multi ? ', ' + p[2].toLowerCase() : '') + ')' : multi ? ' (' + p[2] + ')' : '');
             }
             var checkNotes = [];
+            function flagMark(i, sev) {
+                var ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg');
+                svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); svg.setAttribute('stroke-width', '2.4'); svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
+                var p = document.createElementNS(ns, 'path'); p.setAttribute('d', 'M5 21V4h11l-2 4 2 4H5'); svg.appendChild(p);
+                var b = el('button', { type: 'button', class: 'flag-mark', 'data-note': String(i), 'aria-label': sev + ': see the note', title: sev });
+                b.appendChild(svg);
+                return b;
+            }
             function renderChecks() {
                 var box = $('#Checks'), notes = checkNotes = computeChecks();
                 $$('#InputList .flag-mark').forEach(function (m) { m.remove(); });
@@ -2125,35 +2134,35 @@
                 box.textContent = '';
                 box.hidden = !notes.length;
                 if (!notes.length) return;
-                var counts = {}; notes.forEach(function (n) { counts[n.sev] = (counts[n.sev] || 0) + 1; });
-                var chips = el('span', { class: 'sev-chips' });
-                SEV_ORDER.forEach(function (k) { if (counts[k]) chips.appendChild(el('span', { class: 'sev-chip', 'data-sev': k, text: SEV[k] + ' (' + counts[k] + ')' })); });
-                var det = el('details', null, [el('summary', null, [el('span', { class: 'checks-title', text: 'Things to double-check' }), chips, chevron()])]);
+                // one line: the title and a count; only "Resolve before play" gets its own chip
+                var resolve = notes.filter(function (n) { return n.sev === 'resolve'; }).length;
+                var det = el('details', null, [el('summary', null, [el('span', { class: 'checks-title', text: 'Things to double-check' }), el('span', { class: 'checks-count', text: String(notes.length) }),
+                    resolve ? el('span', { class: 'sev-chip', 'data-sev': 'resolve', text: resolve + ' to resolve before play' }) : null, chevron()])]);
                 det.open = state.checksOpen;
                 det.addEventListener('toggle', function () { state.checksOpen = det.open; });
                 var list = el('ul', { class: 'checks-list' });
                 notes.forEach(function (n, i) {
-                    var acts = el('div', { class: 'check-actions' });
+                    var acts = el('div', { class: 'check-actions' }, [el('span', { class: 'show-lbl', text: 'Show' })]);
                     var seen = [];
                     n.keys.forEach(function (k) {
                         if (!groupsByKey.has(k)) return;
                         var lbl = itemLabel(k);
                         if (seen.indexOf(lbl) >= 0 || seen.length >= 4) return;
                         seen.push(lbl);
-                        acts.appendChild(el('button', { type: 'button', class: 'note-btn', 'data-jump': k, text: 'Show ' + lbl }));
+                        acts.appendChild(el('button', { type: 'button', class: 'note-btn', 'data-jump': k, text: lbl, 'aria-label': 'Show ' + lbl }));
                     });
                     acts.appendChild(el('button', { type: 'button', class: 'note-btn', 'data-dismiss': n.id, text: 'Dismiss' }));
-                    list.appendChild(el('li', { class: 'check-note', 'data-sev': n.sev, id: 'Note' + i }, [el('span', { class: 'sev-tag', 'data-sev': n.sev, text: SEV[n.sev] }), el('p', { text: n.text }), acts]));
+                    list.appendChild(el('li', { class: 'check-note', 'data-sev': n.sev, id: 'Note' + i }, [el('p', null, [el('span', { class: 'sev-tag', 'data-sev': n.sev, text: SEV[n.sev] }), document.createTextNode(n.text)]), acts]));
                     n.keys.forEach(function (k) {
                         var g = groupsByKey.get(k); if (!g) return;
                         var li = g.parentNode;
                         if (li.classList.contains('flagged')) return;
                         li.classList.add('flagged');
                         var nm = li.querySelector('.item-name');
-                        nm.appendChild(el('button', { type: 'button', class: 'flag-mark', 'data-note': String(i), text: SEV[n.sev] === SEV.talk ? 'Talk' : 'Double-check', 'aria-label': SEV[n.sev] + ': see the note' }));
+                        nm.appendChild(flagMark(i, SEV[n.sev]));
                     });
                 });
-                det.appendChild(el('div', { class: 'checks-body' }, [el('p', { class: 'checks-intro', text: 'These aren\u2019t errors. They\u2019re places answers might mean two different things, so they\u2019re worth a look before you share.' }), list]));
+                det.appendChild(el('div', { class: 'checks-body' }, [el('p', { class: 'checks-intro', text: 'Not errors: places where answers could mean two things. Worth a look before you share.' }), list]));
                 box.appendChild(det);
             }
             function openChecks(noteIdx) {
@@ -2190,7 +2199,7 @@
                 var serious = checkNotes.filter(function (n) { return n.sev !== 'talk'; });
                 var sig = serious.map(function (n) { return n.id; }).join('\n');
                 if (!serious.length || sig === nudgeSeen) return false;
-                $('#NudgeText').textContent = 'You have ' + serious.length + ' note' + (serious.length === 1 ? '' : 's') + ' to review. ' + verb + ' anyway?';
+                $('#NudgeText').textContent = 'You have ' + serious.length + ' note' + (serious.length === 1 ? '' : 's') + ' to review.';
                 $('#NudgeGo').textContent = verb + ' anyway';
                 nudgeGo = function () { nudgeSeen = sig; go(); };
                 nudgeDlg.showModal();
@@ -2208,10 +2217,10 @@
                 $('#PrivateBadge').hidden = !state.privateMode;
                 if (state.privateMode) {
                     try { history.replaceState(history.state, '', baseUrl()); } catch (e) { /* ignore */ }
-                    flash('Private mode on: answers are only in this tab and vanish when you close or reload it. Use Copy share link to keep them.');
+                    flash('Private mode on: answers vanish when this tab closes. Copy the link to keep them.');
                 } else {
                     syncUrl();
-                    flash('Private mode off: answers are kept in the address bar again.');
+                    flash('Private mode off: answers are back in the address bar.');
                 }
             });
             window.addEventListener('beforeunload', function (e) {
@@ -2304,7 +2313,7 @@
                 if (!e.target.closest || !e.target.closest('.menu-wrap')) closeMenus(false);
             });
             $('#PrivateBadge').addEventListener('click', function () {
-                flash('Private mode is on: answers live only in this tab and vanish when you close or reload it. Turn it off in the \u00B7\u00B7\u00B7 menu.');
+                flash('Private mode: answers vanish when this tab closes. Turn it off in the \u00B7\u00B7\u00B7 menu.');
             });
 
             /* ---------------------------------------------------------------
@@ -2343,8 +2352,7 @@
             function gNorm(i) { var n = state.slots.length; return ((i % n) + n) % n; }
             function renderGuided() {
                 var pos = gNorm(gIndex), s = state.slots[pos], n = activeTotal();
-                var shown = state.slots.slice(0, pos).filter(function (x) { return !slotHidden(x); }).length;
-                $('#GMeta').textContent = s.cat + ' \u00B7 ' + (shown + 1) + ' of ' + n;
+                $('#GMeta').textContent = s.cat;
                 var title = $('#GItem'); title.textContent = '';
                 if (s.multi) title.appendChild(el('span', { class: 'g-field', text: s.field + ': ' }));
                 title.appendChild(document.createTextNode(s.item));
@@ -3018,7 +3026,7 @@
             function openCompare() {
                 resetCompare();
                 var n = state.answers.size;
-                $('#CmpYou').textContent = n ? 'Your side: the ' + n + ' answer' + (n === 1 ? '' : 's') + ' on this page (' + state.household.labels.join(', ') + ').' : 'Answer some items on this page first (or open your own share link), then compare.';
+                $('#CmpYou').textContent = n ? 'Your side: ' + n + ' answer' + (n === 1 ? '' : 's') + ' (' + state.household.labels.join(', ') + ').' : 'Answer some items on this page first (or open your own share link), then compare.';
                 cmpDlg.showModal();
                 $('#CmpLink').focus();
             }
@@ -3201,10 +3209,15 @@
                 }
                 Object.keys(GLOSSARY.likeScale).forEach(function (k) { add(k, GLOSSARY.likeScale[k], 'Answer scale'); });
                 if (hasSafetyScale(state.list)) Object.keys(GLOSSARY.scale).forEach(function (k) { add(k, GLOSSARY.scale[k], 'Safety scale'); });
-                state.list.forEach(function (cat) {
-                    add(cat.name, sectionDef(cat), 'Section');
-                    cat.fields.forEach(function (f) { add(f, columnDef(f), 'Column'); });
-                    cat.items.forEach(function (item) { add(item, itemDef(cat, item), cat.name); });
+                // one entry per section as shown on the page: "Activities", not one per person
+                displayGroups(state.list).forEach(function (g) {
+                    var m = /^(.*) \(([^()]*)\)$/.exec(g.cat.name), base = g.merged ? g.base : m && personIndex(m[2]) >= 0 ? m[1] : g.cat.name;
+                    add(base, g.merged ? mergedDef(g) : sectionDef(g.cat), 'Section');
+                    g.cis.forEach(function (ci) {
+                        var cat = state.list[ci];
+                        cat.fields.forEach(function (f) { add(f, columnDef(f), 'Column'); });
+                        cat.items.forEach(function (item) { add(item, itemDef(cat, item), base); });
+                    });
                 });
                 return Array.from(byKey.values()).sort(function (a, b) { return a.title.localeCompare(b.title, undefined, { sensitivity: 'base', numeric: true }); });
             }
@@ -3220,7 +3233,7 @@
                         el('dd', { text: e.desc })
                     ]));
                 });
-                $('#GlossCount').textContent = q ? (shown + ' of ' + all.length + ' terms match') : (all.length + ' terms');
+                $('#GlossCount').textContent = q ? (shown + ' of ' + all.length + ' terms match') : '';
             }
             $('#GlossaryBtn').addEventListener('click', function () {
                 $('#GlossSearch').value = '';
