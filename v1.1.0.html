@@ -165,6 +165,36 @@
             .notice strong { font-weight: 700; }
             .notice.has-action { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
 
+            /* Things to double-check: one quiet line, opens into short notes */
+            .checks { margin: 0 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+            .checks[hidden] { display: none; }
+            .checks > details > summary { list-style: none; cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 12px; min-height: 44px; }
+            .checks > details > summary::-webkit-details-marker { display: none; }
+            .checks-title { font-weight: 650; font-size: 15px; }
+            .sev-chips { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+            .sev-chip, .sev-tag { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+            .sev-chip[data-sev="resolve"], .sev-tag[data-sev="resolve"] { border-color: var(--accent); color: var(--text); background: var(--accent-soft); }
+            .checks .chev { margin-left: auto; }
+            @media (max-width: 600px) { .checks-title { flex: 1; } .checks .chev { order: 2; } .sev-chips { order: 3; flex-basis: 100%; } }
+            .checks details[open] .chev { transform: rotate(180deg); }
+            .checks-body { padding: 0 12px 10px; }
+            .checks-intro { margin: 0 0 6px; font-size: 14px; color: var(--muted); }
+            .checks-list { list-style: none; margin: 0; padding: 0; }
+            .check-note { padding: 10px 0; border-top: 1px solid var(--border); font-size: 15px; }
+            .check-note p { margin: 4px 0; line-height: 1.45; }
+            .check-actions { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+            .note-btn { background: none; border: 0; padding: 4px 0; min-height: 32px; font: inherit; font-size: 14px; font-weight: 600; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+            .flag-mark { margin-left: 6px; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--accent); color: var(--accent); background: none; cursor: pointer; vertical-align: 1px; white-space: nowrap; }
+            .item.flash-row { animation: flash-row 1.6s ease-out; }
+            @keyframes flash-row { from { background: var(--accent-soft); } to { background: transparent; } }
+            dialog.nudge { width: min(400px, calc(100vw - 24px)); }
+            dialog.nudge p { color: var(--text) !important; font-size: 16px !important; }
+            /* Pick-one questions: the choices are words, not dots */
+            .item.pick .chip { width: auto; min-width: var(--chip-w); padding: 0 12px; }
+            .choices.pick { flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+            .choices.pick .choice { width: auto; height: auto; min-height: 34px; padding: 4px 12px; border-radius: 99px; font-size: 13px; font-weight: 600; }
+            .cmp-pick { font-size: 13px; font-weight: 600; color: var(--text); padding: 1px 8px; border-radius: 99px; background: var(--accent-soft); }
+
             /* Sections (multi-column, reflows on its own) */
             .sections { columns: 380px 4; column-gap: 16px; }
             .section.merged { column-span: all; }
@@ -249,6 +279,8 @@
             .sv2 { --c: var(--s2); --ink: var(--s2-ink); --edge: var(--s2-edge); }
             .sv3 { --c: var(--s3); --ink: var(--s3-ink); }
             .sv4 { --c: var(--s4); --ink: var(--s4-ink); --edge: var(--s4-edge); }
+            /* pick-one answers: one accent colour, the word says which */
+            .pk1, .pk2, .pk3, .pk4, .pk5 { --c: var(--accent); --ink: var(--accent-ink); }
             .dot.lv0, .dot.sv0 { background: transparent; border: 2px dashed var(--muted); }
             .legend .legend-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
             .sec-scale-wrap { display: none; }
@@ -582,6 +614,7 @@
         <main class="wrap">
             <ul class="legend" id="Legend" aria-label="Legend"></ul>
             <div id="LinkNotice" class="notice" hidden></div>
+            <section id="Checks" class="checks" hidden aria-label="Things to double-check"></section>
 
             <div id="PersonSwitch" class="person-switch" role="group" aria-label="Show answers for" hidden></div>
             <div id="InputList" class="sections" data-view="all"></div>
@@ -591,6 +624,16 @@
                 <p>Nothing leaves this device. Anyone with a share link can see the answers.</p>
             </footer>
         </main>
+
+        <dialog id="NudgeDialog" class="nudge" aria-labelledby="NudgeText">
+            <div class="dlg">
+                <p id="NudgeText"></p>
+                <div class="dlg-actions">
+                    <button type="button" class="btn" id="NudgeReview">Review notes</button>
+                    <button type="button" class="btn btn-primary" id="NudgeGo">Copy anyway</button>
+                </div>
+            </div>
+        </dialog>
 
         <dialog id="EditDialog" aria-labelledby="EditTitle">
             <div class="dlg">
@@ -792,6 +835,15 @@
                 safety: { levels: SAFETY_LEVELS, cls: 'sv' }
             };
             function scaleOf(cat) { return SCALES[(cat && cat.scale) || 'like']; }
+            // Pick-one questions ("{A | B | C}") get their own scale: the choices, in order (stored 1..n like any answer).
+            function pickScale(opts) {
+                var key = 'pick\u241F' + opts.join('|');
+                if (!SCALES[key]) SCALES[key] = { key: key, cls: 'pk', pick: true,
+                    levels: [{ name: 'Not entered', color: '#FFFFFF', ink: '#6B6880', sym: '' }].concat(opts.map(function (o) { return { name: o, color: '#6D4ED8', ink: '#FFFFFF', sym: '' }; })) };
+                return SCALES[key];
+            }
+            function itemScale(cat, item) { return cat && cat.opts && cat.opts[item] ? pickScale(cat.opts[item]) : scaleOf(cat); }
+            function itemScaleKey(cat, item) { return cat.opts && cat.opts[item] ? pickScale(cat.opts[item]).key : (cat.scale || 'like'); }
             for (var li = 1; li < LEVELS.length; li++) {
                 document.documentElement.style.setProperty('--l' + li, LEVELS[li].color);
                 document.documentElement.style.setProperty('--l' + li + '-ink', LEVELS[li].ink);
@@ -887,10 +939,12 @@
             var DEFAULT_HH = makeHousehold('couple');
             var LEGACY_HH = makeHousehold('couple', ['Him', 'Her']); // v1-v3 lists are Him / Her
 
-            var ACTIVITY_ITEMS = ['Kissing', 'Handjob / fingering', 'Oral', 'Swallowing', 'Penetrative sex', 'Penetrative sex (strap on)', 'Anal touch',
+            // v4 default list, frozen so #v4: links keep opening exactly as saved
+            var ACTIVITY_ITEMS_V4 = ['Kissing', 'Handjob / fingering', 'Oral', 'Swallowing', 'Penetrative sex', 'Penetrative sex (strap on)', 'Anal touch',
                 'Anal sex, pegging', 'Rimming', 'Double penetration', 'Dildos', 'Plugs', 'Vibrators'];
-            var KINK_ITEMS = ['Blindfold', 'Collar', 'Gag', 'Leash', 'Bondage', 'Hair pulling', 'Light pain', 'Cock/Pussy slapping', 'Spanking', 'Nipple clamps', 'Flogging'];
-            function defaultListText(hh) {
+            var KINK_ITEMS_V4 = ['Blindfold', 'Collar', 'Gag', 'Leash', 'Bondage', 'Hair pulling', 'Light pain', 'Cock/Pussy slapping', 'Spanking', 'Nipple clamps', 'Flogging'];
+            function defaultListTextV4(hh) {
+                var ACTIVITY_ITEMS = ACTIVITY_ITEMS_V4, KINK_ITEMS = KINK_ITEMS_V4;
                 var L = hh.labels, many = L.length > 1, out = [];
                 function sec(name, cols, items) { out.push('#' + name, '(' + cols.join(', ') + ')'); items.forEach(function (i) { out.push('* ' + i); }); out.push(''); }
                 sec('Boundaries', ['General'], ['Social only', 'Soft swap', 'Oral only', 'Full swap', 'Kissing other people', 'Same room, same bed',
@@ -907,6 +961,29 @@
                 L.forEach(function (l) { sec('Kinks (' + l + ')', ['Giving', 'Receiving'], KINK_ITEMS); });
                 return out.join('\n').trim();
             }
+            // Current (v5) default list. "{A | B | C}" after an item makes it a pick-one question.
+            var LADDER = 'How far we play with others', LADDER_ORAL = 'Does soft swap include oral?';
+            var LADDER_OPTS = ['Social', 'Soft swap', 'Full swap'];
+            var ACTIVITY_ITEMS = ['Kissing', 'Massage or making out', 'Breast or chest play', 'Handjob', 'Fingering', 'Oral', 'Swallowing', 'Penetrative sex',
+                'Strap-on sex', 'Anal touch', 'Anal sex', 'Rimming', 'Double penetration', 'Dildos', 'Plugs', 'Vibrators'];
+            var KINK_ITEMS = ['Dirty talk', 'Blindfold', 'Collar', 'Gag', 'Leash', 'Bondage', 'Hair pulling', 'Light pain play', 'Genital slapping', 'Spanking', 'Nipple clamps', 'Flogging'];
+            function defaultListText(hh) {
+                var L = hh.labels, many = L.length > 1, out = [];
+                function sec(name, cols, items) { out.push('#' + name, '(' + cols.join(', ') + ')'); items.forEach(function (i) { out.push('* ' + i); }); out.push(''); }
+                sec('Boundaries', ['General'], [LADDER + ' {' + LADDER_OPTS.join(' | ') + '}', LADDER_ORAL + ' {Yes | No' + (many ? ' | We\u2019ll say per person' : '') + '}',
+                    'Kissing other people', 'Same room, same bed', 'Same room, separate beds', 'Separate rooms'].concat(many ? ['Independent play'] : []));
+                sec('Agreements [safety]', ['General'], ['Check in before escalating', 'Stop if anyone signals', 'Safe word or signal', 'Anyone can veto', 'Consent before photos or videos']);
+                sec('Safety [safety]', ['General'], ['Condoms for penetrative sex', 'Fresh condom for each partner', 'Condoms or dams for oral',
+                    'Regular STI testing', 'Recent results shared', 'Clear-headed play (sober or light drinking)']);
+                sec('Play Location', ['General'], ['Club', 'Resort', 'Hotel takeover', 'Hotel room', 'Hosting at home', 'Party']);
+                sec('Who I play with', L, ['Women', 'Men', 'Nonbinary people', 'Playing with singles']);
+                sec('Group play', ['General'], (many ? ['Parallel play'] : []).concat(['Threesome, any genders', 'FFM', 'FMF', 'MFM', 'MMF',
+                    'Foursome, any genders', 'MFFM', 'MFMF', 'Orgy', 'Gangbang']));
+                L.forEach(function (l) { sec('Activities (' + l + ')', ['Giving', 'Receiving'], ACTIVITY_ITEMS); });
+                sec('Watching', ['General'], ['Exhibitionism', 'Voyeurism'].concat(many ? ['Watching my partner with someone else'] : []));
+                L.forEach(function (l) { sec('Kinks (' + l + ')', ['Giving', 'Receiving'], KINK_ITEMS); });
+                return out.join('\n').trim();
+            }
 
             /* ---------------------------------------------------------------
              * Built-in glossary. Shown for matching terms in any list (an
@@ -920,17 +997,20 @@
                     'Play Style': 'How close you like to be to the other couple when things get intimate: sharing a bed, sharing a room, or having your own space.',
                     'Play Location': 'Where you feel comfortable meeting up and playing, from clubs and resorts to private homes.',
                     'Safety': 'The safer-sex habits that matter to you. Agreeing on these before you meet anyone helps everyone relax and enjoy themselves.',
-                    'Sexual Preference': 'Who each person is open to playing with, answered in their own column. Trans people count as the gender they are.',
+                    'Sexual Preference': 'Who each person is open to playing with, answered in their own column. Trans women are women; trans men are men. Ask, don\u2019t assume.',
+                    'Who I play with': 'Who each person is open to playing with, answered in their own column. Trans women are women; trans men are men. Ask, don\u2019t assume.',
                     'Groupings': 'The mix of people you\u2019re open to playing with. The letters are lifestyle shorthand (F for a woman, M for a man), and the order often hints at who\u2019s in the middle. They don\u2019t fit everyone and people read them differently, so talk through what each of you means.',
+                    'Group play': 'The mix of people you\u2019re open to playing with, and how. The letters are lifestyle shorthand (F for a woman, M for a man), and the order often hints at who\u2019s in the middle. They don\u2019t fit everyone and people read them differently, so talk through what each of you means.',
                     'Activities (Him)': 'Sexual activities for him: things he\u2019d like to do with others (Giving) and have done to him (Receiving).',
                     'Activities (Her)': 'Sexual activities for her: things she\u2019d like to do with others (Giving) and have done to her (Receiving).',
                     'Observation': 'Watching and being watched: how much you enjoy having an audience, or being one.',
-                    'Kinks (Him)': 'Kink and BDSM play for him, from light and playful to more intense. Start slowly, agree on limits and a safeword, and check in often.',
-                    'Kinks (Her)': 'Kink and BDSM play for her, from light and playful to more intense. Start slowly, agree on limits and a safeword, and check in often.'
+                    'Watching': 'Watching and being watched: how much you enjoy having an audience, or being one.',
+                    'Kinks (Him)': 'Kink and BDSM play for him, from light and playful to more intense. Start slowly, agree on limits and a safe word, and check in often.',
+                    'Kinks (Her)': 'Kink and BDSM play for her, from light and playful to more intense. Start slowly, agree on limits and a safe word, and check in often.'
                 },
                 // Compare view (two households)
                 compare: {
-                    'Agree on these first': 'Rules and boundaries where the two households differ: one side requires something the other marked Open or N/A (or didn\u2019t answer), or a firm No in Boundaries against a yes. Settle these before anything else.',
+                    'Resolve before you meet': 'Where the two households differ on something that matters before anyone plays: how far play goes, a rule one side requires and the other marked Open or N/A (or didn\u2019t answer), or a firm No in Boundaries against a yes.',
                     'Both into it': 'Everyone who answered, on both sides, said Favorite or Like. For rules: both sides marked it Required, or both Preferred.',
                     'Worth talking about': 'At least one Okay or Maybe, or the two sides feel differently, like Favorite against Maybe. Good places to start a conversation.',
                     'Not for us': 'Someone said No. By default this doesn\u2019t show who, so nobody has to explain their no.',
@@ -948,8 +1028,15 @@
                     'Open': 'Fine either way. Happy to go with what feels right for everyone.',
                     'N/A': 'Doesn\u2019t apply to you, or not something you need to decide on.'
                 },
+                likeScale: {
+                    'Favorite': 'Something you love and hope happens.',
+                    'Like': 'You enjoy it and would be glad to.',
+                    'Okay': 'Fine with it if it comes up, though you wouldn\u2019t seek it out.',
+                    'Maybe': 'Not sure yet: it depends on who, when or how, so talk it through first.',
+                    'No': 'Not for you. No reason needed.'
+                },
                 columns: {
-                    'General': 'One answer for the two of you together.',
+                    'General': 'One answer for the household together.',
                     'Him': 'His own answer, so each partner can speak for themselves.',
                     'Her': 'Her own answer, so each partner can speak for themselves.',
                     'Giving': 'Doing this to or for someone else.',
@@ -960,6 +1047,24 @@
                     'Soft swap': 'Playing with others short of intercourse: kissing, touching and often oral. Couples draw this line in different places, so say exactly where yours is.',
                     'Oral only': 'Oral is as far as it goes with others, with no intercourse. Some couples count this as soft swap; others draw the soft-swap line before oral.',
                     'Full swap': 'Going all the way with someone else, including intercourse. Most couples pair this with clear safer-sex rules they\u2019ve agreed on beforehand.',
+                    'How far we play with others': 'The furthest play goes with other people, for your household as a whole. Social: no sexual play with others. Soft swap: play with others, short of intercourse. Full swap: intercourse with others is on the table.',
+                    'Does soft swap include oral?': 'People draw the soft-swap line in different places. Say whether oral with others is part of yours, or that each person will say for themselves.',
+                    'Social': 'Meeting, flirting and hanging out with others, with no sexual play with anyone else. A relaxed way to enjoy the lifestyle, and a perfectly good place to stay.',
+                    'Safe word or signal': 'A word or gesture you\u2019ve chosen together that means \u201cslow down\u201d or \u201cstop.\u201d A gesture helps in loud clubs, or when talking is hard.',
+                    'Consent before photos or videos': 'No pictures or recordings of anyone unless everyone clearly says yes first. Most clubs and parties have this rule, and it protects everyone\u2019s privacy.',
+                    'Clear-headed play (sober or light drinking)': 'Keeping drinks light, or skipping them, so everyone stays clear-headed about what they want. New decisions are best made sober.',
+                    'Playing with singles': 'Open to playing with someone who isn\u2019t part of a couple, not only with other couples.',
+                    'Parallel play': 'Everyone plays with their own partner or partners, side by side, with no swapping. A popular, low-pressure way to start.',
+                    'Watching my partner with someone else': 'Enjoying seeing your partner play with someone else, whether or not you join in.',
+                    'Massage or making out': 'Sensual massage, kissing and touching without going further. Often where soft swap starts.',
+                    'Breast or chest play': 'Touching, kissing or sucking breasts, chests and nipples.',
+                    'Handjob': 'Using a hand to pleasure someone\u2019s penis.',
+                    'Fingering': 'Using fingers on or inside someone\u2019s vulva or vagina.',
+                    'Strap-on sex': 'Penetration with a dildo worn in a harness, vaginal or anal. Strap-on anal sex is often called pegging. Plenty of lube and a slow start make it more enjoyable.',
+                    'Anal sex': 'Anal penetration with a penis, a strap-on or a toy. Use lots of lube, go slowly, and never switch from anal to vaginal without a fresh condom.',
+                    'Light pain play': 'Mild sensations like scratching, biting or pinching that add intensity. Agree on limits and a safe word first.',
+                    'Genital slapping': 'Light, controlled slaps to the genitals (cock or pussy slapping). Start very gently, build up only with feedback, and avoid hard hits to the testicles.',
+                    'Dirty talk': 'Saying out loud what you want, what you\u2019re doing or what turns you on. Agree on any words that are off-limits.',
                     'Kissing other people': 'Whether kissing on the lips is on the table with others. For many couples it feels more intimate than sex, so some keep it just for each other.',
                     'Independent play': 'Playing with someone else when your partner (or partners) isn\u2019t there, like a solo date. Agree on what\u2019s okay and how you\u2019ll share about it afterwards.',
                     'Check in before escalating': 'Pausing to ask before moving on to something new, like from kissing to oral. A quick look or a word keeps everyone on the same page.',
@@ -989,7 +1094,7 @@
                     'Parallel Play': 'Everyone plays with their own partner or partners, side by side, with no swapping. A popular, low-pressure way to start.',
                     'Women': 'Open to playing with women, trans women included.',
                     'Men': 'Open to playing with men, trans men included.',
-                    'Nonbinary people': 'Open to playing with people who aren\u2019t only a man or a woman. Ask about names, pronouns and the words they like for their bodies.',
+                    'Nonbinary people': 'Open to playing with nonbinary people. Ask about names, pronouns, and the words they like for their bodies.',
                     'Threesome, any genders': 'Three people playing together, whatever their genders. Handy when the letter combos don\u2019t fit; talk through who does what with whom.',
                     'Foursome, any genders': 'Four people playing together, often two couples, whatever their genders. Talk through who plays with whom, and whether anyone stays just with their partner.',
                     'Stop if anyone signals': 'If anyone gives the signal, play pauses or stops, no questions asked. You can talk it over later, once everyone feels ready.',
@@ -1001,18 +1106,18 @@
                     'MFFM': 'Two men and two women with the women in the middle. Usually means the women may also play with each other, while the men don\u2019t. Usage varies, so check.',
                     'MFMF': 'Two men and two women alternating, like a classic foursome or full swap where everyone pairs up man-woman. Usage varies, so talk it through.',
                     'Orgy': 'Group sex with several people playing together, often at parties. Agree on your limits as a couple before you go.',
-                    'Gangbang': 'One person (often a woman) is the focus of several partners, usually taking turns. Plan it carefully: clear limits, condoms, a safeword, and someone trusted looking out for them.',
-                    'Kissing': 'Kissing on the lips, from soft to passionate. For many couples it feels more intimate than sex, so it\u2019s worth agreeing on.',
+                    'Gangbang': 'One person is the focus of several partners, taking turns. Plan it carefully: clear limits, condoms, a safe word, and someone trusted looking out for them.',
+                    'Kissing': 'Kissing on the lips, from soft to passionate. For many couples it feels more intimate than sex, so it\u2019s worth agreeing on. Giving: starting the kiss. Receiving: being kissed.',
                     'Handjob / fingering': 'Using hands and fingers to pleasure someone\u2019s genitals.',
                     'Oral': 'Oral sex: using the mouth on someone\u2019s genitals. Some couples use condoms or dental dams for oral with new partners.',
-                    'Swallowing': 'Swallowing semen during oral sex. This carries some STI risk, so recent test results and trust matter here.',
+                    'Swallowing': 'Swallowing fluids during oral sex. This carries some STI risk, so recent test results and trust matter here.',
                     'Penetrative sex': 'Intercourse involving penetration. Condoms are the norm with new partners.',
                     'Penetrative sex (PIV)': 'Penis-in-vagina intercourse. Condoms are the norm with new partners.',
                     'Penetrative sex (strap on)': 'Penetration with a dildo worn in a harness. Plenty of lube and a slow start make it more enjoyable.',
                     'Anal touch': 'Touching or teasing around the anus with fingers, a tongue or a toy, without full penetration.',
                     'Anal sex, pegging': 'Anal penetration. Pegging means a woman penetrating a man with a strap-on. Use lots of lube, go slowly, and never switch from anal to vaginal without a fresh condom.',
                     'Rimming': 'Using the tongue on someone\u2019s anus (analingus). Good hygiene matters, and a dental dam lowers the risk of infection.',
-                    'Double penetration': 'Being penetrated in two places at once, by two partners or a partner and a toy. It\u2019s intense: warm up, use plenty of lube, and keep checking in.',
+                    'Double penetration': 'Penetration in two places at once, by two partners or a partner and a toy. It\u2019s intense: warm up, use plenty of lube, and keep checking in. Giving: being one of the partners (or toys) doing the penetrating. Receiving: being penetrated in two places.',
                     'Dildos': 'Penetrative sex toys. Choose body-safe materials, and clean or cover toys with a fresh condom between partners.',
                     'Plugs': 'Butt plugs worn in the anus for a feeling of fullness. Always use one with a flared base, and plenty of lube.',
                     'Vibrators': 'Buzzing toys used on or inside the body, alone or with partners. Clean or cover them between people.',
@@ -1020,11 +1125,11 @@
                     'Voyeurism': 'Enjoying watching others be intimate, always with their consent.',
                     'Blindfold': 'Covering someone\u2019s eyes to heighten their other senses. A gentle first step into sensory play.',
                     'Collar': 'Wearing a collar, often as a symbol of submission or belonging. Keep it loose enough for two fingers, and never pull on the neck.',
-                    'Gag': 'Something in or over the mouth that muffles speech. Because the wearer can\u2019t say a safeword, agree on a hand signal, and never leave a gagged person alone.',
+                    'Gag': 'Something in or over the mouth that muffles speech. Because the wearer can\u2019t say a safe word, agree on a hand signal, and never leave a gagged person alone.',
                     'Leash': 'A lead clipped to a collar for playful control or display. Guide gently and never put pressure on the throat.',
                     'Bondage': 'Restraining someone with cuffs, rope or ties. Keep safety shears nearby, check circulation often, and never leave a restrained person alone.',
                     'Hair pulling': 'Gripping hair during sex for a rush of sensation and a feeling of being taken. Grab close to the roots and pull steadily rather than yanking.',
-                    'Light pain': 'Mild sensations like scratching, biting or pinching that add intensity. Agree on limits and a safeword first.',
+                    'Light pain': 'Mild sensations like scratching, biting or pinching that add intensity. Agree on limits and a safe word first.',
                     'Cock/Pussy slapping': 'Light, controlled slaps to the genitals. Start very gently, build up only with feedback, and avoid hard hits to the testicles.',
                     'Spanking': 'Slapping the buttocks with a hand or toy. Aim for the fleshy part, warm up slowly, and check in as it gets more intense.',
                     'Nipple clamps': 'Clips that squeeze the nipples. Start loose and keep sessions short. Removing them gives an intense rush, so take them off gently.',
@@ -1081,15 +1186,22 @@
                         if (sd.def.length > DEF_MAX) return { error: 'Line ' + (i + 1) + ': the definition is too long (max ' + DEF_MAX + ' characters).' };
                         if (seen[name]) return { error: 'Section "' + name + '" appears twice.' };
                         seen[name] = true;
-                        cat = { name: name, fields: null, items: [], def: sd.def, defs: {}, scale: scale };
+                        cat = { name: name, fields: null, items: [], def: sd.def, defs: {}, scale: scale, opts: {} };
                     } else if (!cat) {
                         return { error: 'Line ' + (i + 1) + ': start with a # section line.' };
                     } else if (line[0] === '(') {
                         cat.fields = line.replace(/^\(|\)$/g, '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
                         if (cat.fields.length > 4) return { error: '"' + cat.name + '": at most 4 columns per section.' };
                     } else if (line[0] === '*') {
-                        var idf = splitDef(line.substring(1)), item = idf.name;
+                        var idf = splitDef(line.substring(1)), item = idf.name, pick = null;
+                        var pm = tags ? /\s*\{([^{}]*)\}$/.exec(item) : null; // "* Question {A | B | C}": pick one
+                        if (pm) {
+                            item = item.substring(0, pm.index).trim();
+                            pick = pm[1].split('|').map(function (o) { return o.trim(); }).filter(Boolean);
+                            if (pick.length < 2 || pick.length > 5) return { error: 'Line ' + (i + 1) + ': a {choice | list} needs 2 to 5 choices.' };
+                        }
                         if (!item) continue;
+                        if (pick) cat.opts[item] = pick;
                         if (idf.def.length > DEF_MAX) return { error: 'Line ' + (i + 1) + ': the definition is too long (max ' + DEF_MAX + ' characters).' };
                         if (idf.def) cat.defs[item] = idf.def;
                         if (cat.items.indexOf(item) >= 0) return { error: '"' + item + '" is listed twice in "' + cat.name + '".' };
@@ -1107,7 +1219,7 @@
             function serializeList(list) {
                 return list.map(function (c) {
                     return '#' + c.name + (c.scale ? ' [' + c.scale + ']' : '') + (c.def ? ' :: ' + c.def : '') + '\n(' + c.fields.join(', ') + ')\n' +
-                        c.items.map(function (i) { return '* ' + i + (c.defs[i] ? ' :: ' + c.defs[i] : ''); }).join('\n');
+                        c.items.map(function (i) { return '* ' + i + (c.opts && c.opts[i] ? ' {' + c.opts[i].join(' | ') + '}' : '') + (c.defs[i] ? ' :: ' + c.defs[i] : ''); }).join('\n');
                 }).join('\n\n');
             }
             // Definition lookup: the list's own definition first, then the built-in glossary.
@@ -1117,7 +1229,7 @@
                 var m = /^(Activities|Kinks) \((.+)\)$/.exec(cat.name);
                 if (m && personIndex(m[2]) >= 0) return m[1] === 'Activities'
                     ? 'Sexual activities for ' + m[2] + ': things they\u2019d like to do with others (Giving) and have done to them (Receiving).'
-                    : 'Kink and BDSM play for ' + m[2] + ', from light and playful to more intense. Start slowly, agree on limits and a safeword, and check in often.';
+                    : 'Kink and BDSM play for ' + m[2] + ', from light and playful to more intense. Start slowly, agree on limits and a safe word, and check in often.';
                 return '';
             }
             function itemDef(cat, item) { return (cat.defs && cat.defs[item]) || GLOSSARY.items[item] || ''; }
@@ -1139,7 +1251,7 @@
                 list.forEach(function (c, ci) {
                     c.items.forEach(function (item) {
                         c.fields.forEach(function (field) {
-                            out.push({ cat: c.name, item: item, field: field, ci: ci, key: keyOf(c.name, item, field), multi: c.fields.length > 1, levels: scaleOf(c).levels });
+                            out.push({ cat: c.name, item: item, field: field, ci: ci, key: keyOf(c.name, item, field), multi: c.fields.length > 1, levels: itemScale(c, item).levels });
                         });
                     });
                 });
@@ -1151,6 +1263,12 @@
                 var k = hh.type + '\u241F' + hh.labels.join('\u241F');
                 if (!defaultCache[k]) { var l = parseList(defaultListText(hh)).list; defaultCache[k] = { list: l, ser: serializeList(l) }; }
                 return defaultCache[k];
+            }
+            var defaultCacheV4 = {};
+            function defaultListForV4(hh) {
+                var k = hh.type + '\u241F' + hh.labels.join('\u241F');
+                if (!defaultCacheV4[k]) { var l = parseList(defaultListTextV4(hh)).list; defaultCacheV4[k] = { list: l, ser: serializeList(l) }; }
+                return defaultCacheV4[k];
             }
             var DEFAULT_LIST = defaultListFor(DEFAULT_HH).list;
             var LIST_V3 = parseList(LIST_V3_TEXT).list;
@@ -1169,7 +1287,10 @@
                 slots: slotsOf(DEFAULT_LIST),
                 answers: new Map(),       // slot key -> level 1..5
                 privateMode: false,
-                collapsed: new Set()      // section names
+                collapsed: new Set(),     // section names
+                dismissed: new Set(),     // double-check notes dismissed in this tab
+                upgradeNotes: [],         // notes left by "Use the new list"
+                checksOpen: false
             };
 
             /* ---------------------------------------------------------------
@@ -1258,6 +1379,7 @@
             function listKind() {
                 var s = serializeList(state.list);
                 if (s === defaultListFor(state.household).ser) return 'default';
+                if (s === defaultListForV4(state.household).ser) return 'v4';
                 return s === V3_SERIALIZED ? 'v3' : s === V2_SERIALIZED ? 'v2' : 'custom';
             }
             function isCustomList() { return listKind() === 'custom'; }
@@ -1268,8 +1390,11 @@
                 if (kind === 'v2') return 'v2:' + data; // earlier lists, kept as-is until the user switches
                 if (kind === 'v3') return 'v3:' + data;
                 var hh = encodeHousehold(state.household);
-                if (kind === 'default') return (data || hh !== 'c') ? 'v4:' + hh + ':' + data : '';
-                return 'v4:' + hh + ':' + data + ':' + b64urlEncode(serializeList(state.list));
+                if (kind === 'v4') return 'v4:' + hh + ':' + data;
+                if (kind === 'default') return (data || hh !== 'c') ? 'v5:' + hh + ':' + data : '';
+                // an edited list without pick-one questions stays readable by the previous release
+                var picks = state.list.some(function (c) { return Object.keys(c.opts || {}).length; });
+                return (picks ? 'v5:' : 'v4:') + hh + ':' + data + ':' + b64urlEncode(serializeList(state.list));
             }
             function baseUrl() { return location.href.split('#')[0]; }
             function shareLink() { var h = buildHash(); return baseUrl() + (h ? '#' + h : ''); }
@@ -1306,12 +1431,33 @@
             var V2_MOVED = { 'Play Style': 'Boundaries' }, V2_DROPPED = { 'Safety': true };
             var V3_RENAMED = { 'Stop if either partner signals': 'Stop if anyone signals', 'Either partner can veto': 'Anyone can veto', 'Penetrative sex (PIV)': 'Penetrative sex' };
             var V3_SEXPREF = { 'Opposite sex': { Him: 'Women', Her: 'Men' }, 'Same sex': { Him: 'Men', Her: 'Women' } };
+            // v4 -> v5: renamed items and sections, one item moved, and the four swap items become one pick-one question.
+            var V5_SECTIONS = { 'Sexual Preference': 'Who I play with', 'Groupings': 'Group play', 'Observation': 'Watching' };
+            var V5_RENAMED = { 'Agreed safe word or signal': 'Safe word or signal', 'Sober or limited alcohol': 'Clear-headed play (sober or light drinking)',
+                'Parallel Play': 'Parallel play', 'Penetrative sex (strap on)': 'Strap-on sex', 'Anal sex, pegging': 'Anal sex', 'Light pain': 'Light pain play', 'Cock/Pussy slapping': 'Genital slapping' };
+            var V5_MOVED = { 'Safety\u241FNo photos or videos': ['Agreements', 'Consent before photos or videos'] };
+            var SWAP_RUNGS = { 'Social only': 1, 'Soft swap': 2, 'Oral only': 2, 'Full swap': 3 };
+            // The old swap answers (item -> level) as a ladder answer: the furthest one marked Favorite / Like / Okay.
+            // Social only plus a further level is ambiguous, so it is left for people to pick.
+            function ladderFrom(swap) {
+                var yes = function (k) { return swap[k] >= 1 && swap[k] <= 3; }, top = 0;
+                Object.keys(SWAP_RUNGS).forEach(function (k) { if (yes(k)) top = Math.max(top, SWAP_RUNGS[k]); });
+                if (!top) return { level: 0 };
+                if (yes('Social only') && top > 1) return { level: 0, conflict: Object.keys(SWAP_RUNGS).filter(function (k) { return k !== 'Social only' && yes(k); }) };
+                return { level: top, oral: top === 2 ? (yes('Oral only') ? 1 : swap['Oral only'] === 5 ? 2 : 0) : 0 };
+            }
+            function v5Name(sec, item) {
+                var mv = V5_MOVED[sec + '\u241F' + item];
+                if (mv) return mv;
+                return [V5_SECTIONS[sec] || sec, V5_RENAMED[item] || item];
+            }
             function upgradeList(quiet) {
                 var kind = listKind();
-                if (kind !== 'v2' && kind !== 'v3') return;
-                var target = defaultListFor(LEGACY_HH).list;
+                if (kind !== 'v2' && kind !== 'v3' && kind !== 'v4') return;
+                var hh = kind === 'v4' ? state.household : LEGACY_HH;
+                var target = defaultListFor(hh).list;
                 var keys = new Set(slotsOf(target).map(function (s) { return s.key; }));
-                var next = new Map(), kept = 0, safety = 0, other = 0;
+                var next = new Map(), kept = 0, safety = 0, other = 0, swap = {}, missed = [];
                 state.answers.forEach(function (v, k) {
                     var p = k.split('\u241F');
                     if (kind === 'v2') {
@@ -1320,10 +1466,22 @@
                     }
                     if (p[0] === 'Sexual Preference' && V3_SEXPREF[p[1]]) p[1] = V3_SEXPREF[p[1]][p[2]];
                     else if (V3_RENAMED[p[1]]) p[1] = V3_RENAMED[p[1]];
-                    var nk = keyOf(p[0], p[1], p[2]);
-                    if (keys.has(nk)) { next.set(nk, v); kept++; } else other++;
+                    if (p[0] === 'Boundaries' && SWAP_RUNGS[p[1]]) { swap[p[1]] = v; return; }
+                    var n = v5Name(p[0], p[1]), nk = keyOf(n[0], n[1], p[2]);
+                    if (keys.has(nk)) { next.set(nk, v); kept++; }
+                    else { other++; if (missed.indexOf(p[1]) < 0) missed.push(p[1]); }
                 });
-                state.household = LEGACY_HH;
+                var lad = ladderFrom(swap), ladKey = keyOf('Boundaries', LADDER, 'General');
+                state.upgradeNotes = [];
+                if (lad.level && keys.has(ladKey)) {
+                    next.set(ladKey, lad.level); kept++;
+                    var oralKey = keyOf('Boundaries', LADDER_ORAL, 'General');
+                    if (lad.oral && keys.has(oralKey)) next.set(oralKey, lad.oral);
+                } else if (lad.conflict) {
+                    state.upgradeNotes.push({ id: 'U1', sev: 'check', keys: [ladKey],
+                        text: 'The old link marked Social only and ' + lad.conflict.join(' and ') + ' as a yes, so \u201c' + LADDER + '\u201d is left for you to pick.' });
+                }
+                state.household = hh;
                 setList(target);
                 state.answers = next;
                 renderList();
@@ -1331,8 +1489,9 @@
                 showNotice('');
                 if (!quiet) flash('Switched to the new list. ' + kept + ' answer' + (kept === 1 ? '' : 's') + ' carried over.' +
                     (safety ? ' Safety now uses Required / Preferred / Open / N/A, so please answer it again.' : '') +
-                    (other ? ' ' + other + ' could not be matched.' : '') + ' Use the people button to rename Him and Her.');
-                return { kept: kept, dropped: safety + other };
+                    (missed.length ? ' Please answer again: ' + missed.join(', ') + '.' : '') +
+                    (lad.conflict ? ' Pick how far you play with others.' : '') + (hh === LEGACY_HH ? ' Use Who\u2019s filling this in to rename Him and Her.' : ''));
+                return { kept: kept, dropped: safety + other, missed: missed };
             }
 
             // Move answers to new person labels by position (person 1 -> person 1 ...). null = that person was removed.
@@ -1349,12 +1508,12 @@
             // Returns an error message, or null when the household was applied.
             function applyHousehold(hh) {
                 var kind = listKind();
-                if (kind === 'v2' || kind === 'v3') { upgradeList(true); kind = 'default'; }
+                if (kind === 'v2' || kind === 'v3' || kind === 'v4') { upgradeList(true); kind = 'default'; }
                 var from = state.household.labels, to = hh.labels, list;
                 if (kind === 'custom') {
                     if (to.length !== from.length) return 'Your list has been edited, so only the names can change here. Restore the default list (gear button) to change who\u2019s filling it in.';
                     var renamed = state.list.map(function (c) {
-                        return { name: relabelName(c.name, from, to), fields: c.fields.map(function (f) { return relabelField(f, from, to); }), items: c.items, def: c.def, defs: c.defs, scale: c.scale };
+                        return { name: relabelName(c.name, from, to), fields: c.fields.map(function (f) { return relabelField(f, from, to); }), items: c.items, def: c.def, defs: c.defs, scale: c.scale, opts: c.opts };
                     });
                     var parsed = parseList(serializeList(renamed));
                     if (parsed.error) return 'Those names clash with your list: ' + parsed.error;
@@ -1399,14 +1558,14 @@
                 var m = /^v(\d+):/.exec(h);
                 if (m) {
                     var ver = m[1];
-                    if (ver !== '2' && ver !== '3' && ver !== '4') return { error: 'version', msg: 'This link was made with a different version of PlayList (format v' + ver + ') and can\u2019t be opened here.' };
+                    if (ver !== '2' && ver !== '3' && ver !== '4' && ver !== '5') return { error: 'version', msg: 'This link was made with a different version of PlayList (format v' + ver + ') and can\u2019t be opened here.' };
                     var parts = h.split(':'), hh = LEGACY_HH, at = 1;
-                    if (ver === '4') {
+                    if (ver === '4' || ver === '5') {
                         hh = decodeHousehold(parts[1]);
                         if (!hh) return { error: 'damaged', msg: DAMAGED_MSG };
                         at = 2;
                     }
-                    var list = ver === '2' ? LIST_V2 : ver === '3' ? LIST_V3 : defaultListFor(hh).list, custom = false;
+                    var list = ver === '2' ? LIST_V2 : ver === '3' ? LIST_V3 : ver === '4' ? defaultListForV4(hh).list : defaultListFor(hh).list, custom = false;
                     if (parts[at + 1]) {
                         var parsed;
                         try { parsed = parseList(b64urlDecode(parts[at + 1]), { noTags: ver === '2' }); } catch (e) { parsed = { error: 'unreadable' }; }
@@ -1425,6 +1584,7 @@
             // Returns true if the hash held answers that were loaded.
             function loadFromHash() {
                 var d = decodeShare(location.hash.slice(1));
+                state.upgradeNotes = [];
                 if (d.error) { if (d.msg) showNotice(d.msg); return false; }
                 state.household = d.hh;
                 state.view = -1;
@@ -1432,7 +1592,7 @@
                 applyValues(d.values);
                 if (d.ver === '1') showUpgradeNotice(true);
                 else if (d.custom) showNotice('This link uses a custom list, which has been loaded.');
-                else if (d.ver !== '4') showUpgradeNotice(false);
+                else if (d.ver !== '5') showUpgradeNotice(false);
                 else showNotice('');
                 return true;
             }
@@ -1458,7 +1618,7 @@
                 LEVELS.forEach(function (lv, i) {
                     if (!i) return;
                     var dot = el('span', { class: 'dot lv' + i, 'aria-hidden': 'true', text: lv.sym });
-                    ul.appendChild(el('li', null, [dot, el('span', { text: lv.name })]));
+                    ul.appendChild(el('li', { title: GLOSSARY.likeScale[lv.name] }, [dot, el('span', { text: lv.name })]));
                 });
                 if (!hasSafetyScale(state.list)) return;
                 ul.appendChild(el('li', { class: 'legend-break', 'aria-hidden': 'true' }));
@@ -1564,14 +1724,15 @@
             var chipsByKey = new Map(), slotIdx = new Map(), cellUid = 0;
             function makeCell(li, catName, item, field, label, person, sc) {
                 var key = keyOf(catName, item, field), gid = 'sc' + (++cellUid);
+                if (sc.pick) li.classList.add('pick');
                 var chip = el('button', { type: 'button', class: 'chip', 'aria-expanded': 'false', 'aria-controls': gid, 'data-key': key, 'data-name': item + (label ? ', ' + label : '') });
-                var group = el('div', { class: 'choices', id: gid, role: 'radiogroup', 'aria-label': item + (label ? ', ' + label : ''), 'data-key': key, 'data-label': label });
+                var group = el('div', { class: 'choices' + (sc.pick ? ' pick' : ''), id: gid, role: 'radiogroup', 'aria-label': item + (label ? ', ' + label : ''), 'data-key': key, 'data-label': label, 'data-item': item });
                 if (person >= 0) { chip.setAttribute('data-person', String(person)); group.setAttribute('data-person', String(person)); }
                 for (var lv = 1; lv < sc.levels.length; lv++) {
                     group.appendChild(el('button', {
                         type: 'button', role: 'radio', class: 'choice ' + sc.cls + lv, 'data-level': lv, 'aria-checked': 'false',
                         'aria-label': sc.levels[lv].name, title: sc.levels[lv].name, tabindex: lv === 1 ? '0' : '-1'
-                    }, [el('span', { class: 'sym', 'aria-hidden': 'true', text: sc.levels[lv].sym })]));
+                    }, [sc.pick ? el('span', { class: 'pk-lbl', 'aria-hidden': 'true', text: sc.levels[lv].name }) : el('span', { class: 'sym', 'aria-hidden': 'true', text: sc.levels[lv].sym })]));
                 }
                 if (slotIdx.has(key)) group.setAttribute('data-slot', String(slotIdx.get(key))); // list order (rows can interleave people)
                 groupsByKey.set(key, group);
@@ -1604,7 +1765,7 @@
                     details.addEventListener('toggle', function () {
                         if (details.open) state.collapsed.delete(g.base); else state.collapsed.add(g.base);
                     });
-                    var multi = g.merged || cat.fields.length > 1, sc = scaleOf(cat);
+                    var multi = g.merged || cat.fields.length > 1;
                     if (cat.scale === 'safety' && !keyShown) { keyShown = true; details.appendChild(el('div', { class: 'items sec-scale-wrap' }, [scaleKey()])); }
                     if (g.merged) {
                         var mh = el('div', { class: 'fields-head persons' });
@@ -1635,12 +1796,12 @@
                         if (g.merged) {
                             cats.forEach(function (c, pi) {
                                 var pg = el('div', { class: 'pgroup', 'data-person': String(pi) }, [el('span', { class: 'pg-label', 'aria-hidden': 'true', text: L[pi] })]);
-                                c.fields.forEach(function (field) { pg.appendChild(makeCell(li, c.name, item, field, L[pi] + ' \u00B7 ' + field, pi, sc)); });
+                                c.fields.forEach(function (field) { pg.appendChild(makeCell(li, c.name, item, field, L[pi] + ' \u00B7 ' + field, pi, itemScale(c, item))); });
                                 cells.appendChild(pg);
                             });
                         } else {
                             cat.fields.forEach(function (field) {
-                                cells.appendChild(makeCell(li, cat.name, item, field, multi ? field : '', multi && personIndex(field) >= 0 ? personIndex(field) : -1, sc));
+                                cells.appendChild(makeCell(li, cat.name, item, field, multi ? field : '', multi && personIndex(field) >= 0 ? personIndex(field) : -1, itemScale(cat, item)));
                             });
                         }
                         ul.appendChild(li);
@@ -1651,6 +1812,7 @@
                 });
                 state.slots.forEach(function (s) { paintGroup(s.key); });
                 updateProgress();
+                renderChecks();
             }
 
             function paintGroup(key) {
@@ -1669,14 +1831,30 @@
                     var b = v ? buttons[v - 1] : null, lv = b ? b.className.replace(/^choice /, '') : '';
                     chip.className = 'chip' + (v ? ' set ' + lv : '');
                     chip.textContent = '';
-                    if (v) chip.appendChild(el('span', { class: 'sym', 'aria-hidden': 'true', text: b.textContent }));
+                    if (v && !group.classList.contains('pick')) chip.appendChild(el('span', { class: 'sym', 'aria-hidden': 'true', text: b.textContent }));
                     chip.appendChild(el('span', { class: 'chip-lbl', text: v ? b.getAttribute('aria-label') : 'Answer' }));
                     chip.setAttribute('aria-label', chip.getAttribute('data-name') + ': ' + (v ? b.getAttribute('aria-label') : 'not answered'));
                 }
                 var li = group.parentNode;
                 li.classList.toggle('answered', !!li.querySelector('.choices.has-sel'));
+                if (group.getAttribute('data-item') === LADDER_ORAL) {
+                    var sl = state.slots.filter(function (x) { return x.key === key; })[0];
+                    li.hidden = !!(sl && slotHidden(sl));
+                }
             }
 
+            // "Does soft swap include oral?" only applies while "How far" is Soft swap
+            function followUpOf(key) {
+                var p = key.split('\u241F');
+                return p[1] === LADDER ? keyOf(p[0], LADDER_ORAL, p[2]) : null;
+            }
+            function slotHidden(s) {
+                if (s.item !== LADDER_ORAL) return false;
+                var lk = keyOf(s.cat, LADDER, s.field), ls = state.slots.filter(function (x) { return x.key === lk; })[0];
+                if (!ls) return false;
+                return (state.answers.get(lk) || 0) !== ls.levels.map(function (l) { return l.name; }).indexOf('Soft swap');
+            }
+            function activeTotal() { return state.slots.filter(function (s) { return !slotHidden(s); }).length; }
             function countAnswered() {
                 var n = 0;
                 state.slots.forEach(function (s) { if (state.answers.get(s.key)) n++; });
@@ -1684,12 +1862,12 @@
             }
 
             function updateProgress() {
-                var total = state.slots.length, done = 0;
+                var total = activeTotal(), done = 0;
                 var perCat = state.list.map(function () { return 0; });
                 state.slots.forEach(function (s) { if (state.answers.get(s.key)) { done++; perCat[s.ci]++; } });
                 sectionEls.forEach(function (se) {
                     var n = 0, k = 0;
-                    se.cis.forEach(function (ci) { var c = state.list[ci]; n += c.items.length * c.fields.length; k += perCat[ci]; });
+                    se.cis.forEach(function (ci) { n += state.slots.filter(function (s) { return s.ci === ci && !slotHidden(s); }).length; k += perCat[ci]; });
                     se.count.textContent = k + ' of ' + n + ' answered';
                     se.bar.style.width = (n ? k / n * 100 : 0) + '%';
                     se.details.classList.toggle('done', k === n);
@@ -1703,8 +1881,15 @@
 
             function setAnswer(key, level) {
                 if (level > 0) state.answers.set(key, level); else state.answers.delete(key);
+                var fk = followUpOf(key);
+                if (fk && groupsByKey.has(fk)) {
+                    var fs = state.slots.filter(function (x) { return x.key === fk; })[0];
+                    if (fs && slotHidden(fs)) state.answers.delete(fk);
+                    paintGroup(fk);
+                }
                 paintGroup(key);
                 updateProgress();
+                renderChecks();
                 syncUrl();
             }
 
@@ -1794,6 +1979,183 @@
                 statusTimer = setTimeout(function () { s.textContent = ''; }, 6000);
             }
 
+
+            /* ---------------------------------------------------------------
+             * Things to double-check. Places where answers might mean two
+             * different things. Never a block: notes are listed, can be
+             * dismissed, and Copy / Save still work. Rules only use the
+             * answers (never a name, Him / Her or assumed bodies).
+             * ------------------------------------------------------------- */
+            var SEV = { resolve: 'Resolve before play', check: 'Double-check', talk: 'Worth a conversation' }, SEV_ORDER = ['resolve', 'check', 'talk'];
+            function catsNamed(re) { return state.list.filter(function (c) { return re.test(c.name); }); }
+            function ans(sec, item, field) { return state.answers.get(keyOf(sec, item, field || 'General')) || 0; }
+            function pickName(sec, item, field) {
+                var c = catsNamed(new RegExp('^' + sec.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'))[0], v = ans(sec, item, field);
+                return c && c.opts && c.opts[item] && v ? c.opts[item][v - 1] : '';
+            }
+            function likeYes(v) { return v >= 1 && v <= 3; }
+            // [{ key, name }] for items marked yes in the person sections (Activities / Kinks) or a General section
+            function yesIn(re, items) {
+                var out = [];
+                catsNamed(re).forEach(function (c) {
+                    c.items.forEach(function (it) {
+                        if (items && items.indexOf(it) < 0) return;
+                        c.fields.forEach(function (f) { var k = keyOf(c.name, it, f); if (likeYes(state.answers.get(k) || 0)) out.push({ key: k, name: it }); });
+                    });
+                });
+                return out;
+            }
+            function isAre(hits) { var u = []; hits.forEach(function (h) { if (u.indexOf(h.name) < 0) u.push(h.name); }); return u.length > 1 ? 'are' : 'is'; }
+            function names(hits) {
+                var u = []; hits.forEach(function (h) { if (u.indexOf(h.name) < 0) u.push(h.name); });
+                return u.length === 1 ? u[0] : u.length === 2 ? u[0] + ' and ' + u[1] : u[0] + ', ' + u[1] + ' and ' + (u.length - 2) + ' more';
+            }
+            var ACT = /^Activities( \(.*\))?$/, BND = 'Boundaries', AGR = 'Agreements', SAF = 'Safety', WHO = 'Who I play with', GRP = 'Group play';
+            var SAFETY_NAMES = ['Required', 'Preferred', 'Open', 'N/A'];
+            function computeChecks() {
+                var notes = [], how = pickName(BND, LADDER), ladKey = keyOf(BND, LADDER, 'General');
+                function add(id, sev, text, keys) { notes.push({ id: id + '\u241F' + keys.join('|'), sev: sev, text: text, keys: keys }); }
+                if (how === 'Social') {
+                    var hits = yesIn(ACT).filter(function (h) { return h.name !== 'Kissing'; }).concat(yesIn(new RegExp('^' + GRP + '$')).filter(function (h) { return h.name !== 'Parallel play'; }));
+                    if (hits.length) add('A4', 'check', 'You marked Social as how far play goes, and also marked ' + names(hits) + ' as ' + (isAre(hits) === 'is' ? 'a yes' : 'yes') + '. Some couples like social nights and play nights; some mean Social as a hard limit. Want to change one, or leave both and talk it through?', [ladKey].concat(hits.map(function (h) { return h.key; })));
+                }
+                if (how === 'Soft swap') {
+                    var oral = pickName(BND, LADDER_ORAL);
+                    var oh = oral === 'No' ? yesIn(ACT, ['Oral', 'Swallowing']) : [];
+                    if (oh.length) add('A5', 'check', 'Soft swap is marked as not including oral, and ' + names(oh) + ' ' + isAre(oh) + ' also a yes. You may want to include oral in soft swap, or change the ' + names(oh) + ' answers.', [ladKey, keyOf(BND, LADDER_ORAL, 'General')].concat(oh.map(function (h) { return h.key; })));
+                    var ph = yesIn(ACT, ['Penetrative sex', 'Strap-on sex', 'Anal sex', 'Double penetration']);
+                    if (ph.length) add('A6', 'check', 'Soft swap is marked as how far play goes, and ' + names(ph) + ' ' + isAre(ph) + ' also a yes. Soft swap usually stops short of intercourse with others. You may want to change one, or say when each applies.', [ladKey].concat(ph.map(function (h) { return h.key; })));
+                }
+                if (ans(BND, 'Kissing other people') === 5) {
+                    var kh = yesIn(ACT, ['Kissing']);
+                    if (kh.length) add('A7', 'talk', 'Kissing other people is a No, and Kissing is a yes under Activities. That can mean \u201cwe kiss each other, not others,\u201d or one of them needs an update.', [keyOf(BND, 'Kissing other people', 'General')].concat(kh.map(function (h) { return h.key; })));
+                }
+                if (state.household.labels.length === 1) {
+                    var bh = [[BND, 'Independent play'], [GRP, 'Parallel play'], ['Groupings', 'Parallel Play']].filter(function (x) { return ans(x[0], x[1]); });
+                    if (bh.length) add('B1', 'check', bh[0][1] + ' is answered, and you\u2019re filling this in on your own. It\u2019s usually about partners playing apart or side by side; leave it if it means something to you.', [keyOf(bh[0][0], bh[0][1], 'General')]);
+                }
+                var who = catsNamed(new RegExp('^' + WHO + '$'))[0];
+                if (who) {
+                    var closed = {}; // gender item -> true when every person said No
+                    ['Women', 'Men'].forEach(function (g) {
+                        if (who.items.indexOf(g) < 0) return;
+                        closed[g] = who.fields.every(function (f) { return ans(WHO, g, f) === 5; });
+                    });
+                    ['FFM', 'FMF', 'MFM', 'MMF', 'MFFM', 'MFMF'].forEach(function (code) {
+                        if (!likeYes(ans(GRP, code))) return;
+                        var need = (code.indexOf('F') >= 0 && closed.Women) ? 'women' : (code.indexOf('M') >= 0 && closed.Men) ? 'men' : '';
+                        if (need) add('C1', 'check', code + ' is marked as a yes, and nobody is marked as open to playing with ' + need + '. That can make sense if you\u2019d only watch, or if a ' + WHO + ' answer needs an update.',
+                            [keyOf(GRP, code, 'General')].concat(who.fields.map(function (f) { return keyOf(WHO, need === 'women' ? 'Women' : 'Men', f); })));
+                    });
+                }
+                if (how === 'Full swap' && likeYes(ans(GRP, 'Parallel play')))
+                    add('C2', 'talk', 'Parallel play and Full swap are both marked. Lots of people enjoy both on different nights; it\u2019s worth saying which is which.', [keyOf(GRP, 'Parallel play', 'General'), ladKey]);
+                if (ans(SAF, 'Condoms or dams for oral') === 1) {
+                    var sh = yesIn(ACT, ['Swallowing']);
+                    if (sh.length) add('E1', 'resolve', 'A barrier for oral is Required, and Swallowing is a yes. Those usually don\u2019t go together. You might change one, or note when each applies (for example, only with a long-term partner).', [keyOf(SAF, 'Condoms or dams for oral', 'General')].concat(sh.map(function (h) { return h.key; })));
+                }
+                var cp = ans(SAF, 'Condoms for penetrative sex');
+                if (ans(SAF, 'Fresh condom for each partner') === 1 && (cp === 3 || cp === 4))
+                    add('E3', 'check', 'Fresh condom for each partner is Required, and Condoms for penetrative sex is ' + SAFETY_NAMES[cp - 1] + '. You might mean condoms only some of the time; worth making the two match.', [keyOf(SAF, 'Fresh condom for each partner', 'General'), keyOf(SAF, 'Condoms for penetrative sex', 'General')]);
+                var st = ans(SAF, 'Regular STI testing');
+                if (ans(SAF, 'Recent results shared') === 1 && (st === 0 || st === 4) && state.slots.some(function (x) { return x.key === keyOf(SAF, 'Regular STI testing', 'General'); }))
+                    add('E4', 'check', 'Recent results shared is Required, and Regular STI testing ' + (st ? 'is marked N/A' : 'isn\u2019t marked yet') + '. If you\u2019ll ask others for results, it helps to say what you do too.', [keyOf(SAF, 'Recent results shared', 'General'), keyOf(SAF, 'Regular STI testing', 'General')]);
+                if (ans(AGR, 'Stop if anyone signals') === 4)
+                    add('F1', 'talk', 'Stop if anyone signals is marked N/A. If you use another way to pause, you\u2019re fine. If not, this is one people usually decide on before they play.', [keyOf(AGR, 'Stop if anyone signals', 'General')]);
+                if (ans(AGR, 'Anyone can veto') === 4)
+                    add('F1', 'talk', 'Anyone can veto is marked N/A. If you have another way to say no to a person or a plan, you\u2019re fine. If not, this is one people usually decide on before they play.', [keyOf(AGR, 'Anyone can veto', 'General')]);
+                state.upgradeNotes.forEach(function (n) { if (!n.keys.some(function (k) { return state.answers.get(k); })) notes.push(n); });
+                return notes.filter(function (n) { return !state.dismissed.has(n.id); })
+                    .sort(function (a, b) { return SEV_ORDER.indexOf(a.sev) - SEV_ORDER.indexOf(b.sev); });
+            }
+            function itemLabel(key) {
+                var p = key.split('\u241F'), cat = findCat(p[0]), multi = cat && cat.fields.length > 1;
+                var m = /^(.*) \(([^()]*)\)$/.exec(p[0]), who = m && personIndex(m[2]) >= 0 ? m[2] : '';
+                return p[1] + (who ? ' (' + who + (multi ? ', ' + p[2].toLowerCase() : '') + ')' : multi ? ' (' + p[2] + ')' : '');
+            }
+            var checkNotes = [];
+            function renderChecks() {
+                var box = $('#Checks'), notes = checkNotes = computeChecks();
+                $$('#InputList .flag-mark').forEach(function (m) { m.remove(); });
+                $$('#InputList .item.flagged').forEach(function (li) { li.classList.remove('flagged'); });
+                box.textContent = '';
+                box.hidden = !notes.length;
+                if (!notes.length) return;
+                var counts = {}; notes.forEach(function (n) { counts[n.sev] = (counts[n.sev] || 0) + 1; });
+                var chips = el('span', { class: 'sev-chips' });
+                SEV_ORDER.forEach(function (k) { if (counts[k]) chips.appendChild(el('span', { class: 'sev-chip', 'data-sev': k, text: SEV[k] + ' (' + counts[k] + ')' })); });
+                var det = el('details', null, [el('summary', null, [el('span', { class: 'checks-title', text: 'Things to double-check' }), chips, chevron()])]);
+                det.open = state.checksOpen;
+                det.addEventListener('toggle', function () { state.checksOpen = det.open; });
+                var list = el('ul', { class: 'checks-list' });
+                notes.forEach(function (n, i) {
+                    var acts = el('div', { class: 'check-actions' });
+                    var seen = [];
+                    n.keys.forEach(function (k) {
+                        if (!groupsByKey.has(k)) return;
+                        var lbl = itemLabel(k);
+                        if (seen.indexOf(lbl) >= 0 || seen.length >= 4) return;
+                        seen.push(lbl);
+                        acts.appendChild(el('button', { type: 'button', class: 'note-btn', 'data-jump': k, text: 'Show ' + lbl }));
+                    });
+                    acts.appendChild(el('button', { type: 'button', class: 'note-btn', 'data-dismiss': n.id, text: 'Dismiss' }));
+                    list.appendChild(el('li', { class: 'check-note', 'data-sev': n.sev, id: 'Note' + i }, [el('span', { class: 'sev-tag', 'data-sev': n.sev, text: SEV[n.sev] }), el('p', { text: n.text }), acts]));
+                    n.keys.forEach(function (k) {
+                        var g = groupsByKey.get(k); if (!g) return;
+                        var li = g.parentNode;
+                        if (li.classList.contains('flagged')) return;
+                        li.classList.add('flagged');
+                        var nm = li.querySelector('.item-name');
+                        nm.appendChild(el('button', { type: 'button', class: 'flag-mark', 'data-note': String(i), text: SEV[n.sev] === SEV.talk ? 'Talk' : 'Double-check', 'aria-label': SEV[n.sev] + ': see the note' }));
+                    });
+                });
+                det.appendChild(el('div', { class: 'checks-body' }, [el('p', { class: 'checks-intro', text: 'These aren\u2019t errors. They\u2019re places answers might mean two different things, so they\u2019re worth a look before you share.' }), list]));
+                box.appendChild(det);
+            }
+            function openChecks(noteIdx) {
+                var det = $('#Checks details'); if (!det) return;
+                det.open = true; state.checksOpen = true;
+                var target = noteIdx != null ? $('#Note' + noteIdx) : $('#Checks');
+                if (target) { target.scrollIntoView({ block: 'center', behavior: 'smooth' }); var f = target.querySelector('button') || det.querySelector('summary'); if (f) f.focus({ preventScroll: true }); }
+            }
+            $('#Checks').addEventListener('click', function (e) {
+                var j = e.target.closest('[data-jump]'), d = e.target.closest('[data-dismiss]');
+                if (j) {
+                    var key = j.getAttribute('data-jump'), chip = chipsByKey.get(key), g = groupsByKey.get(key);
+                    if (!chip) return;
+                    var sec = chip.closest('details'); if (sec) sec.open = true;
+                    var pv = chip.getAttribute('data-person');
+                    if (pv != null && state.view >= 0 && +pv !== state.view) { state.view = -1; renderSwitch(); }
+                    chip.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                    chip.focus({ preventScroll: true });
+                    var li = g.parentNode; li.classList.remove('flash-row'); void li.offsetWidth; li.classList.add('flash-row');
+                } else if (d) {
+                    state.dismissed.add(d.getAttribute('data-dismiss'));
+                    renderChecks();
+                    var next = $('#Checks [data-jump], #Checks summary'); if (next) next.focus(); else $('#ShareBtn').focus();
+                }
+            });
+            $('#InputList').addEventListener('click', function (e) {
+                var m = e.target.closest('.flag-mark'); if (!m) return;
+                e.stopPropagation(); e.preventDefault();
+                openChecks(+m.getAttribute('data-note'));
+            });
+            // Copy / Save: a gentle nudge when notes remain (never blocks)
+            var nudgeDlg = $('#NudgeDialog'), nudgeGo = null, nudgeSeen = '';
+            function nudge(verb, go) {
+                var serious = checkNotes.filter(function (n) { return n.sev !== 'talk'; });
+                var sig = serious.map(function (n) { return n.id; }).join('\n');
+                if (!serious.length || sig === nudgeSeen) return false;
+                $('#NudgeText').textContent = 'You have ' + serious.length + ' note' + (serious.length === 1 ? '' : 's') + ' to review. ' + verb + ' anyway?';
+                $('#NudgeGo').textContent = verb + ' anyway';
+                nudgeGo = function () { nudgeSeen = sig; go(); };
+                nudgeDlg.showModal();
+                return true;
+            }
+            $('#NudgeGo').addEventListener('click', function () { var g = nudgeGo; nudgeDlg.close(); if (g) g(); });
+            $('#NudgeReview').addEventListener('click', function () { nudgeDlg.close(); openChecks(0); });
+            nudgeDlg.addEventListener('click', function (e) { if (e.target === nudgeDlg) nudgeDlg.close(); });
+
             /* ---------------------------------------------------------------
              * Private mode
              * ------------------------------------------------------------- */
@@ -1815,7 +2177,8 @@
             /* ---------------------------------------------------------------
              * Copy share link (built on demand, works in private mode too)
              * ------------------------------------------------------------- */
-            $('#CopyBtn').addEventListener('click', function () {
+            $('#CopyBtn').addEventListener('click', function () { if (!nudge('Copy', copyLink)) copyLink(); });
+            function copyLink() {
                 var link = shareLink();
                 var done = function () { flash(state.answers.size ? 'Link copied. Anyone with it can see your answers.' : 'Link copied (no answers yet).'); };
                 var fallback = function () {
@@ -1831,7 +2194,7 @@
                 };
                 if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(link).then(done, fallback);
                 else fallback();
-            });
+            }
 
             /* ---------------------------------------------------------------
              * Theme toggle (auto -> light -> dark). Not stored anywhere.
@@ -1939,7 +2302,7 @@
                 $('#GBar').firstChild.style.width = (n ? countAnswered() / n * 100 : 0) + '%';
                 var cur = state.answers.get(s.key) || 0;
                 var opts = $('#GOptions'); opts.textContent = '';
-                var gsc = scaleOf(gcat);
+                var gsc = itemScale(gcat, s.item);
                 gsc.levels.forEach(function (lv, i) {
                     opts.appendChild(el('button', { type: 'button', class: 'g-opt', 'aria-pressed': cur === i ? 'true' : 'false', 'data-level': i }, [
                         el('span', { class: 'dot ' + gsc.cls + i, 'aria-hidden': 'true', text: lv.sym }),
@@ -1949,14 +2312,19 @@
                 });
                 var up = $('#GUp'); up.textContent = '';
                 for (var k = 1; k <= 3 && k < n; k++) {
-                    var ns = state.slots[gNorm(gIndex + k)], v = state.answers.get(ns.key) || 0, nsc = scaleOf(state.list[ns.ci]);
+                    var ns = state.slots[gNorm(gIndex + k)], v = state.answers.get(ns.key) || 0, nsc = itemScale(state.list[ns.ci], ns.item);
                     up.appendChild(el('li', null, [
                         el('span', { class: 'dot ' + nsc.cls + v, 'aria-hidden': 'true', text: nsc.levels[v].sym }),
                         el('span', { text: (ns.multi ? ns.field + ': ' : '') + ns.item + ' \u2014 ' + ns.cat })
                     ]));
                 }
             }
-            function gGo(delta) { clearTimeout(gTimer); gIndex = gNorm(gIndex + delta); renderGuided(); }
+            function gGo(delta) {
+                clearTimeout(gTimer);
+                var guard = state.slots.length;
+                do { gIndex = gNorm(gIndex + delta); } while (slotHidden(state.slots[gIndex]) && --guard > 0);
+                renderGuided();
+            }
             function gPick(level) {
                 setAnswer(state.slots[gNorm(gIndex)].key, level);
                 renderGuided();
@@ -1964,7 +2332,7 @@
                 gTimer = setTimeout(function () { gGo(1); }, 180);
             }
             $('#GuidedBtn').addEventListener('click', function () {
-                var first = state.slots.findIndex(function (s) { return !state.answers.get(s.key); });
+                var first = state.slots.findIndex(function (s) { return !state.answers.get(s.key) && !slotHidden(s); });
                 gIndex = first < 0 ? 0 : first;
                 renderGuided();
                 gDlg.showModal();
@@ -2023,7 +2391,7 @@
                 }
             }
             // Softer section names for the discreet image (the person label is kept)
-            var DISCREET_NAMES = { 'Activities': 'Intimacy', 'Kinks': 'Extras', 'Sexual Preference': 'Partners', 'Groupings': 'Group play', 'Observation': 'Watching' };
+            var DISCREET_NAMES = { 'Activities': 'Intimacy', 'Kinks': 'Extras', 'Sexual Preference': 'Partners', 'Who I play with': 'Partners', 'Groupings': 'Group play', 'Observation': 'Watching' };
             function discreetName(name) {
                 var m = /^(.*?)( \([^()]*\))?$/.exec(name);
                 return (DISCREET_NAMES[m[1]] || m[1]) + (m[2] || '');
@@ -2077,7 +2445,7 @@
                     ctx.fillText(fitText(ctx, name, W - pad * 2 - tw - 14), pad + tw + 14, pad + 28);
                 }
                 ctx.fillStyle = IMG.muted; ctx.font = '14px ' + IMG.font;
-                ctx.fillText(countAnswered() + ' of ' + state.slots.length + ' answered' + (discreet ? ' \u00B7 discreet summary, item names hidden' : ''), pad, pad + 54);
+                ctx.fillText(countAnswered() + ' of ' + activeTotal() + ' answered' + (discreet ? ' \u00B7 discreet summary, item names hidden' : ''), pad, pad + 54);
                 var lx = pad, ly = pad + 86;
                 LEVELS.forEach(function (lv, i) {
                     drawDot(ctx, lx + 11, ly, 11, i);
@@ -2113,7 +2481,7 @@
                         if (discreet) {
                             // One row: how many answers at each level, no item names
                             var counts = levels.map(function () { return 0; });
-                            cat.items.forEach(function (item) { cat.fields.forEach(function (f) { counts[state.answers.get(keyOf(cat.name, item, f)) || 0]++; }); });
+                            cat.items.forEach(function (item) { if (cat.opts && cat.opts[item]) return; cat.fields.forEach(function (f) { counts[state.answers.get(keyOf(cat.name, item, f)) || 0]++; }); });
                             var mid = cy + 14 + rowH / 2, dx = x + cardPad, any = false;
                             for (var lvI = 1; lvI < levels.length; lvI++) {
                                 if (!counts[lvI]) continue;
@@ -2136,6 +2504,18 @@
                         cy += 14;
                         cat.items.forEach(function (item) {
                             var mid = cy + rowH / 2;
+                            if (cat.opts && cat.opts[item]) {
+                                if (slotHidden({ cat: cat.name, item: item, field: cat.fields[0] })) return;
+                                var pv = state.answers.get(keyOf(cat.name, item, cat.fields[0])) || 0;
+                                ctx.fillStyle = IMG.text; ctx.font = '14px ' + IMG.font;
+                                var q = item + ': ';
+                                ctx.fillText(fitText(ctx, q, colW - cardPad * 2), x + cardPad, mid + 5);
+                                ctx.font = '700 14px ' + IMG.font; ctx.fillStyle = pv ? IMG.text : IMG.muted;
+                                var qx = x + cardPad + Math.min(ctx.measureText(q).width + 2, colW - cardPad * 2 - 60);
+                                ctx.fillText(fitText(ctx, pv ? cat.opts[item][pv - 1] : 'Not answered', x + colW - cardPad - qx), qx, mid + 5);
+                                cy += rowH;
+                                return;
+                            }
                             cat.fields.forEach(function (field, fi) {
                                 drawDot(ctx, x + cardPad + dotR + fi * dotStep, mid, dotR, state.answers.get(keyOf(cat.name, item, field)) || 0, levels);
                             });
@@ -2181,12 +2561,13 @@
                 if (!has) $('#ShowName').checked = false;
                 else if (!nameTouched) $('#ShowName').checked = true;
             }
-            $('#DownloadBtn').addEventListener('click', function () {
+            $('#DownloadBtn').addEventListener('click', function () { if (!nudge('Save', openExport)) openExport(); });
+            function openExport() {
                 if (!$('input[name="ExLayout"]:checked')) $('input[name="ExLayout"][value="' + (mqSheet.matches ? 'narrow' : 'wide') + '"]').checked = true;
                 syncNameBox();
                 renderPreview();
                 exportDlg.showModal();
-            });
+            }
             $('#Name').addEventListener('input', function () { syncNameBox(); renderPreview(); });
             $('#ShowName').addEventListener('change', function () { nameTouched = true; renderPreview(); });
             $$('input[name="ExStyle"], input[name="ExLayout"]').forEach(function (r) { r.addEventListener('change', renderPreview); });
@@ -2216,7 +2597,7 @@
              * ------------------------------------------------------------- */
             var cmpDlg = $('#CompareDialog'), cmp = null;
             var CMP_GROUPS = [
-                { id: 'first', title: 'Agree on these first', desc: 'Rules and boundaries the two households see differently.' },
+                { id: 'first', title: 'Resolve before you meet', desc: 'Things that matter before anyone plays, where the two households differ.' },
                 { id: 'both', title: 'Both into it', desc: '' },
                 { id: 'talk', title: 'Worth talking about', desc: '' },
                 { id: 'no', title: 'Not for us', desc: '' }
@@ -2237,12 +2618,12 @@
             }
             function sideFromPage() {
                 var k = listKind();
-                return { hh: state.household, list: state.list, answers: new Map(state.answers), ver: k === 'v2' ? '2' : k === 'v3' ? '3' : '4' };
+                return { hh: state.household, list: state.list, answers: new Map(state.answers), ver: k === 'v2' ? '2' : k === 'v3' ? '3' : k === 'v4' ? '4' : '5' };
             }
             // One entry per answer slot, with the person taken out of the section / column name,
             // and earlier lists' item names brought up to date so they match.
             function sideEntries(side) {
-                var labels = side.hh.labels, out = [];
+                var labels = side.hh.labels, out = [], swap = {}, hadSwap = false;
                 side.list.forEach(function (c) {
                     var m = /^(.*) \(([^()]*)\)$/.exec(c.name), base = c.name, secPerson = -1;
                     if (m && labels.indexOf(m[2]) >= 0) { base = m[1]; secPerson = labels.indexOf(m[2]); }
@@ -2252,11 +2633,19 @@
                             var fp = labels.indexOf(f), it = item;
                             if (V3_SEXPREF[item] && V3_SEXPREF[item][f]) it = V3_SEXPREF[item][f];
                             else if (V3_RENAMED[item]) it = V3_RENAMED[item];
-                            out.push({ sec: base, item: it, role: fp >= 0 ? '' : f, person: fp >= 0 ? fp : secPerson, byCol: fp >= 0,
-                                scale: c.scale || 'like', v: side.answers.get(keyOf(c.name, item, f)) || 0, def: (c.defs && c.defs[item]) || '' });
+                            var v = side.answers.get(keyOf(c.name, item, f)) || 0;
+                            // earlier lists: the four swap items become one "How far" answer
+                            if (base === 'Boundaries' && SWAP_RUNGS[it] && !(c.opts && c.opts[item])) { hadSwap = true; if (v) swap[it] = v; return; }
+                            var n = v5Name(base, it);
+                            out.push({ sec: n[0], item: n[1], role: fp >= 0 ? '' : f, person: fp >= 0 ? fp : secPerson, byCol: fp >= 0,
+                                scale: itemScaleKey(c, item), v: v, def: (c.defs && c.defs[item]) || '' });
                         });
                     });
                 });
+                if (hadSwap) {
+                    var lad = ladderFrom(swap);
+                    out.unshift({ sec: 'Boundaries', item: LADDER, role: 'General', person: -1, byCol: false, scale: pickScale(LADDER_OPTS).key, v: lad.level || 0, def: '' });
+                }
                 return out;
             }
             function itemGroups(side) {
@@ -2295,13 +2684,21 @@
             }
             function levelNames(vals, scale) { return vals.map(function (v) { return SCALES[scale].levels[v].name; }).filter(function (n, i, a) { return a.indexOf(n) === i; }).join(' / '); }
             // -> { cat: first | both | talk | no | one | neither, why, hideWho }
-            function classify(sec, scale, a, b) {
+            function classify(sec, scale, a, b, item) {
                 var all = a.concat(b);
+                if (SCALES[scale] && SCALES[scale].pick) {
+                    if (!a.length || !b.length) return { cat: 'one' };
+                    var lv = SCALES[scale].levels, same = all.every(function (v) { return v === all[0]; });
+                    if (same) return { cat: 'both' };
+                    if (item === LADDER) return { cat: 'first', why: 'You: ' + levelNames(a, scale) + '. Them: ' + levelNames(b, scale) + '. Worth agreeing what this meetup is before you go.' };
+                    return { cat: 'talk', why: 'You: ' + levelNames(a, scale) + '. Them: ' + levelNames(b, scale) + '.' };
+                }
                 if (scale === 'safety') {
                     var reqA = a.indexOf(1) >= 0, reqB = b.indexOf(1) >= 0;
                     var wantA = a.some(function (v) { return v <= 2; }), wantB = b.some(function (v) { return v <= 2; });
-                    if (reqA && !wantB) return { cat: 'first', why: 'You require this; they ' + (b.length ? 'marked it ' + levelNames(b, scale) : 'haven\u2019t answered it') + '.' };
-                    if (reqB && !wantA) return { cat: 'first', why: 'They require this; you ' + (a.length ? 'marked it ' + levelNames(a, scale) : 'haven\u2019t answered it') + '.' };
+                    var settle = ' Settle this before anyone plays, not in the moment.';
+                    if (reqA && !wantB) return { cat: 'first', why: 'You require this; they ' + (b.length ? 'marked it ' + levelNames(b, scale) : 'haven\u2019t answered it') + '.' + settle };
+                    if (reqB && !wantA) return { cat: 'first', why: 'They require this; you ' + (a.length ? 'marked it ' + levelNames(a, scale) : 'haven\u2019t answered it') + '.' + settle };
                     if (!a.length || !b.length) return { cat: 'one' };
                     if (all.every(function (v) { return v <= 2; })) {
                         var same = all.every(function (v) { return v === 1; }) || all.every(function (v) { return v === 2; });
@@ -2345,7 +2742,7 @@
                         res.ref.push(Object.assign({ a: g.entries, b: o.entries, side: true }, base));
                         return;
                     }
-                    var overall = classify(g.sec, g.scale, vals(g.entries), vals(o.entries));
+                    var overall = classify(g.sec, g.scale, vals(g.entries), vals(o.entries), g.item);
                     // Household-wide rules always come from the household view
                     if (c.mode === 'hh' || overall.cat === 'first') {
                         if (c.mode === 'hh' || g.entries.every(function (e) { return e.person < 0; })) push(Object.assign({ a: g.entries, b: o.entries, cat: overall.cat, why: overall.why, hideWho: overall.hideWho }, base));
@@ -2357,7 +2754,7 @@
                         var want = e.role === 'Giving' ? 'Receiving' : e.role === 'Receiving' ? 'Giving' : e.role;
                         var f = o.entries.filter(function (x) { return x.person === c.pb && x.role === want; })[0];
                         if (!f) return;
-                        var k = classify(g.sec, g.scale, e.v ? [e.v] : [], f.v ? [f.v] : []);
+                        var k = classify(g.sec, g.scale, e.v ? [e.v] : [], f.v ? [f.v] : [], g.item);
                         if (!e.v && !f.v) return;
                         var dir = e.role === 'Giving' ? personName(c, 'A', c.pa) + ' gives, ' + personName(c, 'B', c.pb) + ' receives'
                             : e.role === 'Receiving' ? personName(c, 'B', c.pb) + ' gives, ' + personName(c, 'A', c.pa) + ' receives' : '';
@@ -2379,7 +2776,10 @@
                 var aria = label + ': ' + (ans.length ? ans.map(function (e) { return (entries.length > 1 || e.person >= 0 ? entryWho(c, side, e) + ' ' : '') + lv[e.v].name; }).join(', ') : 'not answered');
                 var span = el('span', { class: 'cmp-side', role: 'img', 'aria-label': aria, title: aria }, [el('b', { text: label, 'aria-hidden': 'true' })]);
                 if (!ans.length) span.appendChild(el('span', { class: 'none', 'aria-hidden': 'true', text: '\u2014' }));
-                ans.forEach(function (e) { span.appendChild(el('span', { class: 'dot ' + SCALES[scale].cls + e.v, 'aria-hidden': 'true', text: lv[e.v].sym })); });
+                ans.forEach(function (e) {
+                    if (SCALES[scale].pick) span.appendChild(el('span', { class: 'cmp-pick', 'aria-hidden': 'true', text: lv[e.v].name }));
+                    else span.appendChild(el('span', { class: 'dot ' + SCALES[scale].cls + e.v, 'aria-hidden': 'true', text: lv[e.v].sym }));
+                });
                 return span;
             }
             function sectionDefFor(sec, scale) { return (scale === 'safety' && GLOSSARY.scaledSections[sec]) || GLOSSARY.sections[sec] || ''; }
@@ -2405,7 +2805,7 @@
             }
             function hhText(side) {
                 var t = side.hh.type, n = side.hh.labels;
-                return (t === 'single' ? 'one person' : t === 'triad' ? 'a triad' : 'a couple') + (side.hh.custom || side.ver !== '4' ? ': ' + n.join(', ') : '');
+                return (t === 'single' ? 'one person' : t === 'triad' ? 'a triad' : 'a couple') + (side.hh.custom || (side.ver !== '4' && side.ver !== '5') ? ': ' + n.join(', ') : '');
             }
             function renderCompare() {
                 var c = cmp, body = $('#CmpBody');
@@ -2417,7 +2817,7 @@
                 $('#CmpPeople').hidden = c.mode !== 'pp';
                 var total = res.first.length + res.both.length + res.talk.length + res.no.length;
                 body.appendChild(el('p', { class: 'cmp-summary', text: 'You (' + hhText(c.A) + ') and them (' + hhText(c.B) + '): ' +
-                    res.first.length + ' to agree on first, ' + res.both.length + ' both into it, ' + res.talk.length + ' worth talking about, ' + res.no.length + ' not for us.' }));
+                    res.first.length + ' to resolve before you meet, ' + res.both.length + ' both into it, ' + res.talk.length + ' worth talking about, ' + res.no.length + ' not for us.' }));
                 var modeHelp = el('p', { class: 'cmp-note' });
                 if (c.mode === 'hh') {
                     modeHelp.appendChild(document.createTextNode('Comparing '));
@@ -2663,6 +3063,7 @@
                     if (!e) { e = { title: title, desc: desc, tags: [] }; byKey.set(k, e); }
                     if (e.tags.indexOf(tag) < 0) e.tags.push(tag);
                 }
+                Object.keys(GLOSSARY.likeScale).forEach(function (k) { add(k, GLOSSARY.likeScale[k], 'Answer scale'); });
                 if (hasSafetyScale(state.list)) Object.keys(GLOSSARY.scale).forEach(function (k) { add(k, GLOSSARY.scale[k], 'Safety scale'); });
                 state.list.forEach(function (cat) {
                     add(cat.name, sectionDef(cat), 'Section');
