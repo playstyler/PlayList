@@ -578,6 +578,57 @@
                 * { transition: none !important; }
                 .g-hint { animation: none; }
             }
+
+            /* Empty chips: a quiet dashed outline, no word (3:1 against the card in both themes) */
+            :root { --chip-ring: #86829A; } /* 3.7:1 on the card, 3.1:1 on an open row */
+            @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --chip-ring: #77738A; } }
+            :root[data-theme="dark"] { --chip-ring: #77738A; } /* 3.6:1 on the dark card */
+            .chip:not(.set) { color: transparent; border-color: var(--chip-ring); }
+            .chip:not(.set):hover, .chip:not(.set):focus-visible { border-color: var(--accent); background: var(--accent-soft); }
+
+            /* Giving / Receiving as plain words: each direction is its own row, one chip per person */
+            .item.dir.pair-2 { border-top: 0; padding-top: 0; }
+            .item.dir.pair-1 { padding-bottom: 2px; }
+            .dirhead-row { display: block; }
+            .fields-head.dirhead .fh-cell { font-size: 12px; text-transform: none; letter-spacing: 0; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            @media (min-width: 900px) {
+                .section.merged .dirhead-row, .section.merged .items.dirlist { display: grid; grid-template-columns: 1fr 1fr; column-gap: 56px; }
+                .section.merged .item.dir.pair-1, .section.merged .item.dir.pair-2 { padding: 6px 0; border-top: 1px solid var(--border); }
+                .section.merged .items.dirlist > .item:nth-child(-n+2) { border-top: none; }
+            }
+            @media (max-width: 899px) { .dirhead-row > .fields-head:nth-child(2) { display: none; } }
+            @media (max-width: 640px) {
+                /* phone: the words and up to two chips share one line */
+                .item.dir.dir-inline .item-name, #InputList:not([data-view="all"]) .item.dir .item-name { flex: 1 1 0; }
+                .item.dir.dir-inline .cells { flex-wrap: nowrap; }
+            }
+
+            /* How this works: only while nothing is answered */
+            .howto { margin: 14px 0 4px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); display: grid; grid-template-columns: 1fr auto; gap: 10px 12px; align-items: start; }
+            .howto[hidden] { display: none; }
+            .howto h2 { margin: 0; font-size: 15px; font-weight: 650; align-self: center; }
+            .howto ol { grid-column: 1 / -1; margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 18px; counter-reset: s; }
+            .howto li { counter-increment: s; display: flex; gap: 8px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+            .howto li::before { content: counter(s); flex: none; width: 20px; height: 20px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); font-size: 12px; font-weight: 700; display: grid; place-items: center; margin-top: 1px; }
+            .howto li strong { color: var(--text); font-weight: 600; }
+            .howto .chip-demo { display: inline-block; width: 34px; height: 16px; vertical-align: -3px; margin: 0 2px; border: 1.5px dashed var(--chip-ring); border-radius: 99px; }
+            .howto .ht-actions { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
+            .howto .icon-btn { width: 32px; height: 32px; }
+            @media (max-width: 640px) { .howto ol { grid-template-columns: 1fr; gap: 6px; } .howto { padding: 10px 12px; margin-top: 10px; } }
+
+            /* Done for now? Share card at the end of the list, and Guided's last card */
+            .sharecard { max-width: 640px; margin: 0 0 16px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); display: grid; gap: 10px; }
+            .sharecard[hidden] { display: none; }
+            .sharecard h2 { margin: 0; font-size: 17px; font-weight: 650; }
+            .sharecard p, .g-finish p { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.45; }
+            .sharecard .sc-priv, .g-finish .sc-priv { color: var(--text); }
+            .sc-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+            .sc-link { background: none; border: 0; padding: 2px; font: inherit; font-size: 14px; font-weight: 600; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+            .g-card.finish > :not(.g-finish) { display: none; }
+            .g-finish { display: none; flex-direction: column; gap: 12px; }
+            .g-card.finish .g-finish { display: flex; }
+            .g-finish .sc-actions { display: grid; gap: 8px; }
+            .g-finish .btn { justify-content: center; }
         </style>
     </head>
     <body>
@@ -652,12 +703,23 @@
         </header>
 
         <main class="wrap">
+            <section id="HowTo" class="howto" aria-labelledby="HowToTitle" hidden>
+                <h2 id="HowToTitle">How this works</h2>
+                <button type="button" class="icon-btn" id="HowToClose" aria-label="Hide how this works"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+                <ol>
+                    <li><span><strong>Tap the empty outline</strong> <span class="chip-demo" aria-hidden="true"></span> next to anything you have a feeling about. Skip the rest.</span></li>
+                    <li><span>Underlined words explain themselves. <strong>Guided</strong> asks one at a time.</span></li>
+                    <li><span><strong>Share</strong> the link with your partner. Your answers live in the link, never on a server.</span></li>
+                </ol>
+                <div class="ht-actions"><button type="button" class="btn btn-primary btn-small" id="HowToGuided"><span aria-hidden="true">&#9654;</span> Start guided</button></div>
+            </section>
             <ul class="legend" id="Legend" aria-label="Legend"></ul>
             <div id="LinkNotice" class="notice" hidden></div>
             <section id="Checks" class="checks" hidden aria-label="Things to double-check"></section>
 
             <div id="PersonSwitch" class="person-switch" role="group" aria-label="Show answers for" hidden></div>
             <div id="InputList" class="sections" data-view="all"></div>
+            <section id="ShareCard" class="sharecard" aria-labelledby="ShareCardTitle" hidden></section>
 
             <footer>
                 <p>This is a starting point for a conversation, not a contract. Anyone can change their mind at any time.</p>
@@ -736,6 +798,7 @@
                 <div class="dlg-actions">
                     <button type="button" class="btn" id="SetupCancel">Not now</button>
                     <span class="spacer"></span>
+                    <button type="button" class="btn" id="SetupGuided" hidden>Start guided</button>
                     <button type="button" class="btn btn-primary" id="SetupSave">Start</button>
                 </div>
             </div>
@@ -1032,6 +1095,49 @@
             }
 
             /* ---------------------------------------------------------------
+             * Giving / Receiving in plain words. Display only: the answers are
+             * still stored per "Giving" / "Receiving" slot, so links don't change.
+             * "them" = the people you play with; "me" = whoever is answering.
+             * Edited lists fall back to "<item>, to them" / "<item>, to me".
+             * ------------------------------------------------------------- */
+            var DIR_PHRASES = {
+                'Kissing': ['Kissing them', 'Being kissed'],
+                'Massage or making out': ['Massaging them or making out', 'Being massaged or making out'],
+                'Breast or chest play': ['Playing with their chest', 'My chest played with'],
+                'Handjob': ['Giving a handjob', 'Getting a handjob'],
+                'Fingering': ['Fingering them', 'Being fingered'],
+                'Oral': ['Giving oral', 'Getting oral'],
+                'Swallowing': ['I swallow', 'They swallow'],
+                'Penetrative sex': ['Penetrating them', 'Being penetrated'],
+                'Strap-on sex': ['Wearing a strap-on', 'Taking a strap-on'],
+                'Anal touch': ['Touching their anus', 'My anus touched'],
+                'Anal sex': ['Penetrating them anally', 'Being penetrated anally'],
+                'Rimming': ['Rimming them', 'Being rimmed'],
+                'Double penetration': ['One of two, for DP', 'Being double-penetrated'],
+                'Dildos': ['Using a dildo on them', 'A dildo used on me'],
+                'Plugs': ['Putting a plug in them', 'Wearing a plug'],
+                'Vibrators': ['Using a vibrator on them', 'A vibrator used on me'],
+                'Dirty talk': ['Talking dirty', 'Being talked dirty to'],
+                'Blindfold': ['Blindfolding them', 'Being blindfolded'],
+                'Collar': ['Collaring them', 'Wearing a collar'],
+                'Gag': ['Gagging them', 'Being gagged'],
+                'Leash': ['Holding the leash', 'Being on a leash'],
+                'Bondage': ['Tying them up', 'Being tied up'],
+                'Hair pulling': ['Pulling their hair', 'Having my hair pulled'],
+                'Light pain play': ['Giving light pain', 'Getting light pain'],
+                'Genital slapping': ['Slapping their genitals', 'My genitals slapped'],
+                'Spanking': ['Spanking them', 'Being spanked'],
+                'Nipple clamps': ['Clamping their nipples', 'Wearing nipple clamps'],
+                'Flogging': ['Flogging them', 'Being flogged']
+            };
+            function isDirField(f) { return f === 'Giving' || f === 'Receiving'; }
+            function isDirCat(cat) { return !!cat && cat.fields.length === 2 && cat.fields[0] === 'Giving' && cat.fields[1] === 'Receiving'; }
+            function dirPhrase(item, field) {
+                var g = field === 'Giving', p = Object.prototype.hasOwnProperty.call(DIR_PHRASES, item) ? DIR_PHRASES[item] : null;
+                return p ? p[g ? 0 : 1] : item + (g ? ', to them' : ', to me');
+            }
+
+            /* ---------------------------------------------------------------
              * Built-in glossary. Shown for matching terms in any list (an
              * explicit "* Term :: description" in an edited list wins).
              * Never put into share links: every copy of the page already has it.
@@ -1061,7 +1167,7 @@
                     'Worth talking about': 'At least one Okay or Maybe, or the two sides feel differently, like Favorite against Maybe. Good places to start a conversation.',
                     'Not for us': 'Someone said No. By default this doesn\u2019t show who, so nobody has to explain their no.',
                     'Households': 'Compares each household as a whole. A No from anyone in a household counts as a No.',
-                    'Person by person': 'Compares one person from each household. Giving is matched with the other person\u2019s Receiving, so \u201cAlex gives, Jo receives\u201d uses Alex\u2019s Giving and Jo\u2019s Receiving answers.',
+                    'Person by person': 'Compares one person from each household, matching each side of an activity: Alex\u2019s \u201cFingering them\u201d is shown next to Jo\u2019s \u201cBeing fingered\u201d, and the other way round.',
                     'Who\u2019s open to whom': 'Each person\u2019s own answers about who they\u2019d play with. The list doesn\u2019t ask anyone\u2019s gender, so these are shown side by side rather than matched.'
                 },
                 // Used instead of the entry above when the section is answered on the Required scale
@@ -1102,7 +1208,7 @@
                     'Playing with singles': 'Open to playing with someone who isn\u2019t part of a couple, not only with other couples.',
                     'Parallel play': 'Everyone plays with their own partner or partners, side by side, with no swapping. A popular, low-pressure way to start.',
                     'Watching my partner with someone else': 'Enjoying seeing your partner play with someone else, whether or not you join in.',
-                    'Massage or making out': 'Sensual massage, kissing and touching without going further. Often where soft swap starts.',
+                    'Massage or making out': 'Sensual massage, kissing and touching without going further. Often where soft swap starts. One line is you doing it to them, the other is them doing it to you.',
                     'Breast or chest play': 'Touching, kissing or sucking breasts, chests and nipples.',
                     'Handjob': 'Using a hand to pleasure someone\u2019s penis.',
                     'Fingering': 'Using fingers on or inside someone\u2019s vulva or vagina.',
@@ -1153,17 +1259,17 @@
                     'MFMF': 'Two men and two women alternating, like a classic foursome or full swap where everyone pairs up man-woman. Usage varies, so talk it through.',
                     'Orgy': 'Group sex with several people playing together, often at parties. Agree on your limits as a couple before you go.',
                     'Gangbang': 'One person is the focus of several partners, taking turns. Plan it carefully: clear limits, condoms, a safe word, and someone trusted looking out for them.',
-                    'Kissing': 'Kissing on the lips, from soft to passionate. For many couples it feels more intimate than sex, so it\u2019s worth agreeing on. Giving: starting the kiss. Receiving: being kissed.',
+                    'Kissing': 'Kissing on the lips, from soft to passionate. For many couples it feels more intimate than sex, so it\u2019s worth agreeing on.',
                     'Handjob / fingering': 'Using hands and fingers to pleasure someone\u2019s genitals.',
                     'Oral': 'Oral sex: using the mouth on someone\u2019s genitals. Some couples use condoms or dental dams for oral with new partners.',
-                    'Swallowing': 'Swallowing fluids during oral sex. This carries some STI risk, so recent test results and trust matter here.',
+                    'Swallowing': 'Swallowing fluids during oral sex: \u201cI swallow\u201d when you go down on someone, \u201cThey swallow\u201d when they go down on you. This carries some STI risk, so recent test results and trust matter here.',
                     'Penetrative sex': 'Intercourse involving penetration. Condoms are the norm with new partners.',
                     'Penetrative sex (PIV)': 'Penis-in-vagina intercourse. Condoms are the norm with new partners.',
                     'Penetrative sex (strap on)': 'Penetration with a dildo worn in a harness. Plenty of lube and a slow start make it more enjoyable.',
                     'Anal touch': 'Touching or teasing around the anus with fingers, a tongue or a toy, without full penetration.',
                     'Anal sex, pegging': 'Anal penetration. Pegging means a woman penetrating a man with a strap-on. Use lots of lube, go slowly, and never switch from anal to vaginal without a fresh condom.',
                     'Rimming': 'Using the tongue on someone\u2019s anus (analingus). Good hygiene matters, and a dental dam lowers the risk of infection.',
-                    'Double penetration': 'Penetration in two places at once, by two partners or a partner and a toy. It\u2019s intense: warm up, use plenty of lube, and keep checking in. Giving: being one of the partners (or toys) doing the penetrating. Receiving: being penetrated in two places.',
+                    'Double penetration': 'Penetration in two places at once, by two partners or a partner and a toy. It\u2019s intense: warm up, use plenty of lube, and keep checking in. \u201cOne of two\u201d means being one of the partners doing the penetrating.',
                     'Dildos': 'Penetrative sex toys. Choose body-safe materials, and clean or cover toys with a fresh condom between partners.',
                     'Plugs': 'Butt plugs worn in the anus for a feeling of fullness. Always use one with a flared base, and plenty of lube.',
                     'Vibrators': 'Buzzing toys used on or inside the body, alone or with partners. Clean or cover them between people.',
@@ -1274,7 +1380,7 @@
                 if (d) return d;
                 var m = /^(Activities|Kinks) \((.+)\)$/.exec(cat.name);
                 if (m && personIndex(m[2]) >= 0) return m[1] === 'Activities'
-                    ? 'Sexual activities for ' + m[2] + ': things they\u2019d like to do with others (Giving) and have done to them (Receiving).'
+                    ? 'Sexual activities for ' + m[2] + '. Each activity has two lines: doing it to the people you play with (\u201cthem\u201d), and having it done to you (\u201cme\u201d).'
                     : 'Kink and BDSM play for ' + m[2] + ', from light and playful to more intense. Start slowly, agree on limits and a safe word, and check in often.';
                 return '';
             }
@@ -1737,7 +1843,7 @@
                 return out;
             }
             function mergedDef(g) {
-                if (g.base === 'Activities') return 'Sexual activities: what each person would like to do with others (Giving) and have done to them (Receiving).';
+                if (g.base === 'Activities') return 'Sexual activities. Each has two lines: doing it to the people you play with (\u201cthem\u201d), and having it done to you (\u201cme\u201d).';
                 if (g.base === 'Kinks') return 'Kink and BDSM play, from light and playful to more intense. Start slowly, agree on limits and a safe word, and check in often.';
                 return sectionDef(g.cat);
             }
@@ -1812,7 +1918,17 @@
                     });
                     var multi = g.merged || cat.fields.length > 1;
                     if (cat.scale === 'safety' && !keyShown) { keyShown = true; details.appendChild(el('div', { class: 'items sec-scale-wrap' }, [scaleKey()])); }
-                    if (g.merged) {
+                    var dirMode = cats.every(isDirCat);
+                    if (g.merged && dirMode) { // one column per person, like "Who I play with"; on wide screens the two directions sit side by side
+                        var dirHead = function () {
+                            var dh = el('div', { class: 'fields-head dirhead' });
+                            cats.forEach(function (c, pi) { dh.appendChild(el('span', { class: 'fh-cell', 'data-person': String(pi), text: L[pi], title: L[pi] })); });
+                            return dh;
+                        };
+                        details.appendChild(el('div', { class: 'items fields-wrap' }, [el('div', { class: 'dirhead-row' }, [dirHead(), dirHead()])]));
+                    } else if (dirMode) {
+                        // one person's own section: the section title names them, so no column labels
+                    } else if (g.merged) {
                         var mh = el('div', { class: 'fields-head persons' });
                         cats.forEach(function (c, pi) {
                             var fields = el('div', { class: 'fh-fields' });
@@ -1826,7 +1942,35 @@
                         details.appendChild(el('div', { class: 'items fields-wrap' }, [head]));
                     }
                     var ul = el('ul', { class: 'items' });
-                    cat.items.forEach(function (item) {
+                    if (dirMode) {
+                        ul.classList.add('dirlist');
+                        cat.items.forEach(function (item) {
+                            cat.fields.forEach(function (field, fi) {
+                                var phrase = dirPhrase(item, field);
+                                var li = el('li', { class: 'item multi dir pair-' + (fi + 1) + (cats.length <= 2 ? ' dir-inline' : '') });
+                                var nameEl = el('span', { class: 'item-name' });
+                                if (itemDef(cat, item)) {
+                                    var tb = termButton({ kind: 'item', cat: cat.name, item: item }, phrase + ', show definition');
+                                    if (g.merged) tb.setAttribute('data-ctx', g.base);
+                                    tb.textContent = phrase;
+                                    nameEl.appendChild(tb);
+                                } else nameEl.textContent = phrase;
+                                li.appendChild(nameEl);
+                                var cells = el('div', { class: 'cells' });
+                                li.appendChild(cells);
+                                cats.forEach(function (c, pi) {
+                                    var who = g.merged ? pi : sectionPerson(c.name);
+                                    var label = who >= 0 ? L[who] : '';
+                                    var ch = makeCell(li, c.name, item, field, label, who, itemScale(c, item));
+                                    ch.setAttribute('data-name', phrase + (label ? ', ' + label : ''));
+                                    var grp = groupsByKey.get(keyOf(c.name, item, field));
+                                    grp.setAttribute('aria-label', phrase + (label ? ', ' + label : ''));
+                                    cells.appendChild(ch);
+                                });
+                                ul.appendChild(li);
+                            });
+                        });
+                    } else cat.items.forEach(function (item) {
                         var li = el('li', { class: 'item' + (multi ? ' multi' : ' single') });
                         var nameEl = el('span', { class: 'item-name' });
                         if (itemDef(cat, item)) {
@@ -1877,8 +2021,9 @@
                     chip.className = 'chip' + (v ? ' set ' + lv : '');
                     chip.textContent = '';
                     if (v && !group.classList.contains('pick')) chip.appendChild(el('span', { class: 'sym', 'aria-hidden': 'true', text: b.textContent }));
-                    chip.appendChild(el('span', { class: 'chip-lbl', text: v ? b.getAttribute('aria-label') : 'Answer' }));
-                    chip.setAttribute('aria-label', chip.getAttribute('data-name') + ': ' + (v ? b.getAttribute('aria-label') : 'not answered'));
+                    if (v) chip.appendChild(el('span', { class: 'chip-lbl', text: b.getAttribute('aria-label') }));
+                    chip.setAttribute('aria-label', v ? chip.getAttribute('data-name') + ': ' + b.getAttribute('aria-label') : 'Answer: ' + chip.getAttribute('data-name'));
+                    chip.title = v ? '' : 'Answer';
                 }
                 var li = group.parentNode;
                 li.classList.toggle('answered', !!li.querySelector('.choices.has-sel'));
@@ -2045,7 +2190,7 @@
                 catsNamed(re).forEach(function (c) {
                     c.items.forEach(function (it) {
                         if (items && items.indexOf(it) < 0) return;
-                        c.fields.forEach(function (f) { var k = keyOf(c.name, it, f); if (likeYes(state.answers.get(k) || 0)) out.push({ key: k, name: it }); });
+                        c.fields.forEach(function (f) { var k = keyOf(c.name, it, f); if (likeYes(state.answers.get(k) || 0)) out.push({ key: k, item: it, name: isDirCat(c) ? '\u201c' + dirPhrase(it, f) + '\u201d' : it }); });
                     });
                 });
                 return out;
@@ -2061,7 +2206,7 @@
                 var notes = [], how = pickName(BND, LADDER), ladKey = keyOf(BND, LADDER, 'General');
                 function add(id, sev, text, keys) { notes.push({ id: id + '\u241F' + keys.join('|'), sev: sev, text: text, keys: keys }); }
                 if (how === 'Social') {
-                    var hits = yesIn(ACT).filter(function (h) { return h.name !== 'Kissing'; }).concat(yesIn(new RegExp('^' + GRP + '$')).filter(function (h) { return h.name !== 'Parallel play'; }));
+                    var hits = yesIn(ACT).filter(function (h) { return h.item !== 'Kissing'; }).concat(yesIn(new RegExp('^' + GRP + '$')).filter(function (h) { return h.name !== 'Parallel play'; }));
                     if (hits.length) add('A4', 'check', 'You marked Social as how far play goes, and also marked ' + names(hits) + ' as ' + (isAre(hits) === 'is' ? 'a yes' : 'yes') + '. Some couples like social nights and play nights; some mean Social as a hard limit. Want to change one, or leave both and talk it through?', [ladKey].concat(hits.map(function (h) { return h.key; })));
                 }
                 if (how === 'Soft swap') {
@@ -2073,7 +2218,7 @@
                 }
                 if (ans(BND, 'Kissing other people') === 5) {
                     var kh = yesIn(ACT, ['Kissing']);
-                    if (kh.length) add('A7', 'talk', 'Kissing other people is a No, and Kissing is a yes under Activities. That can mean \u201cwe kiss each other, not others,\u201d or one of them needs an update.', [keyOf(BND, 'Kissing other people', 'General')].concat(kh.map(function (h) { return h.key; })));
+                    if (kh.length) add('A7', 'talk', 'Kissing other people is a No, and ' + names(kh) + ' ' + isAre(kh) + ' a yes under Activities. That can mean \u201cwe kiss each other, not others,\u201d or one of them needs an update.', [keyOf(BND, 'Kissing other people', 'General')].concat(kh.map(function (h) { return h.key; })));
                 }
                 if (state.household.labels.length === 1) {
                     var bh = [[BND, 'Independent play'], [GRP, 'Parallel play'], ['Groupings', 'Parallel Play']].filter(function (x) { return ans(x[0], x[1]); });
@@ -2097,7 +2242,7 @@
                     add('C2', 'talk', 'Parallel play and Full swap are both marked. Lots of people enjoy both on different nights; it\u2019s worth saying which is which.', [keyOf(GRP, 'Parallel play', 'General'), ladKey]);
                 if (ans(SAF, 'Condoms or dams for oral') === 1) {
                     var sh = yesIn(ACT, ['Swallowing']);
-                    if (sh.length) add('E1', 'resolve', 'A barrier for oral is Required, and Swallowing is a yes. Those usually don\u2019t go together. You might change one, or note when each applies (for example, only with a long-term partner).', [keyOf(SAF, 'Condoms or dams for oral', 'General')].concat(sh.map(function (h) { return h.key; })));
+                    if (sh.length) add('E1', 'resolve', 'A barrier for oral is Required, and ' + names(sh) + ' ' + isAre(sh) + ' a yes. Those usually don\u2019t go together. You might change one, or note when each applies (for example, only with a long-term partner).', [keyOf(SAF, 'Condoms or dams for oral', 'General')].concat(sh.map(function (h) { return h.key; })));
                 }
                 var cp = ans(SAF, 'Condoms for penetrative sex');
                 if (ans(SAF, 'Fresh condom for each partner') === 1 && (cp === 3 || cp === 4))
@@ -2116,6 +2261,7 @@
             function itemLabel(key) {
                 var p = key.split('\u241F'), cat = findCat(p[0]), multi = cat && cat.fields.length > 1;
                 var m = /^(.*) \(([^()]*)\)$/.exec(p[0]), who = m && personIndex(m[2]) >= 0 ? m[2] : '';
+                if (isDirCat(cat)) return dirPhrase(p[1], p[2]) + (who ? ' (' + who + ')' : '');
                 return p[1] + (who ? ' (' + who + (multi ? ', ' + p[2].toLowerCase() : '') + ')' : multi ? ' (' + p[2] + ')' : '');
             }
             var checkNotes = [];
@@ -2352,13 +2498,16 @@
             function gNorm(i) { var n = state.slots.length; return ((i % n) + n) % n; }
             function renderGuided() {
                 var pos = gNorm(gIndex), s = state.slots[pos], n = activeTotal();
-                $('#GMeta').textContent = s.cat;
+                gCard.classList.remove('finish'); $('#GNext').hidden = false;
+                var dirG = s.multi && isDirField(s.field) && isDirCat(state.list[s.ci]);
+                var mm = /^(.*) \(([^()]*)\)$/.exec(s.cat);
+                $('#GMeta').textContent = mm && personIndex(mm[2]) >= 0 ? mm[1] + ' \u00B7 ' + mm[2] : s.cat;
                 var title = $('#GItem'); title.textContent = '';
-                if (s.multi) title.appendChild(el('span', { class: 'g-field', text: s.field + ': ' }));
-                title.appendChild(document.createTextNode(s.item));
+                if (s.multi && !dirG) title.appendChild(el('span', { class: 'g-field', text: s.field + ': ' }));
+                title.appendChild(document.createTextNode(dirG ? dirPhrase(s.item, s.field) : s.item));
                 var gcat = state.list[s.ci], gdef = $('#GDef');
                 gdef.textContent = itemDef(gcat, s.item);
-                if (s.multi && gdef.textContent && columnDef(s.field)) gdef.appendChild(el('span', { class: 'g-fdef', text: s.field + ': ' + columnDef(s.field) }));
+                if (s.multi && !dirG && gdef.textContent && columnDef(s.field)) gdef.appendChild(el('span', { class: 'g-fdef', text: s.field + ': ' + columnDef(s.field) }));
                 var done = countAnswered();
                 $('#GBar').firstChild.style.width = (n ? done / n * 100 : 0) + '%';
                 $('#GCount').textContent = done + ' of ' + n + ' answered';
@@ -2404,8 +2553,17 @@
                 gCard.animate(frames, { duration: reduceMotion.matches ? 160 : 300, easing: 'cubic-bezier(.2,.8,.2,1)' });
             }
             // dir: 1 = next (skip), -1 = back
+            function gLast() { var last = 0; state.slots.forEach(function (s, i) { if (!slotHidden(s)) last = i; }); return last; }
+            function gFinished() { return gCard.classList.contains('finish'); }
             function gGo(delta, from) {
                 clearTimeout(gTimer); gTimer = null;
+                if (gFinished()) { // the finish card: Back returns to the last question; there is nothing after it
+                    if (delta > 0) return;
+                    gFlyOut(delta, from); gCard.style.transform = ''; gFlags(0); renderGuided(); gFlyIn(delta); return;
+                }
+                if (delta > 0 && gNorm(gIndex) === gLast()) {
+                    gFlyOut(delta, from); gMoves++; gCard.style.transform = ''; gFlags(0); gShowFinish(); gFlyIn(delta); return;
+                }
                 gFlyOut(delta, from);
                 var guard = state.slots.length; // the soft-swap follow-up only shows when it applies
                 do { gIndex = gNorm(gIndex + delta); } while (slotHidden(state.slots[gIndex]) && --guard > 0);
@@ -2442,6 +2600,7 @@
             gDlg.addEventListener('keydown', function (e) {
                 if (e.altKey || e.ctrlKey || e.metaKey) return;
                 var lv = state.slots[gNorm(gIndex)].levels.length;
+                if (gFinished() && /^[0-5]$/.test(e.key)) return;
                 if (/^[0-5]$/.test(e.key) && +e.key < lv) gPick(+e.key);
                 else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') gGo(1);
                 else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'Backspace') gGo(-1);
@@ -2562,7 +2721,7 @@
                 var consentLines = wrapLines(measure, CONSENT_TEXT, W - pad * 2);
                 var footH = 30 + consentLines.length * 18 + (discreet ? 18 : 0);
                 var cats = state.list.map(function (c) {
-                    return { cat: c, h: discreet ? cardPad * 2 + titleH + rowH : cardPad * 2 + titleH + (c.fields.length > 1 ? subH : 0) + c.items.length * rowH };
+                    return { cat: c, h: discreet ? cardPad * 2 + titleH + rowH : isDirCat(c) ? cardPad * 2 + titleH + c.items.length * 2 * rowH : cardPad * 2 + titleH + (c.fields.length > 1 ? subH : 0) + c.items.length * rowH };
                 });
                 var total = cats.reduce(function (a, c) { return a + c.h + cardGap; }, 0);
                 var avg = total / numCols, cols = [], ci = 0;
@@ -2637,6 +2796,21 @@
                                 dx += dotR * 2 + 5 + ctx.measureText(label).width + 14;
                             }
                             if (!any) { ctx.fillStyle = IMG.muted; ctx.font = '14px ' + IMG.font; ctx.fillText('Not answered yet', dx, mid + 5); }
+                            y += entry.h + cardGap;
+                            return;
+                        }
+                        if (isDirCat(cat)) { // the same plain words as the page: one row per direction
+                            cy += 14;
+                            cat.items.forEach(function (item) {
+                                cat.fields.forEach(function (field) {
+                                    var mid = cy + rowH / 2;
+                                    drawDot(ctx, x + cardPad + dotR, mid, dotR, state.answers.get(keyOf(cat.name, item, field)) || 0, levels);
+                                    var tx = x + cardPad + dotStep + 6;
+                                    ctx.fillStyle = IMG.text; ctx.font = '14px ' + IMG.font;
+                                    ctx.fillText(fitText(ctx, dirPhrase(item, field), x + colW - cardPad - tx), tx, mid + 5);
+                                    cy += rowH;
+                                });
+                            });
                             y += entry.h + cardGap;
                             return;
                         }
@@ -2868,9 +3042,9 @@
                 var L = (side === 'A' ? c.A : c.B).hh.labels[i];
                 return tagNames(c) ? L + ' (' + (side === 'A' ? 'you' : 'them') + ')' : L;
             }
-            function entryWho(c, side, e) {
+            function entryWho(c, side, e, item) {
                 var who = e.person >= 0 ? (side === 'A' ? c.A : c.B).hh.labels[e.person] : '';
-                var role = e.role && e.role !== 'General' ? e.role.toLowerCase() : '';
+                var role = e.role && e.role !== 'General' ? (item && isDirField(e.role) ? dirPhrase(item, e.role) : e.role.toLowerCase()) : '';
                 return (who && role ? who + ', ' + role : who || role || 'Household');
             }
             function computeCompare(c) {
@@ -2900,8 +3074,7 @@
                         if (!f) return;
                         var k = classify(g.sec, g.scale, e.v ? [e.v] : [], f.v ? [f.v] : [], g.item);
                         if (!e.v && !f.v) return;
-                        var dir = e.role === 'Giving' ? personName(c, 'A', c.pa) + ' gives, ' + personName(c, 'B', c.pb) + ' receives'
-                            : e.role === 'Receiving' ? personName(c, 'B', c.pb) + ' gives, ' + personName(c, 'A', c.pa) + ' receives' : '';
+                        var dir = isDirField(e.role) ? personName(c, 'A', c.pa) + ': ' + dirPhrase(g.item, e.role) + ' \u00B7 ' + personName(c, 'B', c.pb) + ': ' + dirPhrase(g.item, want) : '';
                         push(Object.assign({}, base, { a: [e], b: [f], cat: k.cat, why: k.why, hideWho: k.hideWho, dir: dir, pp: true }));
                     });
                 });
@@ -2914,10 +3087,10 @@
                 b._term = { title: title, context: context, desc: desc };
                 return b;
             }
-            function sideDots(c, side, entries, scale) {
+            function sideDots(c, side, entries, scale, item) {
                 var lv = SCALES[scale].levels, ans = entries.filter(function (e) { return e.v > 0; });
                 var label = (side === 'A' ? 'You' : 'Them');
-                var aria = label + ': ' + (ans.length ? ans.map(function (e) { return (entries.length > 1 || e.person >= 0 ? entryWho(c, side, e) + ' ' : '') + lv[e.v].name; }).join(', ') : 'not answered');
+                var aria = label + ': ' + (ans.length ? ans.map(function (e) { return (entries.length > 1 || e.person >= 0 ? entryWho(c, side, e, item) + ' ' : '') + lv[e.v].name; }).join(', ') : 'not answered');
                 var span = el('span', { class: 'cmp-side', role: 'img', 'aria-label': aria, title: aria }, [el('b', { text: label, 'aria-hidden': 'true' })]);
                 if (!ans.length) span.appendChild(el('span', { class: 'none', 'aria-hidden': 'true', text: '\u2014' }));
                 ans.forEach(function (e) {
@@ -2933,7 +3106,7 @@
                 if (r.why) name.appendChild(el('small', { class: 'cmp-why', text: r.why }));
                 var sides = el('span', { class: 'cmp-sides' });
                 if (r.hideWho && !c.reveal) sides.appendChild(el('span', { class: 'cmp-hidden', text: r.cat === 'no' ? 'Someone said No' : 'Details hidden' }));
-                else { sides.appendChild(sideDots(c, 'A', r.a, r.scale)); sides.appendChild(sideDots(c, 'B', r.b, r.scale)); }
+                else { sides.appendChild(sideDots(c, 'A', r.a, r.scale, r.item)); sides.appendChild(sideDots(c, 'B', r.b, r.scale, r.item)); }
                 return el('div', { class: 'cmp-row', 'data-cat': r.cat || '' }, [name, sides]);
             }
             function cmpSections(c, rows, box) {
@@ -2969,7 +3142,7 @@
                     modeHelp.appendChild(document.createTextNode(': a No from anyone counts.'));
                 } else {
                     modeHelp.appendChild(document.createTextNode('Comparing ' + personName(c, 'A', c.pa) + ' with ' + personName(c, 'B', c.pb) + '. '));
-                    modeHelp.appendChild(cmpTerm('Giving is matched with the other person\u2019s Receiving', 'Person by person', GLOSSARY.compare['Person by person'], 'Compare'));
+                    modeHelp.appendChild(cmpTerm('\u201cFingering them\u201d is matched with the other person\u2019s \u201cBeing fingered\u201d', 'Person by person', GLOSSARY.compare['Person by person'], 'Compare'));
                     modeHelp.appendChild(document.createTextNode('.'));
                 }
                 body.appendChild(modeHelp);
@@ -3270,6 +3443,7 @@
                 setupType = hh.type;
                 renderSetup(hh.custom ? hh.labels : null);
                 $('#SetupSave').textContent = first ? 'Start' : 'Save';
+                $('#SetupGuided').hidden = !first;
                 setupDlg.showModal();
             }
             $('.hh-options').addEventListener('click', function (e) {
@@ -3302,6 +3476,86 @@
             setupDlg.addEventListener('close', function () { try { sessionStorage.setItem(SETUP_KEY, '1'); } catch (e) { /* ignore */ } });
             setupDlg.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); $('#SetupSave').click(); } });
             $('#SetupBtn').addEventListener('click', function () { openSetup(false); });
+
+            /* ---------------------------------------------------------------
+             * How this works: shown while nothing is answered. It needs no
+             * memory: the first answer (or the close button) hides it.
+             * ------------------------------------------------------------- */
+            var howtoClosed = false;
+            function paintHowTo() { $('#HowTo').hidden = howtoClosed || state.answers.size > 0; }
+            $('#HowToClose').addEventListener('click', function () {
+                howtoClosed = true; paintHowTo();
+                var f = $('#InputList .chip'); if (f) f.focus({ preventScroll: true });
+            });
+            $('#HowToGuided').addEventListener('click', function () { $('#GuidedBtn').click(); });
+
+            /* ---------------------------------------------------------------
+             * Done for now? A share card after the last section, and the same
+             * actions on Guided's finish card. Private mode: the link is still
+             * built on request, and it's the only copy of the answers.
+             * ------------------------------------------------------------- */
+            function shareText() {
+                var n = countAnswered(), t = activeTotal();
+                return { n: n, t: t, body: n + ' of ' + t + ' answered. Blanks are fine. The link holds your answers; anyone who has it can see them.',
+                    priv: state.privateMode ? 'Private mode is on: this link is the only copy of your answers. Copy it before you close the tab.' : '' };
+            }
+            function shareActions(extra) {
+                return el('div', { class: 'sc-actions' }, [
+                    el('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'copy', text: 'Copy link' }),
+                    el('button', { type: 'button', class: 'btn', 'data-act': 'image', 'aria-haspopup': 'dialog', text: 'Save as image\u2026' }),
+                    el('button', { type: 'button', class: 'sc-link', 'data-act': 'compare', 'aria-haspopup': 'dialog', text: 'Have their link? Compare' })
+                ].concat(extra || []));
+            }
+            function onShareAct(e) {
+                var b = e.target.closest('[data-act]'); if (!b) return;
+                var a = b.getAttribute('data-act');
+                if (a === 'review') {
+                    var f = state.slots.findIndex(function (s) { return !state.answers.get(s.key) && !slotHidden(s); });
+                    gIndex = f < 0 ? 0 : f; renderGuided(); gFlyIn(1); return;
+                }
+                if (gDlg.open) gDlg.close();
+                if (a === 'copy') $('#CopyBtn').click(); else if (a === 'image') $('#DownloadBtn').click(); else if (a === 'compare') $('#CompareBtn').click();
+            }
+            var shareCard = $('#ShareCard');
+            shareCard.addEventListener('click', onShareAct);
+            var shareSig = '';
+            function paintShareCard() {
+                var c = shareText(), sig = c.n + '|' + c.t + '|' + c.priv;
+                shareCard.hidden = !c.n;
+                if (!c.n || sig === shareSig) return; // keep the buttons (and focus) when nothing changed
+                shareSig = sig;
+                shareCard.textContent = '';
+                shareCard.appendChild(el('h2', { id: 'ShareCardTitle', text: 'Done for now? Send it to your partner' }));
+                shareCard.appendChild(el('p', { text: c.body }));
+                if (c.priv) shareCard.appendChild(el('p', { class: 'sc-priv', text: c.priv }));
+                shareCard.appendChild(shareActions());
+            }
+            var gFin = el('div', { class: 'g-finish', id: 'GFinish' });
+            gFin.addEventListener('click', onShareAct);
+            gCard.appendChild(gFin);
+            function gShowFinish() {
+                var c = shareText();
+                gFin.textContent = '';
+                gFin.appendChild(el('h2', { class: 'g-item', text: 'That\u2019s every card' }));
+                gFin.appendChild(el('p', { text: c.body }));
+                if (c.priv) gFin.appendChild(el('p', { class: 'sc-priv', text: c.priv }));
+                gFin.appendChild(shareActions(c.n < c.t ? [el('button', { type: 'button', class: 'sc-link', 'data-act': 'review', text: 'Go through the ' + (c.t - c.n) + ' skipped' })] : []));
+                gCard.classList.add('finish');
+                $('#GMeta').textContent = 'Finished';
+                $('#GNext').hidden = true;
+                $('#GBar').firstChild.style.width = (c.t ? c.n / c.t * 100 : 0) + '%';
+                $('#GCount').textContent = c.n + ' of ' + c.t + ' answered';
+                gFin.querySelector('button').focus({ preventScroll: true });
+            }
+            $('#PrivateToggle').addEventListener('change', paintShareCard);
+            var _updateProgress = updateProgress;
+            updateProgress = function () { _updateProgress(); paintHowTo(); paintShareCard(); };
+
+            // First visit: "Start guided" next to Start in "Who's filling this in?"
+            $('#SetupGuided').addEventListener('click', function () {
+                $('#SetupSave').click();
+                if (!setupDlg.open) $('#GuidedBtn').click();
+            });
 
             /* ---------------------------------------------------------------
              * Boot
